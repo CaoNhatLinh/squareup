@@ -1,0 +1,126 @@
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+export default function Home() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard')
+    }
+  }, [user, navigate])
+
+  if (user) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-blue-600">SquareUp</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/signin"
+                className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            Manage your restaurant
+            <br />
+            <span className="text-blue-600">with ease</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Complete restaurant management system. Handle items, categories, orders, and more - all in one place.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link
+              to="/signup"
+              className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-3 rounded-lg text-lg font-medium shadow-lg hover:shadow-xl transition-all"
+            >
+              Get started
+            </Link>
+            <Link
+              to="/signin"
+              className="bg-white text-gray-700 hover:bg-gray-50 px-8 py-3 rounded-lg text-lg font-medium border-2 border-gray-300 transition-all"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Item Management</h3>
+            <p className="text-gray-600">
+              Easily manage your menu items, categories, and inventory in one place.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Reports & Analytics</h3>
+            <p className="text-gray-600">
+              Track your sales, inventory, and performance with detailed reports.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Management</h3>
+            <p className="text-gray-600">
+              Keep track of your customers and build lasting relationships.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <footer className="bg-white mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center">
+            <p className="text-gray-600 text-sm">
+              © 2025 SquareUp. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Privacy</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Terms</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

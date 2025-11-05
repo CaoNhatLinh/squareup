@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const cookieParser = require('cookie-parser');
+const controller = require('../controllers/authController');
+
+router.use(cookieParser());
+
+router.post('/sessionLogin', controller.sessionLogin);
+router.post('/sessionLogout', controller.sessionLogout);
+router.get('/verifySession', controller.verifySession);
+
+module.exports = router;

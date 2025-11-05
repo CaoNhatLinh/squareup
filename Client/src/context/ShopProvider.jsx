@@ -1,0 +1,158 @@
+import  {  useState, useCallback, useEffect } from "react";
+import { ShopContext } from "./ShopContext";
+
+const CART_STORAGE_KEY = "shop_cart";
+
+export function ShopProvider({ children }) {
+  const [restaurant, setRestaurant] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState({});
+  const [modifiers, setModifiers] = useState({});
+  
+  // Load cart from localStorage on mount
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Error loading cart from localStorage:", error);
+      return [];
+    }
+  });
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch (error) {
+      console.error("Error saving cart to localStorage:", error);
+    }
+  }, [cart]);
+
+  const getCartItemGroupKey = useCallback((itemId, selectedOptions) => {
+    const sortedOptions = [...selectedOptions].sort((a, b) =>
+      a.id.localeCompare(b.id)
+    );
+    const optionsKey = sortedOptions.map((opt) => opt.id).join(",");
+    return `${itemId}_${optionsKey}`;
+  }, []);
+
+  const addToCart = useCallback(
+    (item, selectedOptions = [], quantity = 1, specialInstruction = "", editingCartKey = null) => {
+      const groupKey = getCartItemGroupKey(item.id, selectedOptions);
+      const basePrice = item.price || 0;
+      const optionsPrice = selectedOptions.reduce(
+        (sum, opt) => sum + (opt.price || 0),
+        0
+      );
+      const pricePerItem = basePrice + optionsPrice;
+
+      setCart((prevCart) => {
+        let cartWithoutEditing = prevCart;
+        if (editingCartKey) {
+          cartWithoutEditing = prevCart.filter(
+            (cartItem) => cartItem.groupKey !== editingCartKey
+          );
+        }
+
+        const existingItemIndex = cartWithoutEditing.findIndex(
+          (cartItem) => cartItem.groupKey === groupKey
+        );
+
+        if (existingItemIndex >= 0) {
+          return cartWithoutEditing.map((cartItem, index) => {
+            if (index === existingItemIndex) {
+              return {
+                ...cartItem,
+                quantity: cartItem.quantity + quantity,
+                totalPrice: cartItem.totalPrice + pricePerItem * quantity,
+                specialInstruction:
+                  specialInstruction || cartItem.specialInstruction,
+              };
+            }
+            return cartItem;
+          });
+        } else {
+          const cartItem = {
+            id: `${item.id}_${Date.now()}`,
+            groupKey: groupKey,
+            itemId: item.id,
+            name: item.name,
+            price: pricePerItem,
+            image: item.image,
+            discount: item.discount,
+            selectedOptions: selectedOptions,
+            quantity: quantity,
+            totalPrice: pricePerItem * quantity,
+            specialInstruction: specialInstruction,
+          };
+          return [...cartWithoutEditing, cartItem];
+        }
+      });
+    },
+    [getCartItemGroupKey]
+  );
+
+  const removeFromCart = useCallback((groupKey) => {
+    setCart((prevCart) =>
+      prevCart.filter((item) => item.groupKey !== groupKey)
+    );
+  }, []);
+
+  const updateCartItemQuantity = useCallback((groupKey, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(groupKey);
+      return;
+    }
+    setCart((prevCart) =>
+      prevCart.map((item) => {
+        if (item.groupKey === groupKey) {
+          return {
+            ...item,
+            quantity: newQuantity,
+            totalPrice: item.price * newQuantity,
+          };
+        }
+        return item;
+      })
+    );
+  }, [removeFromCart]);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
+  }, []);
+
+  const getCartTotal = useCallback(() => {
+    return cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [cart]);
+
+  const getTotalItemsCount = useCallback(() => {
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cart]);
+
+  const value = {
+    // State
+    restaurant,
+    categories,
+    items,
+    modifiers,
+    cart,
+
+    // Setters
+    setRestaurant,
+    setCategories,
+    setItems,
+    setModifiers,
+
+    // Cart functions
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart,
+    getCartTotal,
+    getTotalItemsCount,
+  };
+
+  return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
+}
