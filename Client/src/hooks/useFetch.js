@@ -10,7 +10,6 @@ export function useFetch(fetchFn, deps = []) {
 
   const fetchData = async () => {
     if (fetchingRef.current) {
-      console.log('Fetch already in progress, skipping...');
       return;
     }
 
@@ -34,7 +33,6 @@ export function useFetch(fetchFn, deps = []) {
       fetchingRef.current = false;
     }
   };
-
   useEffect(() => {
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;

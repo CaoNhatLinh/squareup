@@ -3,11 +3,16 @@ import { useParams } from "react-router-dom";
 import { fetchRestaurantForShop } from "../../api/restaurants";
 import { ShopProvider} from "../../context/ShopProvider";
 import { useShop } from "../../context/ShopContext";
-import ShopHeader from "./ShopHeader";
-import CategoryNavigation from "./CategoryNavigation";
-import ItemList from "./ItemList";
-import ModifierModal from "./ModifierModal";
-import CartDrawer from "./CartDrawer";
+import ShopHeader from "./components/ShopHeader";
+import RestaurantBanner from "./components/RestaurantBanner";
+import RestaurantInfoDrawer from "./components/RestaurantInfoDrawer";
+import OrderTypeSelector from "./components/OrderTypeSelector";
+import ClosedBanner from "./components/ClosedBanner";
+import CategoryNavigation from "./components/CategoryNavigation";
+import ItemList from "./components/ItemList";
+import ModifierModal from "./components/ModifierModal";
+import CartDrawer from "./components/CartDrawer";
+import Footer from "./components/Footer";
 
 function ShopPageContent() {
   const { restaurantId } = useParams();
@@ -27,6 +32,8 @@ function ShopPageContent() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
+  const [orderType, setOrderType] = useState("pickup");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -65,9 +72,20 @@ function ShopPageContent() {
       setLoading(true);
       setError(null);
       try {
-        console.log("🔍 Fetching restaurant data for ID:", restaurantId);
         const data = await fetchRestaurantForShop(restaurantId);
-        setRestaurant({ name: data.name, id: data.id });
+
+        setRestaurant({ 
+          name: data.name, 
+          id: data.id,
+          isOpen: data.isOpen,
+          nextOpenTime: data.nextOpenTime,
+          closureReason: data.closureReason, // NEW: Add closure reason
+          hours: data.hours,
+          address: data.address,
+          phone: data.phone,
+          email: data.email,
+          specialClosures: data.specialClosures
+        });
         const cats = data.categories ? Object.values(data.categories) : [];
         setCategories(cats);
         setItems(data.items || {});
@@ -117,7 +135,7 @@ function ShopPageContent() {
   if (!restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-red-600">Không tìm thấy nhà hàng</div>
+        <div className="text-lg text-red-600">No restaurant found</div>
       </div>
     );
   }
@@ -127,6 +145,27 @@ function ShopPageContent() {
       <ShopHeader 
         onCartClick={() => setIsCartOpen(true)}
       />
+      
+      {/* Restaurant Banner */}
+      <RestaurantBanner 
+        restaurant={restaurant}
+        onInfoClick={() => setIsInfoDrawerOpen(true)}
+      />
+
+      <RestaurantInfoDrawer
+        isOpen={isInfoDrawerOpen}
+        onClose={() => setIsInfoDrawerOpen(false)}
+        restaurant={restaurant}
+      />
+
+      <OrderTypeSelector
+        selectedType={orderType}
+        onSelectType={setOrderType}
+      />
+      
+      {/* Closed Banner */}
+      <ClosedBanner restaurant={restaurant} />
+
       <CategoryNavigation
         categories={categories}
         selectedCategory={selectedCategory}
@@ -139,6 +178,9 @@ function ShopPageContent() {
           onItemClick={handleItemClick}
         />
       </div>
+      
+      <Footer restaurant={restaurant} />
+
       {isModalOpen && selectedItem && (
         <ModifierModal
           item={selectedItem}
@@ -155,12 +197,9 @@ function ShopPageContent() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onEditItem={(cartItem) => {
-          // Find the original item
           const originalItem = items[cartItem.itemId];
           if (originalItem) {
-            // Close cart first
             setIsCartOpen(false);
-            // Then open modal with pre-selected options
             setSelectedItem({
               ...originalItem,
               preSelectedOptions: cartItem.selectedOptions,

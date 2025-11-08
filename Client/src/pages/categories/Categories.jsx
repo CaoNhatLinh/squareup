@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { HiPlus, HiFilter, HiChevronDown, HiChevronRight } from 'react-icons/hi';
-import { useAuth } from '../../context/AuthContext';
-import { fetchCategories, deleteCategory } from '../../api/categories';
-import SearchBar from '../../components/common/SearchBar';
-import BulkActionBar from '../../components/common/BulkActionBar';
-import ActionMenu from '../../components/common/ActionMenu';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  HiPlus,
+  HiOutlineSquares2X2,
+  HiChevronRight,
+  HiOutlineTag,
+} from "react-icons/hi2";
+import { useAuth } from "../../hooks/useAuth";
+import { fetchCategories, deleteCategory } from "../../api/categories";
+import SearchBar from "../../components/common/SearchBar";
+import BulkActionBar from "../../components/common/BulkActionBar";
+import ActionMenu from "../../components/common/ActionMenu";
 
 export default function Categories() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categoryMenus, setCategoryMenus] = useState({});
   const [categories, setCategories] = useState([]);
@@ -18,14 +23,13 @@ export default function Categories() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    
     const loadCategories = async () => {
       setLoading(true);
       try {
         const data = await fetchCategories(user.uid);
         setCategories(Object.values(data || {}));
       } catch (err) {
-        console.error('Failed to load categories:', err);
+        console.error("Failed to load categories:", err);
       } finally {
         setLoading(false);
       }
@@ -40,19 +44,22 @@ export default function Categories() {
       const data = await fetchCategories(user.uid);
       setCategories(Object.values(data || {}));
     } catch (err) {
-      console.error('Failed to refetch categories:', err);
+      console.error("Failed to refetch categories:", err);
     }
   };
 
   const organizedCategories = React.useMemo(() => {
     if (!categories) return [];
-    
-    const parentCategories = categories.filter(cat => !cat.parentCategoryId);
-    const result = [];
+    const parentCategories = categories
+      .filter((cat) => !cat.parentCategoryId)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    parentCategories.forEach(parent => {
+    const result = [];
+    parentCategories.forEach((parent) => {
       result.push(parent);
-      const children = categories.filter(cat => cat.parentCategoryId === parent.id);
+      const children = categories
+        .filter((cat) => cat.parentCategoryId === parent.id)
+        .sort((a, b) => a.name.localeCompare(b.name));
       result.push(...children);
     });
 
@@ -65,7 +72,7 @@ export default function Categories() {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedCategories((categories || []).map(cat => cat.id));
+      setSelectedCategories((categories || []).map((cat) => cat.id));
     } else {
       setSelectedCategories([]);
     }
@@ -73,7 +80,9 @@ export default function Categories() {
 
   const handleSelectCategory = (categoryId) => {
     if (selectedCategories.includes(categoryId)) {
-      setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
+      setSelectedCategories(
+        selectedCategories.filter((id) => id !== categoryId)
+      );
     } else {
       setSelectedCategories([...selectedCategories, categoryId]);
     }
@@ -81,24 +90,35 @@ export default function Categories() {
 
   const handleBulkDelete = async () => {
     if (selectedCategories.length === 0) return;
-    if (!window.confirm(`Delete ${selectedCategories.length} selected categor${selectedCategories.length > 1 ? 'ies' : 'y'}?`)) return;
+    if (
+      !window.confirm(
+        `Delete ${selectedCategories.length} selected categor${
+          selectedCategories.length > 1 ? "ies" : "y"
+        }?`
+      )
+    )
+      return;
 
     try {
-      await Promise.all(selectedCategories.map(catId => deleteCategory(user.uid, catId)));
+      await Promise.all(
+        selectedCategories.map((catId) => deleteCategory(user.uid, catId))
+      );
       setSelectedCategories([]);
       refetchCategories();
     } catch (err) {
-      console.error('Failed to delete categories:', err);
-      alert('Failed to delete some categories');
+      console.error("Failed to delete categories:", err);
+      alert("Failed to delete some categories");
     }
   };
 
   const handleDeleteCategory = async (categoryId) => {
+    if (!window.confirm(`Are you sure you want to delete this category?`))
+      return;
     try {
       await deleteCategory(user.uid, categoryId);
       refetchCategories();
     } catch {
-      alert('Failed to delete category');
+      alert("Failed to delete category");
     }
   };
 
@@ -107,113 +127,171 @@ export default function Categories() {
   );
 
   return (
-    <div className="p-6 pb-24">
-      <div className="mb-6 flex gap-3 items-center">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search categories" />
-        
-        {/* <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2">
-          <HiFilter className="w-4 h-4" />
-          All filters
-        </button> */}
-        <div className="flex-1"></div>
-        {/* <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
-          Actions
-          <HiChevronDown className="w-4 h-4" />
-        </button> */}
-        <Link
-          to="/categories/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create category
-        </Link>
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4">
+          <HiOutlineSquares2X2 className="w-10 h-10 text-red-600" />{" "}
+          {/* Icon mới */}
+          <h1 className="text-4xl font-extrabold text-gray-900">
+            Menu Categories
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search categories..."
+            className="w-72"
+          />
+          <Link
+            to="/categories/new"
+            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
+          >
+            <HiPlus className="w-5 h-5" /> Create Category
+          </Link>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 ">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <table className="w-full min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left w-12">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-400 text-red-600 w-4 h-4"
+                  checked={
+                    (categories || []).length > 0 &&
+                    selectedCategories.length === (categories || []).length
+                  }
+                  onChange={handleSelectAll}
+                />
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Category Name
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Type
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Items Count
+              </th>
+              <th className="px-6 py-3 w-16">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-200">
+            {loading ? (
               <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300"
-                    checked={(categories || []).length > 0 && selectedCategories.length === (categories || []).length}
-                    onChange={handleSelectAll}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Category Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Items
-                </th>
-                <th className="px-6 py-3 w-12"></th>
+                <td
+                  colSpan="5"
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                >
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-4 border-red-600"></div>
+
+                  <p className="mt-2">Loading categories...</p>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
-                    Loading categories...
-                  </td>
-                </tr>
-              ) : filteredCategories.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
-                    No categories yet. Create your first category!
-                  </td>
-                </tr>
-              ) : (
-                filteredCategories.map((category) => (
-                  <tr
-                    key={category.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/categories/${category.id}/edit`)}
+            ) : filteredCategories.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="5"
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                >
+                  No categories found. Click 'Create Category' to begin.
+                </td>
+              </tr>
+            ) : (
+              filteredCategories.map((category) => (
+                <tr
+                  key={category.id}
+                  className={`hover:bg-red-50/50 cursor-pointer ${
+                    isSubcategory(category) ? "bg-gray-50/50" : "bg-white"
+                  }`}
+                  onClick={() => navigate(`/categories/${category.id}/edit`)}
+                >
+                  <td
+                    className="px-6 py-4"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                        checked={selectedCategories.includes(category.id)}
-                        onChange={() => handleSelectCategory(category.id)}
-                        onClick={(e) => e.stopPropagation()}
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-400 text-red-600 w-4 h-4"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => handleSelectCategory(category.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      {isSubcategory(category) ? (
+                        <HiChevronRight className="w-4 h-4 text-gray-500 ml-4 flex-shrink-0" />
+                      ) : (
+                        <HiOutlineTag className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      )}
+
+                      <span
+                        className={`text-base font-semibold ${
+                          isSubcategory(category)
+                            ? "text-gray-700"
+                            : "text-gray-900"
+                        }`}
+                      >
+                        {category.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded ${
+                        isSubcategory(category)
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {isSubcategory(category)
+                        ? "Subcategory"
+                        : "Parent Category"}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-base font-semibold text-gray-800">
+                    {Array.isArray(category.itemIds)
+                      ? category.itemIds.length
+                      : category.itemIds
+                      ? Object.values(category.itemIds).length
+                      : 0}
+                  </td>
+
+                  <td
+                    className="px-6 py-4 w-16"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-end">
+                      <ActionMenu
+                        isOpen={categoryMenus[category.id]}
+                        onToggle={(open) =>
+                          setCategoryMenus({
+                            ...categoryMenus,
+                            [category.id]: open,
+                          })
+                        }
+                        editPath={`/categories/${category.id}/edit`}
+                        onDelete={() => handleDeleteCategory(category.id)}
+                        itemName={category.name}
                       />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {isSubcategory(category) && (
-                          <HiChevronRight className="w-4 h-4 text-gray-400 ml-4" />
-                        )}
-                        <span className={`text-sm ${isSubcategory(category) ? 'text-gray-600' : 'font-medium text-gray-900'}`}>
-                          {category.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {isSubcategory(category) ? 'Subcategory' : 'Parent'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {Array.isArray(category.itemIds) ? category.itemIds.length : (category.itemIds ? Object.values(category.itemIds).length : 0)}
-                    </td>
-                    <td className="px-6 py-4 " onClick={(e) => e.stopPropagation()}>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <ActionMenu
-                          isOpen={categoryMenus[category.id]}
-                          onToggle={(open) => setCategoryMenus({ ...categoryMenus, [category.id]: open })}
-                          editPath={`/categories/${category.id}/edit`}
-                          onDelete={() => handleDeleteCategory(category.id)}
-                          itemName={category.name}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       <BulkActionBar

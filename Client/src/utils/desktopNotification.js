@@ -1,0 +1,84 @@
+/**
+ * Desktop Notification Utility
+ * Handles browser desktop notifications for new orders
+ */
+
+// Request notification permission
+export const requestNotificationPermission = async () => {
+  if (!('Notification' in window)) {
+    console.warn('This browser does not support desktop notifications');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+};
+
+// Check if notification is supported and permitted
+export const isNotificationSupported = () => {
+  return 'Notification' in window && Notification.permission === 'granted';
+};
+
+// Show desktop notification
+export const showDesktopNotification = (order) => {
+  if (!isNotificationSupported()) {
+    return null;
+  }
+
+  const options = {
+    body: `${order.restaurantName}\nAmount: $${order.amount?.toFixed(2)}\nStatus: ${order.status}`,
+    icon: '/favicon.ico', // Update with your app icon
+    badge: '/favicon.ico',
+    tag: order.id, // Prevent duplicate notifications
+    requireInteraction: false, // Auto-close after timeout
+    silent: false, // Play notification sound
+    timestamp: Date.now(),
+    data: {
+      orderId: order.id,
+      url: `/orders/${order.id}`,
+    },
+  };
+
+  try {
+    const notification = new Notification('🔔 New Order Received!', options);
+
+    // Handle click event
+    notification.onclick = (event) => {
+      event.preventDefault();
+      window.focus();
+      
+      // Navigate to order details
+      if (order.id) {
+        window.location.href = `/orders/${order.id}`;
+      }
+      
+      notification.close();
+    };
+
+    // Auto-close after 10 seconds
+    setTimeout(() => {
+      notification.close();
+    }, 10000);
+
+    return notification;
+  } catch (error) {
+    console.error('Failed to show desktop notification:', error);
+    return null;
+  }
+};
+
+// Check notification permission status
+export const getNotificationPermissionStatus = () => {
+  if (!('Notification' in window)) {
+    return 'unsupported';
+  }
+  return Notification.permission; // 'granted', 'denied', or 'default'
+};

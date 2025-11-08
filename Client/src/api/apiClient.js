@@ -3,7 +3,7 @@ import { auth } from '../firebase'
 
 const instance = axios.create({
   baseURL: 'http://localhost:5000',
-  withCredentials: true, // allow cookies for session flows
+  withCredentials: true, 
 })
 
 async function buildAuthHeaders(contentType, idTokenOverride) {
@@ -39,6 +39,10 @@ export async function post(url, body, opts = {}) {
 export async function put(url, body, opts = {}) {
   const headers = await buildAuthHeaders('application/json', opts.idToken)
   return instance.put(url, body, { headers })
+}
+export async function patch(url, body, opts = {}) {
+  const headers = await buildAuthHeaders('application/json', opts.idToken)
+  return instance.patch(url, body, { headers })
 }
 export async function del(url, opts = {}) {
   const headers = await buildAuthHeaders(null, opts.idToken)

@@ -74,6 +74,7 @@ exports.getOrderBySession = async (req, res) => {
 
 /**
  * Get all orders for a restaurant
+ * Orders are now stored at restaurants/{restaurantId}/orders/
  */
 exports.getAllOrders = async (req, res) => {
   try {
@@ -83,11 +84,8 @@ exports.getAllOrders = async (req, res) => {
       return res.status(400).json({ error: "Restaurant ID is required" });
     }
 
-    // Query orders by restaurantId
     const ordersSnapshot = await db
-      .ref("orders")
-      .orderByChild("restaurantId")
-      .equalTo(restaurantId)
+      .ref(`restaurants/${restaurantId}/orders`)
       .once("value");
 
     const ordersData = ordersSnapshot.val();

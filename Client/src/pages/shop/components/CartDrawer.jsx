@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useShop } from "../../context/ShopContext";
+import { useShop } from "../../../context/ShopContext";
 import { useParams } from "react-router-dom";
 import RemoveItemModal from "./RemoveItemModal";
-import { createCheckoutSession } from "../../api/checkout";
+import { createCheckoutSession } from "../../../api/checkout";
 
 export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const { restaurantId } = useParams();
@@ -26,6 +26,12 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    
+    // Block checkout if restaurant is closed
+    if (restaurant?.isOpen === false) {
+      alert("Sorry, the restaurant is currently closed. Please come back during business hours.");
+      return;
+    }
     
     if (!restaurantId) {
       alert("Restaurant ID không hợp lệ. Vui lòng tải lại trang.");
@@ -96,12 +102,27 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
           <div className="px-6 py-3 bg-white border-b">
             <button 
               onClick={handleCheckout}
-              disabled={checkoutLoading}
-              className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-between px-6"
+              disabled={checkoutLoading || restaurant?.isOpen === false}
+              className={`w-full py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-between px-6 ${
+                restaurant?.isOpen === false
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              }`}
             >
-              <span>{checkoutLoading ? "Processing..." : "Checkout"}</span>
+              <span>
+                {restaurant?.isOpen === false
+                  ? "Closed - Cannot Order"
+                  : checkoutLoading
+                  ? "Processing..."
+                  : "Checkout"}
+              </span>
               <span>${totalAmount.toFixed(2)}</span>
             </button>
+            {restaurant?.isOpen === false && restaurant?.nextOpenTime && (
+              <p className="text-sm text-red-600 text-center mt-2">
+                Opens {restaurant.nextOpenTime}
+              </p>
+            )}
           </div>
         )}
 

@@ -1,164 +1,273 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { fetchItems, updateItem } from '../../api/items'
-import { useImageUpload } from '../../hooks/useImageUpload'
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { fetchItems, updateItem } from "../../api/items";
+import { useImageUpload } from "../../hooks/useImageUpload";
+import {
+  HiXMark,
+  HiTag,
+  HiOutlineCurrencyDollar,
+  HiCamera,
+  HiRectangleGroup,
+  HiAdjustmentsHorizontal,
+  HiMagnifyingGlass,
+} from "react-icons/hi2";
+
+const renderFilterList = (
+  list,
+  search,
+  setSearch,
+  selected,
+  setSelected,
+  title,
+  icon
+) => {
+  const IconComponent = icon;
+  const filtered = list.filter((item) =>
+    (item.name || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="border border-gray-300 rounded-xl bg-white shadow-sm">
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-2">
+          <IconComponent className="w-5 h-5 text-red-600" />
+          {title}
+        </h3>
+        <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white">
+          <HiMagnifyingGlass className="w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder={`Search or add to ${title.toLowerCase()}`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 text-sm focus:outline-none text-gray-700"
+          />
+        </div>
+      </div>
+
+      {selected.length > 0 && (
+        <div className="p-4 border-b border-gray-200 flex flex-wrap gap-2">
+          {selected.map((item) => (
+            <span
+              key={item.id}
+              className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm text-red-800 font-medium"
+            >
+              {item.name}
+              <button
+                onClick={() =>
+                  setSelected(selected.filter((s) => s.id !== item.id))
+                }
+                className="text-red-500 hover:text-red-700 p-0.5"
+              >
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {search && (
+        <div className="max-h-56 overflow-y-auto">
+          {filtered.map((item) => {
+            const isSelected = selected.find((s) => s.id === item.id);
+            if (isSelected) return null;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setSelected([...selected, item]);
+                  setSearch("");
+                }}
+                className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-100 transition-colors"
+              >
+                {item.name}
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="px-4 py-3 text-sm text-gray-500">
+              No matching {title.toLowerCase()} found.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function EditItem() {
-  const navigate = useNavigate()
-  const { itemId } = useParams()
-  const { user } = useAuth()
-  const { uploadImage, uploading } = useImageUpload()
+  const navigate = useNavigate();
+  const { itemId } = useParams();
+  const { user } = useAuth();
+  const { uploadImage, uploading } = useImageUpload();
   const [formData, setFormData] = useState({
-    itemType: 'Physical good',
-    name: '',
-    price: '',
-    description: '',
-  })
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [categories, setCategories] = useState([])
-  const [modifiers, setModifiers] = useState([])
-  const [modifierSearch, setModifierSearch] = useState('')
-  const [selectedModifiers, setSelectedModifiers] = useState([])
-  const [categorySearch, setCategorySearch] = useState('')
-  const [selectedCategories, setSelectedCategories] = useState([])
+    itemType: "Physical good",
+    name: "",
+    price: "",
+    description: "",
+  });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [modifiers, setModifiers] = useState([]);
+  const [modifierSearch, setModifierSearch] = useState("");
+  const [selectedModifiers, setSelectedModifiers] = useState([]);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
-    if (!user || !itemId) return
-    setLoading(true)
-    
+    if (!user || !itemId) return;
+    setLoading(true);
     Promise.all([
       fetchItems(user.uid),
-      import('../../api/categories').then(({ fetchCategories }) => fetchCategories(user.uid)),
-      import('../../api/modifers').then(({ fetchModifiers }) => fetchModifiers(user.uid))
+      import("../../api/categories").then(({ fetchCategories }) =>
+        fetchCategories(user.uid)
+      ),
+      import("../../api/modifers").then(({ fetchModifiers }) =>
+        fetchModifiers(user.uid)
+      ),
     ])
       .then(([itemsData, categoriesData, modifiersData]) => {
-        const items = Object.values(itemsData || {})
-        const item = items.find(i => i.id === itemId)
+        const items = Object.values(itemsData || {});
+        const item = items.find((i) => i.id === itemId);
         if (item) {
           setFormData({
-            itemType: item.type || 'Physical good',
-            name: item.name || '',
-            price: item.price?.toString() || '',
-            description: item.description || '',
-          })
-          if (item.image) setImagePreview(item.image)
+            itemType: item.type || "Physical good",
+            name: item.name || "",
+            price: item.price?.toString() || "",
+            description: item.description || "",
+          });
+          if (item.image) setImagePreview(item.image);
         }
-        
-        const cats = Object.values(categoriesData || {})
-        setCategories(cats)
-        
-        const itemCategories = cats.filter(cat => 
-          cat.itemIds && cat.itemIds.includes(itemId)
-        )
-        setSelectedCategories(itemCategories)
+        const cats = Object.values(categoriesData || {});
+        setCategories(cats);
+        const itemCategories = cats.filter(
+          (cat) => cat.itemIds && cat.itemIds.includes(itemId)
+        );
+        setSelectedCategories(itemCategories);
 
-        const mods = Object.values(modifiersData || {})
-        setModifiers(mods)
-        // determine selected modifiers from the item's modifierIds (items now own modifierIds)
+        const mods = Object.values(modifiersData || {});
+        setModifiers(mods);
         if (item && Array.isArray(item.modifierIds)) {
           const itemMods = mods.filter((m) => item.modifierIds.includes(m.id));
           setSelectedModifiers(itemMods);
         } else {
-          // backward compatible: if modifiers still have itemIds, fall back to previous behavior
           const itemMods = mods.filter((m) => {
-            const current = Array.isArray(m.itemIds) ? m.itemIds : (m.itemIds ? Object.values(m.itemIds) : []);
+            const current = Array.isArray(m.itemIds)
+              ? m.itemIds
+              : m.itemIds
+              ? Object.values(m.itemIds)
+              : [];
             return current.includes(itemId);
           });
           setSelectedModifiers(itemMods);
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [user, itemId])
+      .finally(() => setLoading(false));
+  }, [user, itemId]);
 
   const handleClose = () => {
-    navigate(-1)
-  }
+    navigate("/items"); // Điều hướng về thư viện món ăn sau khi Edit
+  };
 
   const handleImageSelect = (e) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
+      setImageFile(file);
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert('Item name is required')
-      return
+      alert("Item name is required");
+      return;
     }
-    
-    setSaving(true)
+    setSaving(true);
     try {
-      let imageUrl = imagePreview
+      let imageUrl = imagePreview;
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile, 'items')
+        imageUrl = await uploadImage(imageFile, "items");
       }
-      
       await updateItem(user.uid, itemId, {
         type: formData.itemType,
         name: formData.name,
         price: parseFloat(formData.price) || 0,
         description: formData.description,
         image: imageUrl,
-        categoryIds: selectedCategories.map(c => c.id),
-        modifierIds: selectedModifiers.map(m => m.id),
-      })
-      
-      navigate('/items')
+        categoryIds: selectedCategories.map((c) => c.id),
+        modifierIds: selectedModifiers.map((m) => m.id),
+      });
+      navigate("/items");
     } catch (err) {
-      console.error('Failed to update item:', err)
-      alert('Failed to update item: ' + err.message)
+      console.error("Failed to update item:", err);
+      alert("Failed to update item: " + err.message);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-        <div className="bg-white rounded-lg p-6">Loading...</div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900/70 z-50">
+        <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
+          <p className="text-lg text-gray-700 font-medium">
+            Loading item data...
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-lg shadow-xl flex flex-col">        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <h2 className="text-xl font-semibold">Edit item</h2>
-          <button
-            onClick={handleSave}
-            disabled={saving || uploading}
-            className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {saving || uploading ? 'Saving...' : 'Save'}
-          </button>
-        </div>        <div className="flex-1 overflow-y-auto">
-          <div className="flex gap-6 p-6">            <div className="flex-1 space-y-6">              <div className="border border-blue-500 rounded-lg p-4 bg-blue-50">
+    <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
+      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col">
+        {/* 1. Header (Actions) */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Edit Item: {formData.name || itemId}
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClose}
+              className="p-2 border border-gray-300 text-gray-700 text-sm rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <HiXMark className="w-6 h-6" />
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+            >
+              {saving || uploading ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex gap-8">
+            <div className="flex-1 space-y-6">
+              <div className="border border-red-500 rounded-xl p-4 bg-red-50/50">
                 <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
+                  <HiTag className="w-5 h-5 text-red-600" />
                   <div className="flex-1">
-                    <div className="text-xs text-gray-600 mb-1">Item type</div>
+                    <div className="text-xs text-red-800 font-semibold mb-1">
+                      Item type
+                    </div>
                     <select
                       value={formData.itemType}
-                      onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
-                      className="w-full bg-transparent text-sm font-medium focus:outline-none"
+                      onChange={(e) =>
+                        setFormData({ ...formData, itemType: e.target.value })
+                      }
+                      className="w-full bg-transparent text-sm font-bold text-red-900 focus:outline-none"
                     >
                       <option>Prepared food and beverage</option>
                       <option>Physical good</option>
@@ -170,54 +279,66 @@ export default function EditItem() {
                 </div>
               </div>
 
-              <input
-                type="text"
-                placeholder="Name (required)"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Price"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <input
+                    type="text"
+                    placeholder="Name (required)"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
+                  />
+                </div>
+                <div className="relative col-span-1">
+                  <HiOutlineCurrencyDollar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
+                  />
+                </div>
+              </div>
+              <div>
+                <textarea
+                  placeholder="Customer-facing description (Optional)"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none text-gray-700"
                 />
               </div>
-
-              <textarea
-                placeholder="Customer-facing description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+              <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-gray-50">
                 {imagePreview ? (
-                  <div className="relative">
-                    <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded" />
+                  <div className="relative group">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="max-h-64 mx-auto rounded-lg shadow-lg object-cover w-full"
+                    />
                     <button
                       onClick={() => {
-                        setImageFile(null)
-                        setImagePreview(null)
+                        setImageFile(null);
+                        setImagePreview(null);
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      className="absolute top-2 right-2 bg-red-600/90 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-md"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <HiXMark className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <HiCamera className="w-12 h-12 mx-auto text-red-400 mb-3" />
                     <p className="text-sm text-gray-600">
-                      Drop images here,{' '}
-                      <label className="text-blue-600 hover:underline cursor-pointer">
+                      Drag and drop image here or
+                      <label className="text-red-600 font-semibold hover:text-red-700 cursor-pointer">
                         browse files
                         <input
                           type="file"
@@ -227,122 +348,39 @@ export default function EditItem() {
                         />
                       </label>
                     </p>
+                    {uploading && (
+                      <p className="text-sm text-red-500 mt-2">
+                        Uploading image...
+                      </p>
+                    )}
                   </>
                 )}
               </div>
-            </div>            <div className="w-80 space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Categories</h3>
-                <div className="border border-gray-300 rounded-lg">
-                  <div className="p-3 flex items-center gap-2 text-gray-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Add to categories"
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      className="flex-1 text-sm focus:outline-none"
-                    />
-                  </div>
-                  {categorySearch && (
-                    <div className="border-t max-h-48 overflow-y-auto">
-                      {categories
-                        .filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
-                        .map((cat) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              if (!selectedCategories.find(c => c.id === cat.id)) {
-                                setSelectedCategories([...selectedCategories, cat])
-                              }
-                              setCategorySearch('')
-                            }}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                          >
-                            {cat.name}
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-                {selectedCategories.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedCategories.map((cat) => (
-                      <span
-                        key={cat.id}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-sm"
-                      >
-                        {cat.name}
-                        <button
-                          onClick={() => setSelectedCategories(selectedCategories.filter(c => c.id !== cat.id))}
-                          className="text-gray-500 hover:text-gray-700"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Modifiers</h3>
-                <div className="border border-gray-300 rounded-lg">
-                  <div className="p-3 flex items-center gap-2 text-gray-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Add modifiers"
-                      value={modifierSearch}
-                      onChange={(e) => setModifierSearch(e.target.value)}
-                      className="flex-1 text-sm focus:outline-none"
-                    />
-                  </div>
-                  {modifierSearch && (
-                    <div className="border-t max-h-48 overflow-y-auto">
-                      {modifiers
-                        .filter((m) => (m.name || '').toLowerCase().includes(modifierSearch.toLowerCase()))
-                        .map((m) => (
-                          <button
-                            key={m.id}
-                            onClick={() => {
-                              if (!selectedModifiers.find(s => s.id === m.id)) {
-                                setSelectedModifiers([...selectedModifiers, m])
-                              }
-                              setModifierSearch('')
-                            }}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                          >
-                            {m.name}
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-                {selectedModifiers.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedModifiers.map((m) => (
-                      <span key={m.id} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-sm">
-                        {m.name}
-                        <button onClick={() => setSelectedModifiers(selectedModifiers.filter(s => s.id !== m.id))} className="text-gray-500 hover:text-gray-700">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+            </div>
+
+            <div className="w-96 space-y-8 flex-shrink-0">
+              {renderFilterList(
+                categories,
+                categorySearch,
+                setCategorySearch,
+                selectedCategories,
+                setSelectedCategories,
+                "Categories",
+                HiRectangleGroup
+              )}
+              {renderFilterList(
+                modifiers,
+                modifierSearch,
+                setModifierSearch,
+                selectedModifiers,
+                setSelectedModifiers,
+                "Modifiers",
+                HiAdjustmentsHorizontal
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

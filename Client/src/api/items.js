@@ -19,3 +19,11 @@ export async function deleteItem(uid, itemId) {
   const res = await client.del(`/api/restaurants/${uid}/items/${itemId}`)
   return res.data
 }
+
+/**
+ * Toggle item sold out status
+ */
+export async function toggleItemSoldOut(uid, itemId, isSoldOut) {
+  const res = await client.patch(`/api/restaurants/${uid}/items/${itemId}`, { isSoldOut })
+  return res.data
+}

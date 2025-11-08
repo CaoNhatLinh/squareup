@@ -123,8 +123,8 @@ exports.handleWebhook = async (req, res) => {
             return;
           }
 
-          // Create final order ID
-          const orderId = db.ref().child("orders").push().key;
+          // Create final order ID (generate from restaurant's orders path)
+          const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
 
           const orderData = {
             id: orderId,
@@ -159,17 +159,14 @@ exports.handleWebhook = async (req, res) => {
             updatedAt: Date.now(),
           };
 
-          await db.ref(`orders/${orderId}`).set(orderData);
-          await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set({
-            orderId: orderId,
-            amount: orderData.amount,
-            status: orderData.status,
-            itemCount: pendingOrder.items.length,
-            totalItems: pendingOrder.items.reduce((sum, item) => sum + item.quantity, 0),
-            customerName: orderData.customerName,
-            createdAt: orderData.createdAt,
-          });
+          console.log("✅ Saving order from webhook:", orderData);
 
+          // Save FULL order data in restaurant's orders path (one time, all details)
+          await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
+
+          console.log(`✅ Order ${orderId} saved successfully to restaurants/${restaurantId}/orders/`);
+
+          // Clean up pending order
           await db.ref(`pendingOrders/${pendingOrderId}`).remove();
         }
       } catch (error) {
@@ -201,12 +198,18 @@ exports.handleWebhook = async (req, res) => {
 exports.getOrderBySession = async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const { restaurantId } = req.query; // Get from query params
 
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID is required" });
     }
+
+    if (!restaurantId) {
+      return res.status(400).json({ error: "Restaurant ID is required" });
+    }
+
     const ordersSnapshot = await db
-      .ref("orders")
+      .ref(`restaurants/${restaurantId}/orders`)
       .orderByChild("sessionId")
       .equalTo(sessionId)
       .once("value");
@@ -244,9 +247,7 @@ exports.getAllOrders = async (req, res) => {
     }
 
     const ordersSnapshot = await db
-      .ref("orders")
-      .orderByChild("restaurantId")
-      .equalTo(restaurantId)
+      .ref(`restaurants/${restaurantId}/orders`)
       .once("value");
 
     const ordersData = ordersSnapshot.val();
@@ -273,24 +274,31 @@ exports.getAllOrders = async (req, res) => {
 };
 
 /**
- * Get all orders (admin)
+ * Get all orders (admin) - aggregates orders from all restaurants
  */
 exports.getAllOrdersAdmin = async (req, res) => {
   try {
-    const ordersSnapshot = await db.ref("orders").once("value");
-    const ordersData = ordersSnapshot.val();
+    const restaurantsSnapshot = await db.ref("restaurants").once("value");
+    const restaurantsData = restaurantsSnapshot.val();
 
-    if (!ordersData) {
+    if (!restaurantsData) {
       return res.status(200).json({
         success: true,
         orders: [],
       });
     }
 
-    // Convert to array and sort by createdAt (newest first)
-    const orders = Object.values(ordersData).sort(
-      (a, b) => b.createdAt - a.createdAt
-    );
+    // Aggregate orders from all restaurants
+    const allOrders = [];
+    for (const [restaurantId, restaurantData] of Object.entries(restaurantsData)) {
+      if (restaurantData.orders) {
+        const orders = Object.values(restaurantData.orders);
+        allOrders.push(...orders);
+      }
+    }
+
+    // Sort by createdAt (newest first)
+    const orders = allOrders.sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json({
       success: true,
@@ -304,7 +312,7 @@ exports.getAllOrdersAdmin = async (req, res) => {
 };
 
 /**
- * Get order by ID
+ * Get order by ID - searches across all restaurants
  */
 exports.getOrderById = async (req, res) => {
   try {
@@ -314,8 +322,24 @@ exports.getOrderById = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    const orderSnapshot = await db.ref(`orders/${orderId}`).once("value");
-    const order = orderSnapshot.val();
+    // Search across all restaurants
+    const restaurantsSnapshot = await db.ref("restaurants").once("value");
+    const restaurantsData = restaurantsSnapshot.val();
+
+    if (!restaurantsData) {
+      return res.status(404).json({
+        error: "Order not found",
+        message: "The requested order does not exist.",
+      });
+    }
+
+    let order = null;
+    for (const [restaurantId, restaurantData] of Object.entries(restaurantsData)) {
+      if (restaurantData.orders && restaurantData.orders[orderId]) {
+        order = restaurantData.orders[orderId];
+        break;
+      }
+    }
 
     if (!order) {
       return res.status(404).json({
@@ -359,5 +383,114 @@ exports.getSessionStatus = async (req, res) => {
   } catch (error) {
     console.error("Error getting session status:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Update order status
+ */
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { restaurantId, orderId } = req.params;
+    const { status } = req.body;
+
+    if (!restaurantId || !orderId) {
+      return res.status(400).json({ error: "Restaurant ID and Order ID are required" });
+    }
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    // Validate status
+    const validStatuses = ['pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    const orderRef = db.ref(`restaurants/${restaurantId}/orders/${orderId}`);
+    const orderSnapshot = await orderRef.once('value');
+
+    if (!orderSnapshot.exists()) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Use a slash path for nested update keys (dots are invalid in RTDB keys)
+    // This will set e.g. /statusHistory/accepted = timestamp without creating an invalid key
+    await orderRef.update({
+      status,
+      updatedAt: Date.now(),
+      [`statusHistory/${status}`]: Date.now()
+    });
+
+    const updatedOrder = await orderRef.once('value');
+
+    res.status(200).json({
+      success: true,
+      order: updatedOrder.val(),
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Public endpoint: Get order status by orderId (no authentication required)
+ * This allows guest customers to track their orders
+ */
+exports.getPublicOrderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({ error: "Order ID is required" });
+    }
+
+    // Search for order across all restaurants
+    const restaurantsSnapshot = await db.ref('restaurants').once('value');
+    const restaurants = restaurantsSnapshot.val();
+
+    if (!restaurants) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    let foundOrder = null;
+    let foundRestaurantId = null;
+
+    // Iterate through all restaurants to find the order
+    for (const [restaurantId, restaurantData] of Object.entries(restaurants)) {
+      if (restaurantData.orders && restaurantData.orders[orderId]) {
+        foundOrder = restaurantData.orders[orderId];
+        foundRestaurantId = restaurantId;
+        break;
+      }
+    }
+
+    if (!foundOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Return only necessary information (no sensitive data)
+    const publicOrderData = {
+      id: orderId,
+      status: foundOrder.status,
+      amount: foundOrder.amount,
+      currency: foundOrder.currency || 'USD',
+      items: foundOrder.items || [],
+      restaurantId: foundRestaurantId,
+      restaurantName: foundOrder.restaurantName,
+      createdAt: foundOrder.createdAt,
+      updatedAt: foundOrder.updatedAt || foundOrder.createdAt,
+      statusHistory: foundOrder.statusHistory || {},
+    };
+
+    res.status(200).json({
+      success: true,
+      order: publicOrderData,
+    });
+  } catch (error) {
+    console.error("Error fetching public order status:", error);
+    res.status(500).json({ error: "Failed to fetch order status" });
   }
 };

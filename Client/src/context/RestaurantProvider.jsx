@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { fetchRestaurant } from '../api/restaurants';
 import { RestaurantContext } from './RestaurantContext';
 

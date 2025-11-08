@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { HiPlus, HiFilter, HiChevronDown } from 'react-icons/hi';
-import { useAuth } from '../../context/AuthContext';
-import { fetchItems, createItem, deleteItem } from '../../api/items';
-import { fetchCategories } from '../../api/categories';
-import SearchBar from '../../components/common/SearchBar';
-import BulkActionBar from '../../components/common/BulkActionBar';
-import ActionMenu from '../../components/common/ActionMenu';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  HiPlus,
+  HiOutlineTag,
+  HiTag,
+  HiOutlinePlusCircle,
+} from "react-icons/hi2";
+
+import { useAuth } from "../../hooks/useAuth";
+
+import { fetchItems, createItem, deleteItem } from "../../api/items";
+import { fetchCategories } from "../../api/categories";
+import SearchBar from "../../components/common/SearchBar";
+import BulkActionBar from "../../components/common/BulkActionBar";
+import ActionMenu from "../../components/common/ActionMenu";
 
 export default function ItemLibrary() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [quickCreateMode, setQuickCreateMode] = useState(false);
-  const [quickFormData, setQuickFormData] = useState({ name: '', price: '' });
+  const [quickFormData, setQuickFormData] = useState({ name: "", price: "" });
   const [selectedItems, setSelectedItems] = useState([]);
   const [itemMenus, setItemMenus] = useState({});
   const [items, setItems] = useState([]);
@@ -22,31 +29,28 @@ export default function ItemLibrary() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    
     const loadData = async () => {
       setItemsLoading(true);
       try {
         const [itemsData, categoriesData] = await Promise.all([
           fetchItems(user.uid),
-          fetchCategories(user.uid)
+          fetchCategories(user.uid),
         ]);
         const itemsArray = Object.values(itemsData || {});
         const categoriesArray = Object.values(categoriesData || {});
-        
-        const itemsWithCategories = itemsArray.map(item => {
+        const itemsWithCategories = itemsArray.map((item) => {
           const categoryNames = categoriesArray
-            .filter(cat => cat.itemIds && cat.itemIds.includes(item.id))
-            .map(cat => cat.name);
+            .filter((cat) => cat.itemIds && cat.itemIds.includes(item.id))
+            .map((cat) => cat.name);
           return {
             ...item,
-            categoryNames: categoryNames.length > 0 ? categoryNames : null
+            categoryNames: categoryNames.length > 0 ? categoryNames : null,
           };
         });
-        
         setItems(itemsWithCategories);
         setCategories(categoriesArray);
       } catch (err) {
-        console.error('Failed to load data:', err);
+        console.error("Failed to load data:", err);
       } finally {
         setItemsLoading(false);
       }
@@ -61,13 +65,13 @@ export default function ItemLibrary() {
       const data = await fetchItems(user.uid);
       setItems(Object.values(data || {}));
     } catch (err) {
-      console.error('Failed to refetch items:', err);
+      console.error("Failed to refetch items:", err);
     }
   };
 
   const getCategoryNames = (item) => {
-    if (!item.categoryNames || item.categoryNames.length === 0) return '-';
-    return item.categoryNames.join(', ');
+    if (!item.categoryNames || item.categoryNames.length === 0) return "-";
+    return item.categoryNames.join(", ");
   };
 
   const handleQuickCreate = async () => {
@@ -76,20 +80,20 @@ export default function ItemLibrary() {
       await createItem(user.uid, {
         name: quickFormData.name,
         price: parseFloat(quickFormData.price) || 0,
-        type: 'Physical good',
+        type: "Physical good",
       });
-      setQuickFormData({ name: '', price: '' });
+      setQuickFormData({ name: "", price: "" });
       setQuickCreateMode(false);
       refetchItems();
     } catch (err) {
-      console.error('Failed to create item:', err);
-      alert('Failed to create item');
+      console.error("Failed to create item:", err);
+      alert("Failed to create item");
     }
   };
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedItems((items || []).map(item => item.id));
+      setSelectedItems((items || []).map((item) => item.id));
     } else {
       setSelectedItems([]);
     }
@@ -97,7 +101,7 @@ export default function ItemLibrary() {
 
   const handleSelectItem = (itemId) => {
     if (selectedItems.includes(itemId)) {
-      setSelectedItems(selectedItems.filter(id => id !== itemId));
+      setSelectedItems(selectedItems.filter((id) => id !== itemId));
     } else {
       setSelectedItems([...selectedItems, itemId]);
     }
@@ -105,24 +109,28 @@ export default function ItemLibrary() {
 
   const handleBulkDelete = async () => {
     if (selectedItems.length === 0) return;
-    if (!window.confirm(`Delete ${selectedItems.length} selected item(s)?`)) return;
+    if (!window.confirm(`Delete ${selectedItems.length} selected item(s)?`))
+      return;
 
     try {
-      await Promise.all(selectedItems.map(itemId => deleteItem(user.uid, itemId)));
+      await Promise.all(
+        selectedItems.map((itemId) => deleteItem(user.uid, itemId))
+      );
       setSelectedItems([]);
       refetchItems();
     } catch (err) {
-      console.error('Failed to delete items:', err);
-      alert('Failed to delete some items');
+      console.error("Failed to delete items:", err);
+      alert("Failed to delete some items");
     }
   };
 
   const handleDeleteItem = async (itemId) => {
+    if (!window.confirm(`Are you sure you want to delete this item?`)) return;
     try {
       await deleteItem(user.uid, itemId);
       refetchItems();
     } catch {
-      alert('Failed to delete item');
+      alert("Failed to delete item");
     }
   };
 
@@ -131,176 +139,242 @@ export default function ItemLibrary() {
   );
   const openEditItem = (itemId) => {
     navigate(`/items/${itemId}/edit`);
-  }
+  };
+
   return (
-    <div className="p-6 pb-24">
-      <div className="mb-6 flex gap-3 items-center">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-        <div className="flex-1"></div>
-        <Link
-          to="/items/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create item
-        </Link>
+    <div className="p-8 pb-24 bg-gray-50 min-h-screen">
+      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4">
+          <HiOutlineTag className="w-10 h-10 text-red-600" />
+          <h1 className="text-4xl font-extrabold text-gray-900">
+            Item Library
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search items..."
+            className="w-72"
+          />
+          <Link
+            to="/items/new"
+            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
+          >
+            <HiPlus className="w-5 h-5" /> Create New Item
+          </Link>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 ">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <table className="w-full min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left w-12">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-400 text-red-600 w-4 h-4"
+                  checked={
+                    (items || []).length > 0 &&
+                    selectedItems.length === (items || []).length
+                  }
+                  onChange={handleSelectAll}
+                />
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Item Name
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Category
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Availability
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-6 py-3 w-16">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-200">
+            {quickCreateMode ? (
+              <tr className="bg-red-50/50 border-y-2 border-red-200">
+                <td className="px-6 py-4">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-300"
-                    checked={(items || []).length > 0 && selectedItems.length === (items || []).length}
-                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4"
+                    disabled
                   />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Item
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Availability
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 w-12"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {quickCreateMode ? (
-                <tr className="bg-blue-50">
-                  <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-gray-300" disabled />
-                  </td>
-                  <td className="px-6 py-4">
-                    <input
-                      type="text"
-                      placeholder="Item name"
-                      value={quickFormData.name}
-                      onChange={(e) => setQuickFormData({ ...quickFormData, name: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      autoFocus
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-500">-</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-500">Available</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={quickFormData.price}
-                      onChange={(e) => setQuickFormData({ ...quickFormData, price: e.target.value })}
-                      className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                </td>
+
+                <td className="px-6 py-4">
+                  <input
+                    type="text"
+                    placeholder="Item name (Required)"
+                    value={quickFormData.name}
+                    onChange={(e) =>
+                      setQuickFormData({
+                        ...quickFormData,
+                        name: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 text-sm border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    autoFocus
+                  />
+                </td>
+
+                <td className="px-6 py-4"></td>
+
+                <td className="px-6 py-4"></td>
+
+                <td className="px-6 py-4">
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    value={quickFormData.price}
+                    onChange={(e) =>
+                      setQuickFormData({
+                        ...quickFormData,
+                        price: e.target.value,
+                      })
+                    }
+                    className="w-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </td>
+
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end items-center gap-3">
                     <button
                       onClick={handleQuickCreate}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      className="px-5 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-md"
                     >
                       Save
                     </button>
                     <button
                       onClick={() => {
                         setQuickCreateMode(false);
-                        setQuickFormData({ name: '', price: '' });
+                        setQuickFormData({ name: "", price: "" });
                       }}
-                      className="text-sm text-gray-600 hover:text-gray-700"
+                      className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors duration-200 shadow-sm"
                     >
-                      Cancel
+                     Cancel
                     </button>
-                  </td>
-                </tr>
-              ) : (
-                <tr className="hover:bg-gray-50">
-                  <td colSpan="6" className="px-6 py-4"
-                    onClick={() => setQuickCreateMode(true)}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              <tr
+                className="hover:bg-red-50/50 transition-colors cursor-pointer"
+                onClick={() => setQuickCreateMode(true)}
+              >
+                <td colSpan="6" className="px-6 py-4">
+                  <button className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-2">
+                    <HiOutlinePlusCircle className="w-5 h-5" />
+                    Quick create item
+                  </button>
+                </td>
+              </tr>
+            )}
+            {itemsLoading ? (
+              <tr>
+                <td
+                  colSpan="6"
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                >
+                  Loading items...
+                </td>
+              </tr>
+            ) : filteredItems.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="6"
+                  className="px-6 py-8 text-center text-sm text-gray-500"
+                >
+                  No items matching your search.
+                </td>
+              </tr>
+            ) : (
+              filteredItems.map((item) => (
+                <tr
+                  key={item.id}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => openEditItem(item.id)}
+                >
+                  <td
+                    className="px-6 py-4"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2"
-                    >
-                      <HiPlus className="w-4 h-4" />
-                      Quick create
-                    </button>
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-400 text-red-600 focus:ring-red-500 w-4 h-4"
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleSelectItem(item.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </td>
-                </tr>
-              )}
-              {itemsLoading ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500">
-                    Loading items...
-                  </td>
-                </tr>
-              ) : filteredItems.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500">
-                    No items yet. Create your first item!
-                  </td>
-                </tr>
-              ) : (
-                filteredItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => openEditItem(item.id)}
-                  >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleSelectItem(item.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center overflow-hidden flex-shrink-0">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <HiPlus className="w-5 h-5 text-gray-400" />
-                          )}
-                        </div>
-                        <span className="text-sm font-medium text-blue-600">{item.name}</span>
+
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <HiTag className="w-5 h-5 text-gray-500" />
+                        )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+
+                      <span className="text-base font-semibold text-gray-800">
+                        {item.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <span className="text-gray-700 italic">
                       {getCategoryNames(item)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
                       Available
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      ₫{item.price || 0}
-                    </td>
-                    <td className="px-6 py-4 " onClick={(e) => e.stopPropagation()}>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <ActionMenu
-                          isOpen={itemMenus[item.id]}
-                          onToggle={(open) => setItemMenus({ ...itemMenus, [item.id]: open })}
-                          editPath={`/items/${item.id}/edit`}
-                          onDelete={() => handleDeleteItem(item.id)}
-                          itemName={item.name}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-base font-bold text-gray-800">
+                    ${item.price?.toFixed(2) || "0.00"}
+                  </td>
+
+                  <td
+                    className="px-6 py-4 w-16"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-end">
+                      <ActionMenu
+                        isOpen={itemMenus[item.id]}
+                        onToggle={(open) =>
+                          setItemMenus({ ...itemMenus, [item.id]: open })
+                        }
+                        editPath={`/items/${item.id}/edit`}
+                        onDelete={() => handleDeleteItem(item.id)}
+                        itemName={item.name}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       <BulkActionBar

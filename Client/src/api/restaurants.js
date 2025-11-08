@@ -15,3 +15,18 @@ export async function upsertRestaurant(uid, body, idToken) {
   const res = await client.put(`/api/restaurants/${uid}`, body, { idToken })
   return res.data
 }
+
+export async function updateBusinessHours(uid, hours, idToken) {
+  const res = await client.put(`/api/restaurants/${uid}`, { hours }, { idToken })
+  return res.data
+}
+
+export async function updateBusinessLocation(uid, location, idToken) {
+  const res = await client.put(`/api/restaurants/${uid}`, { 
+    address: location.address,
+    phone: location.phone,
+    email: location.email
+  }, { idToken })
+  return res.data
+}
+

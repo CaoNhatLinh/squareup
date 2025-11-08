@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { getModifier, updateModifier } from '../../api/modifers';
-import { MdOutlineDelete, MdAdd, MdClose, MdDragIndicator } from "react-icons/md";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+
+import { getModifier, updateModifier } from "../../api/modifers";
+import {
+  MdOutlineDelete,
+  MdAdd,
+  MdDragIndicator,
+  MdOutlineRadio,
+  MdOutlineCheckBox,
+} from "react-icons/md";
+import { HiXMark } from "react-icons/hi2";
 
 export default function EditModifier() {
   const { modifierId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    displayName: '', 
-    selectionType: 'multiple', 
-    required: false 
+  const [formData, setFormData] = useState({
+    name: "",
+    displayName: "",
+    selectionType: "multiple",
+    required: false,
   });
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,51 +35,61 @@ export default function EditModifier() {
       try {
         const mod = await getModifier(user.uid, modifierId);
         if (!mounted) return;
-        setFormData({ 
-          name: mod.name || '', 
-          displayName: mod.displayName || '',
-          selectionType: mod.selectionType || 'multiple',
-          required: mod.required || false
+        setFormData({
+          name: mod.name || "",
+          displayName: mod.displayName || "",
+          selectionType: mod.selectionType || "multiple",
+          required: mod.required || false,
         });
         const opts = mod.options ? Object.values(mod.options) : [];
         setOptions(opts.sort((a, b) => (a.index || 0) - (b.index || 0)));
       } catch (err) {
-        console.error('Failed to load modifier', err);
+        console.error("Failed to load modifier", err);
+        alert("Failed to load modifier details.");
+        navigate("/modifiers");
       } finally {
         setLoading(false);
       }
     })();
-    return () => { mounted = false; };
-  }, [user?.uid, modifierId]);
+    return () => {
+      mounted = false;
+    };
+  }, [user?.uid, modifierId, navigate]);
 
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.displayName.trim()) {
-      alert('Name and Display Name are required');
+      alert("Name and Display Name are required");
       return;
     }
+    const invalidIdx = (options || []).findIndex(
+      (o) => !String(o?.name || "").trim()
+    );
+    if (invalidIdx !== -1) {
+      alert(`Option #${invalidIdx + 1} is missing a name`);
+      return;
+    }
+
     setSaving(true);
     try {
-      const opts = (options || []).map((o, idx) => ({ 
-        ...o, 
-        index: o.index !== undefined ? Number(o.index) : idx 
+      const opts = (options || []).map((o, idx) => ({
+        ...o,
+        index: o.index !== undefined ? Number(o.index) : idx,
       }));
-      
-      await updateModifier(user.uid, modifierId, { 
-        name: formData.name, 
-        displayName: formData.displayName, 
+      await updateModifier(user.uid, modifierId, {
+        name: formData.name,
+        displayName: formData.displayName,
         options: opts,
         selectionType: formData.selectionType,
-        required: formData.required
+        required: formData.required,
       });
-      navigate(-1);
+      navigate("/modifiers");
     } catch (err) {
-      console.error('Failed to update modifier', err);
-      alert('Failed to update modifier: ' + (err.message || err));
+      console.error("Failed to update modifier", err);
+      alert("Failed to update modifier: " + (err.message || err));
     } finally {
       setSaving(false);
     }
   };
-  
   const handleDragDrop = (e, dropIndex) => {
     e.preventDefault();
     if (draggingIndex === null || draggingIndex === dropIndex) {
@@ -84,168 +102,271 @@ export default function EditModifier() {
     newOptions.splice(dropIndex, 0, moved);
 
     const withIndex = newOptions.map((o, i) => ({ ...o, index: i }));
-    
     setOptions(withIndex);
     setDraggingIndex(null);
   };
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading)
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900/70 z-50">
+        <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
+          <p className="text-lg text-gray-700 font-medium">
+            Loading modifier set...
+          </p>
+        </div>
+      </div>
+    );
 
-  const optionsValid = (options || []).every((o) => !!String(o?.name || '').trim());
-  const isSaveDisabled = saving || !formData.name.trim() || !formData.displayName.trim() || !optionsValid;
+  const optionsValid = (options || []).every(
+    (o) => !!String(o?.name || "").trim()
+  );
+  const isSaveDisabled =
+    saving ||
+    !formData.name.trim() ||
+    !formData.displayName.trim() ||
+    !optionsValid;
 
-  // Biến kiểm tra validation
   const isNameInvalid = !formData.name.trim();
   const isDisplayNameInvalid = !formData.displayName.trim();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-3xl rounded-lg shadow-xl flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600"><MdClose className="w-6 h-6" /></button>
-          <h2 className="text-xl font-semibold">Edit modifier set</h2>
-          <button onClick={handleSave} disabled={isSaveDisabled} className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
-        </div>
+    <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+          <button
+            onClick={() => navigate("/modifiers")}
+            className="p-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="Close"
+          >
+            <HiXMark className="w-6 h-6" />
+          </button>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Input fields */}
-          <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Edit Modifier Set: {formData.displayName || formData.name}
+          </h2>
+
+          <button
+            onClick={handleSave}
+            disabled={isSaveDisabled}
+            className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            aria-label="Save modifier"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
+              Basic Information
+            </h3>
+
             <div>
-              <input 
-                type="text" 
-                placeholder="Modifier name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                className={`
-                  w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                  ${isNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                `} 
+              <input
+                type="text"
+                placeholder="System Name (e.g., pizza_crust_size)"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-sm font-medium
+                ${
+                  isNameInvalid
+                    ? "border-red-500 focus:ring-red-100"
+                    : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+                }`}
               />
+              <p className="text-xs text-gray-500 mt-1 ml-1">
+                Internal, system use only. (No spaces)
+              </p>
             </div>
             <div>
-              <input 
-                type="text" 
-                placeholder="Display name" 
-                value={formData.displayName} 
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} 
-                className={`
-                  w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                  ${isDisplayNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                `} 
+              <input
+                type="text"
+                placeholder="Customer Display Name (e.g., Choose your size)"
+                value={formData.displayName}
+                onChange={(e) =>
+                  setFormData({ ...formData, displayName: e.target.value })
+                }
+                className={`-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-lg font-semibold
+                ${
+                  isDisplayNameInvalid
+                    ? "border-red-500 focus:ring-red-100"
+                    : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+                }
+                `}
               />
+              <p className="text-xs text-gray-500 mt-1 ml-1">
+                Visible to customers.
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          </div>
+          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm">
+            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
+              Selection Rules
+            </h3>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
                 Selection Type
               </label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer bg-white p-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition-colors">
+                  <MdOutlineRadio
+                    className={`w-5 h-5 ${
+                      formData.selectionType === "single"
+                        ? "text-red-600"
+                        : "text-gray-400"
+                    }`}
+                  />
                   <input
                     type="radio"
                     value="single"
-                    checked={formData.selectionType === 'single'}
-                    onChange={(e) => setFormData({ ...formData, selectionType: e.target.value })}
-                    className="w-4 h-4 text-blue-600"
+                    checked={formData.selectionType === "single"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        selectionType: e.target.value,
+                      })
+                    }
+                    className="hidden"
                   />
-                  <span className="text-sm text-gray-700">Choose one option</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Choose one option (Radio)
+                  </span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer bg-white p-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition-colors">
+                  <MdOutlineCheckBox
+                    className={`w-5 h-5 ${
+                      formData.selectionType === "multiple"
+                        ? "text-red-600"
+                        : "text-gray-400"
+                    }`}
+                  />
+
                   <input
                     type="radio"
                     value="multiple"
-                    checked={formData.selectionType === 'multiple'}
-                    onChange={(e) => setFormData({ ...formData, selectionType: e.target.value })}
-                    className="w-4 h-4 text-blue-600"
+                    checked={formData.selectionType === "multiple"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        selectionType: e.target.value,
+                      })
+                    }
+                    className="hidden"
                   />
-                  <span className="text-sm text-gray-700">Choose multiple options</span>
+
+                  <span className="text-sm font-medium text-gray-700">
+                    Choose multiple options (Checkbox)
+                  </span>
                 </label>
               </div>
             </div>
+
             <div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.required}
-                  onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 rounded"
+                  onChange={(e) =>
+                    setFormData({ ...formData, required: e.target.checked })
+                  }
+                  className="w-5 h-5 text-red-600 rounded border-gray-400 focus:ring-red-500"
                 />
-                <span className="text-sm font-medium text-gray-700">Required (customer must select)</span>
+
+                <span className="text-sm font-medium text-gray-700">
+                  Required (customer must select at least one option)
+                </span>
               </label>
             </div>
           </div>
+          {/* C. MODIFIER OPTIONS LIST */}
           <div>
-            <h3 className="text-sm font-medium mb-2">Modifier list</h3>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              
-              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 text-xs text-gray-600 font-medium">
-                <div className="w-5"></div>
-                <div className="flex-1">Name</div>
-                <div className="w-24">Price</div>
-                <div className="w-10 text-right"></div>
+            <h3 className="text-lg font-bold mb-3 text-gray-900">
+              Options List
+            </h3>
+
+            <div className="border border-gray-300 rounded-xl shadow-md overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-100 text-xs text-gray-600 font-bold uppercase border-b border-gray-200">
+                <div className="w-6"></div>
+                <div className="flex-1">Option Name</div>
+                <div className="w-24 text-right">Price ($)</div>
               </div>
-              
-              <div className="space-y-1">
+
+              <div className="divide-y divide-gray-100">
                 {(options || []).map((opt, idx) => {
-                  const isOptionNameInvalid = !String(opt.name || '').trim();
-                  
+                  const isOptionNameInvalid = !String(opt.name || "").trim();
                   return (
-                    <div 
-                      key={opt.id || idx} 
-                      className={`flex gap-3 items-center px-4 py-2 border-t border-gray-100 ${draggingIndex === idx ? 'opacity-50 bg-blue-50' : 'bg-white'}`}
+                    <div
+                      key={opt.id || idx}
+                      className={`flex gap-3 items-center px-4 py-3 transition-colors ${
+                        draggingIndex === idx
+                          ? "opacity-50 bg-red-50/50 shadow-inner"
+                          : "hover:bg-gray-50"
+                      }`}
                       draggable
                       onDragStart={() => setDraggingIndex(idx)}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => handleDragDrop(e, idx)}
                       onDragEnd={() => setDraggingIndex(null)}
                     >
-                      <div className="text-gray-400 cursor-move">
+                      <div className="text-gray-400 cursor-move w-6 flex-shrink-0">
                         <MdDragIndicator className="w-5 h-5" />
                       </div>
-                      
+
                       <div className="flex-1">
-                        <input 
+                        <input
                           className={`
-                            w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                            ${isOptionNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                          `}
-                          placeholder="Option name" 
-                          value={opt.name || ''} 
-                          onChange={(e) => { 
-                            const next = [...options]; 
-                            next[idx] = { ...next[idx], name: e.target.value }; 
-                            setOptions(next); 
-                          }} 
+w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium
+${
+  isOptionNameInvalid
+    ? "border-red-500 focus:ring-red-100"
+    : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+}
+ `}
+                          placeholder="Option name (e.g., Extra Cheese)"
+                          value={opt.name || ""}
+                          onChange={(e) => {
+                            const next = [...options];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            setOptions(next);
+                          }}
                         />
                       </div>
-                      
-                      <div className="w-24">
-                        <input 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                          placeholder="Price" 
-                          type="number" 
-                          step="0.01" 
-                          value={opt.price || 0} 
-                          onChange={(e) => { 
-                            const next = [...options]; 
-                            next[idx] = { ...next[idx], price: parseFloat(e.target.value || 0) }; 
-                            setOptions(next); 
-                          }} 
+
+                      <div className="w-24 relative">
+                        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+
+                        <input
+                          className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"
+                          placeholder="0.00"
+                          type="number"
+                          step="0.01"
+                          value={opt.price === undefined ? "" : opt.price}
+                          onChange={(e) => {
+                            const next = [...options];
+                            next[idx] = {
+                              ...next[idx],
+                              price: parseFloat(e.target.value || 0),
+                            };
+                            setOptions(next);
+                          }}
                         />
                       </div>
-                      
+
                       <div className="w-10 flex justify-end">
-                        <button 
-                          className="text-red-500 hover:text-red-700 p-1" 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setOptions(options.filter((_, i) => i !== idx)); 
-                          }} 
+                        <button
+                          className="text-red-600 hover:bg-red-100 p-2 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOptions(options.filter((_, i) => i !== idx));
+                          }}
                           aria-label="Remove option"
                         >
-                          <MdOutlineDelete className="w-5 h-5" />
+                          <MdOutlineDelete className="w-6 h-6" />
                         </button>
                       </div>
                     </div>
@@ -254,13 +375,24 @@ export default function EditModifier() {
               </div>
 
               <div className="p-4 border-t border-gray-200">
-                <button 
-                  className="px-3 py-2 bg-green-600 text-white rounded-md flex items-center gap-2 text-sm hover:bg-green-700" 
-                  onClick={() => setOptions([...options, { id: `tmp_${Date.now()}`, name: '', price: 0, index: options.length }])} 
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-red-700 shadow-md"
+                  onClick={() =>
+                    setOptions([
+                      ...options,
+                      {
+                        id: `tmp_${Date.now()}`,
+                        name: "",
+                        price: 0,
+                        index: options.length,
+                        available: true,
+                      },
+                    ])
+                  }
                   aria-label="Add option"
                 >
-                  <MdAdd className="w-4 h-4" />
-                  <span>Add option</span>
+                  <MdAdd className="w-5 h-5" />
+                  <span>Add Option</span>
                 </button>
               </div>
             </div>

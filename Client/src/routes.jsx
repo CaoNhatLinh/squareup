@@ -13,6 +13,8 @@ import ItemLibrary from './pages/items/ItemLibrary'
 import CreateItem from './pages/items/CreateItem'
 import EditItem from './pages/items/EditItem'
 import BusinessAbout from './pages/settings/BusinessAbout'
+import BusinessHours from './pages/settings/BusinessHours'
+import SpecialClosures from './pages/settings/SpecialClosures'
 import { verifySession } from './api/auth'
 import { fetchRestaurant } from './api/restaurants'
 import { fetchCategories } from './api/categories'
@@ -27,6 +29,8 @@ import CheckoutCancelled from './pages/shop/CheckoutCancelled'
 import Orders from './pages/orders/Orders'
 import NotFound from './pages/NotFound'
 import OrderDetails from './pages/orders/OrderDetails'
+import DeveloperTools from './pages/settings/DeveloperTools'
+import TrackOrder from './pages/public/TrackOrder'
 export const dashboardLoader = async () => {
   try {
     const session = await verifySession()
@@ -43,9 +47,38 @@ export const dashboardLoader = async () => {
   }
 }
 
-
+// Loader for Orders page - just verify auth, orders will be loaded in component
+export const ordersLoader = async () => {
+  try {
+    await verifySession() // Verify user is authenticated
+    // Return empty - component will load orders using restaurant from context
+    return { orders: null }
+  } catch (error) {
+    console.error('Error in orders loader:', error)
+    // If auth fails, redirect to signin
+    throw redirect('/signin')
+  }
+}
 
 export const router = createBrowserRouter([
+  // Public routes (no admin layout/sidebar)
+  {
+    path: '/shop/:restaurantId',
+    element: <ShopPage />
+  },
+  {
+    path: '/shop/:restaurantId/success',
+    element: <CheckoutSuccessWrapper />
+  },
+  {
+    path: '/shop/:restaurantId/cancelled',
+    element: <CheckoutCancelled />
+  },
+  {
+    path: '/track-order/:orderId',
+    element: <TrackOrder />
+  },
+  // Admin routes (with layout/sidebar)
   {
     path: '/',
     element: <Layout />,
@@ -64,12 +97,12 @@ export const router = createBrowserRouter([
       { path: 'modifiers', element: <Modifiers />, },
       { path: 'modifiers/new', element: <CreateModifier /> },
       { path: 'modifiers/:modifierId/edit', element: <EditModifier /> },
-      { path: 'orders', element: <Orders /> },
+      { path: 'orders', element: <Orders />, loader: ordersLoader },
       { path: 'orders/:orderId', element: <OrderDetails /> },
       { path: 'settings/business/about', element: <BusinessAbout /> },
-      { path: 'shop/:restaurantId', element: <ShopPage /> },
-      { path: 'shop/:restaurantId/success', element: <CheckoutSuccessWrapper /> },
-      { path: 'shop/:restaurantId/cancelled', element: <CheckoutCancelled /> },
+      { path: 'settings/business/hours', element: <BusinessHours /> },
+      { path: 'settings/business/special-closures', element: <SpecialClosures /> },
+      { path: 'settings/developer-tools', element: <DeveloperTools /> },
       { path: '*', element: <NotFound /> },
     ],
   },

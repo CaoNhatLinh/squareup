@@ -1,19 +1,12 @@
 {
   "rules": {
-    "orders": {
-      ".indexOn": ["sessionId", "restaurantId", "createdAt"],
-      "$orderId": {
-        ".read": true,
-        ".write": true
-      }
-    },
     "restaurants": {
       ".indexOn": ["name", "createdAt"],
       "$restaurantId": {
         ".read": true,
         ".write": true,
         "orders": {
-          ".indexOn": ["createdAt", "status"],
+          ".indexOn": ["createdAt", "status", "sessionId"],
           "$orderId": {
             ".read": true,
             ".write": true

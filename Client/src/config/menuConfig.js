@@ -18,7 +18,7 @@ export const menuItems = [
     children: [ 
       { label: 'Orders', 
         children: [
-          { to: '/orders', label: 'All orders' },
+          { to: '/orders', label: 'All orders', badge: true },
        ],
       }
   ],
@@ -42,9 +42,15 @@ export const menuItems = [
       {
         label: 'My business',
         children: [
-          { to: '/settings/business/about', label: 'About' },
-          { to: '/settings/business/security', label: 'Security' },
-          { to: '/settings/business/locations', label: 'Locations' },
+          { to: '/settings/business/about', label: 'About & Contact' },
+          { to: '/settings/business/hours', label: 'Business Hours' },
+          { to: '/settings/business/special-closures', label: 'Special Closures' },
+        ]
+      },
+      {
+        label: 'Developer',
+        children: [
+          { to: '/settings/developer-tools', label: 'Developer Tools' },
         ]
       },
     ]

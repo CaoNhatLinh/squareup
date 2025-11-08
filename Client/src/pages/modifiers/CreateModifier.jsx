@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { createModifier } from '../../api/modifers';
-import { MdOutlineDelete, MdAdd, MdClose, MdDragIndicator } from "react-icons/md";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+
+import { createModifier } from "../../api/modifers";
+import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
+import { HiXMark } from "react-icons/hi2";
 
 export default function CreateModifier() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    displayName: '', 
-    selectionType: 'multiple', 
-    required: false 
+  const [formData, setFormData] = useState({
+    name: "",
+    displayName: "",
+    selectionType: "multiple",
+    required: false,
   });
   const [saving, setSaving] = useState(false);
   const [options, setOptions] = useState([]);
@@ -21,10 +23,12 @@ export default function CreateModifier() {
 
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.displayName.trim()) {
-      alert('Name and Display Name are required');
+      alert("Name and Display Name are required");
       return;
     }
-    const invalidIdx = (options || []).findIndex((o) => !String(o?.name || '').trim());
+    const invalidIdx = (options || []).findIndex(
+      (o) => !String(o?.name || "").trim()
+    );
     if (invalidIdx !== -1) {
       alert(`Option #${invalidIdx + 1} is missing a name`);
       return;
@@ -33,20 +37,23 @@ export default function CreateModifier() {
     setSaving(true);
     try {
       const opts = (options || [])
-        .map((o, idx) => ({ ...o, index: o.index !== undefined ? Number(o.index) : idx }))
+        .map((o, idx) => ({
+          ...o,
+          index: o.index !== undefined ? Number(o.index) : idx,
+        }))
         .sort((a, b) => (a.index || 0) - (b.index || 0));
 
-      await createModifier(user.uid, { 
-        name: formData.name, 
-        displayName: formData.displayName, 
+      await createModifier(user.uid, {
+        name: formData.name,
+        displayName: formData.displayName,
         options: opts,
         selectionType: formData.selectionType,
-        required: formData.required
+        required: formData.required,
       });
-      navigate(-1);
+      navigate("/modifiers");
     } catch (err) {
-      console.error('Failed to create modifier:', err);
-      alert('Failed to create modifier: ' + (err.message || err));
+      console.error("Failed to create modifier:", err);
+      alert("Failed to create modifier: " + (err.message || err));
     } finally {
       setSaving(false);
     }
@@ -64,159 +71,242 @@ export default function CreateModifier() {
     newOptions.splice(dropIndex, 0, moved);
 
     const withIndex = newOptions.map((o, i) => ({ ...o, index: i }));
-    
     setOptions(withIndex);
     setDraggingIndex(null);
   };
 
   const formInvalid = !formData.name.trim() || !formData.displayName.trim();
-  const optionsValid = (options || []).every((o) => !!String(o?.name || '').trim());
-  const disabled = saving || formInvalid || (options.length > 0 && !optionsValid); 
+  const optionsValid = (options || []).every(
+    (o) => !!String(o?.name || "").trim()
+  );
+  const disabled =
+    saving || formInvalid || (options.length > 0 && !optionsValid);
   const isNameInvalid = !formData.name.trim();
   const isDisplayNameInvalid = !formData.displayName.trim();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-3xl rounded-lg shadow-xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600"><MdClose className="w-6 h-6" /></button>
-          <h2 className="text-xl font-semibold">Create modifier set</h2>
-          <button onClick={handleSave} disabled={disabled} className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50" aria-label="Save modifier">{saving ? 'Saving...' : 'Save'}</button>
+    <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+          <button
+            onClick={handleClose}
+            className="p-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="Close"
+          >
+            <HiXMark className="w-6 h-6" />
+          </button>
+
+          <h2 className="text-2xl font-bold text-gray-900">
+            Create New Modifier Set
+          </h2>
+
+          <button
+            onClick={handleSave}
+            disabled={disabled}
+            className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            aria-label="Save modifier"
+          >
+            {saving ? "Saving..." : "Save Set"}
+          </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="space-y-4">
+
+        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
+              Basic Information
+            </h3>
+
             <div>
-              <input 
-                type="text" 
-                placeholder="Name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+              <input
+                type="text"
+                placeholder="System Name (e.g., pizza_crust_size)"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className={`
-                  w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                  ${isNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                `} 
+         w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-sm font-medium
+         ${
+           isNameInvalid
+             ? "border-red-500 focus:ring-red-100"
+             : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+         }
+        `}
               />
+              <p className="text-xs text-gray-500 mt-1 ml-1">
+                Internal, system use only. (No spaces or special characters)
+              </p>
             </div>
+
             <div>
-              <input 
-                type="text" 
-                placeholder="Display name" 
-                value={formData.displayName} 
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} 
+              <input
+                type="text"
+                placeholder="Customer Display Name (e.g., Choose your size)"
+                value={formData.displayName}
+                onChange={(e) =>
+                  setFormData({ ...formData, displayName: e.target.value })
+                }
                 className={`
-                  w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                  ${isDisplayNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                `} 
+         w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-lg font-semibold
+         ${
+           isDisplayNameInvalid
+             ? "border-red-500 focus:ring-red-100"
+             : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+         }
+        `}
               />
+              <p className="text-xs text-gray-500 mt-1 ml-1">
+                Visible to customers.
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Selection Type
+          </div>
+          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm">
+            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
+              Selection Rules
+            </h3>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Customer must select:
               </label>
-              <div className="flex gap-4">
+
+              <div className="flex gap-6">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     value="single"
-                    checked={formData.selectionType === 'single'}
-                    onChange={(e) => setFormData({ ...formData, selectionType: e.target.value })}
-                    className="w-4 h-4 text-blue-600"
+                    checked={formData.selectionType === "single"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        selectionType: e.target.value,
+                      })
+                    }
+                    className="w-5 h-5 text-red-600 border-gray-400 focus:ring-red-500"
                   />
-                  <span className="text-sm text-gray-700">Choose one option</span>
+
+                  <span className="text-sm font-medium text-gray-700">
+                    One option only
+                  </span>
                 </label>
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     value="multiple"
-                    checked={formData.selectionType === 'multiple'}
-                    onChange={(e) => setFormData({ ...formData, selectionType: e.target.value })}
-                    className="w-4 h-4 text-blue-600"
+                    checked={formData.selectionType === "multiple"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        selectionType: e.target.value,
+                      })
+                    }
+                    className="w-5 h-5 text-red-600 border-gray-400 focus:ring-red-500"
                   />
-                  <span className="text-sm text-gray-700">Choose multiple options</span>
+
+                  <span className="text-sm font-medium text-gray-700">
+                    Multiple options
+                  </span>
                 </label>
               </div>
             </div>
+
             <div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.required}
-                  onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 rounded"
+                  onChange={(e) =>
+                    setFormData({ ...formData, required: e.target.checked })
+                  }
+                  className="w-5 h-5 text-red-600 rounded border-gray-400 focus:ring-red-500"
                 />
-                <span className="text-sm font-medium text-gray-700">Required (customer must select)</span>
+
+                <span className="text-sm font-medium text-gray-700">
+                  Is Required (Customer must make a selection)
+                </span>
               </label>
             </div>
           </div>
-
           <div>
-            <h3 className="text-sm font-medium mb-2">Modifier list</h3>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              
-              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 text-xs text-gray-600 font-medium">
-                <div className="w-5"></div>
-                <div className="flex-1">Name</div>
-                <div className="w-24">Price</div>
-                <div className="w-10 text-right"></div>
+            <h3 className="text-lg font-bold mb-3 text-gray-900">
+              Options List
+            </h3>
+
+            <div className="border border-gray-300 rounded-xl shadow-md overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-100 text-xs text-gray-600 font-bold uppercase border-b border-gray-200">
+                <div className="w-6"></div>
+                <div className="flex-1">Option Name</div>
+                <div className="w-24 text-right">Price ($)</div>
               </div>
-              
-              <div className="space-y-1">
+              <div className="divide-y divide-gray-100">
                 {(options || []).map((opt, idx) => {
-                  const isOptionNameInvalid = !String(opt.name || '').trim();
+                  const isOptionNameInvalid = !String(opt.name || "").trim();
                   return (
-                    <div 
-                      key={opt.id || idx} 
-                      className={`flex gap-3 items-center px-4 py-2 border-t border-gray-100 ${draggingIndex === idx ? 'opacity-50 bg-blue-50' : 'bg-white'}`}
+                    <div
+                      key={opt.id || idx}
+                      className={`flex gap-3 items-center px-4 py-3 transition-colors ${
+                        draggingIndex === idx
+                          ? "opacity-50 bg-red-50/50 shadow-inner"
+                          : "hover:bg-gray-50"
+                      }`}
                       draggable
                       onDragStart={() => setDraggingIndex(idx)}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => handleDragDrop(e, idx)}
                       onDragEnd={() => setDraggingIndex(null)}
                     >
-                      <div className="text-gray-400 cursor-move">
+                      <div className="text-gray-400 cursor-move w-6 flex-shrink-0">
                         <MdDragIndicator className="w-5 h-5" />
                       </div>
-                      
                       <div className="flex-1">
-                        <input 
-                          className={`
-                            w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2
-                            ${isOptionNameInvalid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-                          `}
-                          placeholder="Option name" 
-                          value={opt.name || ''} 
-                          onChange={(e) => { 
-                            const next = [...options]; 
-                            next[idx] = { ...next[idx], name: e.target.value }; 
-                            setOptions(next); 
-                          }} 
+                        <input
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium
+                          ${
+                            isOptionNameInvalid
+                              ? "border-red-500 focus:ring-red-100"
+                              : "border-gray-300 focus:ring-red-100 focus:border-red-500"
+                          }`}
+                          placeholder="Option name (e.g., Extra Cheese)"
+                          value={opt.name || ""}
+                          onChange={(e) => {
+                            const next = [...options];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            setOptions(next);
+                          }}
                         />
                       </div>
-                      
-                      <div className="w-24">
-                        <input 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                          placeholder="Price" 
-                          type="number" 
-                          value={opt.price || 0} 
-                          onChange={(e) => { 
-                            const next = [...options]; 
-                            next[idx] = { ...next[idx], price: parseFloat(e.target.value || 0) }; 
-                            setOptions(next); 
-                          }} 
+
+                      <div className="w-24 relative">
+                        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+                        <input
+                          className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"
+                          placeholder="0.00"
+                          type="number"
+                          step="0.01"
+                          value={opt.price === undefined ? "" : opt.price}
+                          onChange={(e) => {
+                            const next = [...options];
+                            next[idx] = {
+                              ...next[idx],
+                              price: parseFloat(e.target.value),
+                            };
+                            setOptions(next);
+                          }}
                         />
                       </div>
-                      
                       <div className="w-10 flex justify-end">
-                        <button 
-                          className="text-red-500 hover:text-red-700 p-1" 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setOptions(options.filter((_, i) => i !== idx)); 
-                          }} 
+                        <button
+                          className="text-red-600 hover:bg-red-100 p-2 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOptions(options.filter((_, i) => i !== idx));
+                          }}
                           aria-label="Remove option"
                         >
-                          <MdOutlineDelete className="w-5 h-5" />
+                          <MdOutlineDelete className="w-6 h-6" />
                         </button>
                       </div>
                     </div>
@@ -225,13 +315,24 @@ export default function CreateModifier() {
               </div>
 
               <div className="p-4 border-t border-gray-200">
-                <button 
-                  className="px-3 py-2 bg-green-600 text-white rounded-md flex items-center gap-2 text-sm hover:bg-green-700" 
-                  onClick={() => setOptions([...options, { id: `tmp_${Date.now()}`, name: '', price: 0, index: options.length, hideOnline: false, preselect: false, available: true }])} 
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-red-700 shadow-md"
+                  onClick={() =>
+                    setOptions([
+                      ...options,
+                      {
+                        id: `tmp_${Date.now()}`,
+                        name: "",
+                        price: 0,
+                        index: options.length,
+                        available: true,
+                      },
+                    ])
+                  }
                   aria-label="Add option"
                 >
-                  <MdAdd className="w-4 h-4" />
-                  <span>Add option</span>
+                  <MdAdd className="w-5 h-5" />
+                  <span>Add Option</span>
                 </button>
               </div>
             </div>

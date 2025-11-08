@@ -8,8 +8,6 @@ export function ShopProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState({});
   const [modifiers, setModifiers] = useState({});
-  
-  // Load cart from localStorage on mount
   const [cart, setCart] = useState(() => {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
@@ -20,7 +18,6 @@ export function ShopProvider({ children }) {
     }
   });
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
