@@ -162,8 +162,8 @@ export default function SpecialClosures() {
                       <DatePicker
                         selected={newClosure.date}
                         onChange={(date) => setNewClosure((prev) => ({ ...prev, date }))}
-                        minDate={new Date()} // Chỉ cho phép chọn từ hôm nay trở đi
-                        dateFormat="MM/dd/yyyy" // Định dạng hiển thị trong input
+                        minDate={new Date()} 
+                        dateFormat="MM/dd/yyyy" 
                         placeholderText="Select a date"
                         className="w-full px-4 py-3 appearance-none bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700 font-medium"
                       />

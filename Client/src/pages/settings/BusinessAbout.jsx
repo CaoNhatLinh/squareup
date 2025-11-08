@@ -49,7 +49,7 @@ export default function BusinessAbout() {
       };
       await upsertRestaurant(user.uid, updateData, token);
       setMessage("Restaurant information updated successfully!");
-      setTimeout(() => setMessage(""), 4000); // Tăng thời gian hiển thị message
+      setTimeout(() => setMessage(""), 4000);
       updateRestaurant(updateData);
     } catch (err) {
       console.error("Error updating restaurant:", err);

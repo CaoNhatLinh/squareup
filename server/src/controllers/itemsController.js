@@ -99,7 +99,6 @@ async function updateItem(req, res) {
       }
     }
 
-    // modifierIds are stored on the item itself. When modifierIds are provided, update the item.record only.
     if (modifierIds !== undefined) {
       if (!Array.isArray(modifierIds)) return res.status(400).json({ error: 'modifierIds must be an array' });
       updates.modifierIds = modifierIds;
@@ -141,9 +140,6 @@ async function deleteItem(req, res) {
         await catsRef.update(updates);
       }
     }
-
-    // No-op: modifiers no longer store itemIds. Items own modifierIds, so nothing to do here.
-
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);

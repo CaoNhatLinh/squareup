@@ -38,7 +38,7 @@ export default function BusinessHours() {
       DAYS_OF_WEEK.forEach((day) => {
         defaultHours[day.key] = {
           isClosed: false,
-          timeSlots: [{ open: "09:00", close: "17:00" }],
+          timeSlots: [{ open: "08:00", close: "17:00" }],
         };
       });
       setHours(defaultHours);
@@ -205,7 +205,6 @@ export default function BusinessHours() {
                     </span>
                   )}
                 </div>
-                {/* 2. Closed Toggle (Col 2) */}
                 <div className="md:col-span-1 lg:col-span-1 flex flex-col justify-start">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input

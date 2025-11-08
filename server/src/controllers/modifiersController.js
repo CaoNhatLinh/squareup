@@ -11,7 +11,6 @@ async function listModifiers(req, res) {
     return res.status(500).json({ error: 'Server error' });
   }
 }
-
 async function getModifier(req, res) {
   const { uid, modifierId } = req.params;
   try {
@@ -36,7 +35,6 @@ async function createModifier(req, res) {
     const ref = db.ref(`restaurants/${uid}/modifiers`).push();
     const id = ref.key;
     
-    // Convert options array to object with generated IDs
     const optionsObject = {};
     options.forEach(option => {
       const optionRef = db.ref(`restaurants/${uid}/modifiers/${id}/options`).push();
@@ -54,7 +52,7 @@ async function createModifier(req, res) {
       name,
       displayName: displayName || name,
       options: optionsObject,
-      selectionType: selectionType, // 'single' or 'multiple'
+      selectionType: selectionType,
       required: required || false,
       createdAt: Date.now() 
     });
@@ -96,11 +94,9 @@ async function updateModifier(req, res) {
     if (selectionType !== undefined) updates.selectionType = selectionType;
     if (required !== undefined) updates.required = required;
     
-    // If options are provided, convert array to object
     if (options !== undefined) {
       const optionsObject = {};
       options.forEach(option => {
-        // If option has an id, use it; otherwise generate a new one
         const optionId = option.id || db.ref(`restaurants/${uid}/modifiers/${modifierId}/options`).push().key;
         optionsObject[optionId] = {
           id: optionId,
@@ -131,12 +127,7 @@ async function deleteModifier(req, res) {
     const modRef = db.ref(`restaurants/${uid}/modifiers/${modifierId}`);
     const snap = await modRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Modifier not found' });
-    
     await modRef.remove();
-    
-    // Note: modifierIds are stored on items; we don't need to clean up reverse references
-    // since we removed the itemIds array from modifiers
-    
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);

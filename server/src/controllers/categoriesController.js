@@ -32,7 +32,6 @@ async function createCategory(req, res) {
   if (itemIds && !Array.isArray(itemIds)) return res.status(400).json({ error: 'itemIds must be an array' });
   
   try {
-    // If parentCategoryId is provided, validate it exists and is not a subcategory
     if (parentCategoryId) {
       const parentRef = db.ref(`restaurants/${uid}/categories/${parentCategoryId}`);
       const parentSnap = await parentRef.get();
@@ -40,7 +39,6 @@ async function createCategory(req, res) {
         return res.status(400).json({ error: 'Parent category not found' });
       }
       const parentData = parentSnap.val();
-      // Check if parent is already a subcategory (has a parentCategoryId)
       if (parentData.parentCategoryId) {
         return res.status(400).json({ error: 'Cannot create subcategory of a subcategory. Maximum 2 levels allowed.' });
       }
@@ -81,7 +79,6 @@ async function updateCategory(req, res) {
     
     const currentData = snap.val();
     
-    // If updating parentCategoryId, validate
     if (parentCategoryId !== undefined && parentCategoryId !== null) {
       const parentRef = db.ref(`restaurants/${uid}/categories/${parentCategoryId}`);
       const parentSnap = await parentRef.get();
@@ -89,11 +86,9 @@ async function updateCategory(req, res) {
         return res.status(400).json({ error: 'Parent category not found' });
       }
       const parentData = parentSnap.val();
-      // Check if parent is already a subcategory
       if (parentData.parentCategoryId) {
         return res.status(400).json({ error: 'Cannot make this a subcategory of a subcategory. Maximum 2 levels allowed.' });
       }
-      // Check if current category has any subcategories
       const allCategoriesSnap = await db.ref(`restaurants/${uid}/categories`).get();
       if (allCategoriesSnap.exists()) {
         const allCategories = allCategoriesSnap.val();
@@ -129,7 +124,6 @@ async function deleteCategory(req, res) {
     const snap = await catRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
     await catRef.remove();
-    // categories hold itemIds; items do not reference categories
     return res.json({ ok: true });
   } catch (err) {
     console.error(err);

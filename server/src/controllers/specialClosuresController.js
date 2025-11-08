@@ -6,13 +6,11 @@ async function fetchSpecialClosures(req, res) {
         const snapshot = await db.ref(`restaurants/${uid}/specialClosures`).get();
         const specialClosuresData = snapshot.val();
         
-        // Convert Firebase object to array
         let specialClosures = [];
         if (specialClosuresData) {
             if (Array.isArray(specialClosuresData)) {
                 specialClosures = specialClosuresData;
             } else {
-                // Convert object with keys to array
                 specialClosures = Object.entries(specialClosuresData).map(([id, data]) => ({
                     id,
                     ...data

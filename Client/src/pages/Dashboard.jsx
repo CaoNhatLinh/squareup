@@ -1,12 +1,11 @@
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { HiOutlineEye, HiOutlineClipboardList, HiOutlineCurrencyDollar, HiOutlineChartBar } from 'react-icons/hi'; // Icons mới
+import { HiOutlineEye } from 'react-icons/hi';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const shopUrl = `/shop/${user?.uid || 'unknown'}`;
   
-  // Hàm sao chép URL
   const copyToClipboard = () => {
     const urlToCopy = `${window.location.origin}/shop/${user.uid}`;
     navigator.clipboard.writeText(urlToCopy);

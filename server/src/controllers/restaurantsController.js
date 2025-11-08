@@ -9,7 +9,6 @@ async function getRestaurant(req, res) {
     
     const data = snap.val();
     
-    // Return only essential restaurant metadata (not orders, items, categories, modifiers)
     return res.json({
       id: uid,
       name: data.name || '',
@@ -51,30 +50,25 @@ async function getRestaurantForShop(req, res) {
         
         const data = snap.val();
         const now = new Date();
-        const todayDateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const todayDateStr = now.toISOString().split('T')[0]; 
         const dayOfWeekKey = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(); 
         const currentTime = now.toTimeString().slice(0, 5);
         
         let isOpen = false;
         let nextOpenTime = null;
-        let closureReason = null; // NEW: Track closure reason
+        let closureReason = null;
         
-        // Check if today is a special closure date
         const specialClosuresData = data.specialClosures || [];
-        
-        // Convert to array if it's an object (Firebase push keys)
         let specialClosures = [];
         if (specialClosuresData) {
             if (Array.isArray(specialClosuresData)) {
                 specialClosures = specialClosuresData;
             } else if (typeof specialClosuresData === 'object') {
-                // Convert object with keys to array
                 specialClosures = Object.values(specialClosuresData);
             }
         }
         
         const todaySpecialClosure = specialClosures.find(closure => {
-            // Support both string format (old) and object format (new)
             if (typeof closure === 'string') {
                 return closure === todayDateStr;
             }
@@ -118,7 +112,7 @@ async function getRestaurantForShop(req, res) {
             hours: data.hours || {},
             isOpen,
             nextOpenTime,
-            closureReason, // NEW: Send closure reason to frontend
+            closureReason, 
             specialClosures: specialClosures, 
         });
     } catch (err) {
@@ -136,7 +130,6 @@ async function updateRestaurant(req, res) {
     const snap = await db.ref(`restaurants/${uid}`).get();
     const data = snap.val();
     
-    // Return only essential metadata
     return res.json({
       id: uid,
       name: data.name || '',

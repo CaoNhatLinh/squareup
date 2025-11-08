@@ -8,7 +8,6 @@ const {
     updateSpecialClosure,
     removeSpecialClosure
 } = require('../controllers/specialClosuresController')
-// All routes are protected
 router.use(verifyToken);    
 
 router.get('/', fetchSpecialClosures);

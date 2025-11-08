@@ -95,7 +95,7 @@ export default function TrackOrder() {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, order, fetchOrderStatus]); // Thêm fetchOrderStatus vào dependency array
+  }, [autoRefresh, order, fetchOrderStatus]);
 
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleString("en-US", {
@@ -170,7 +170,7 @@ export default function TrackOrder() {
     if (currentIndex === -1) return 0;
     if (status === "completed" || status === "cancelled") return 100; // Hoàn thành hoặc Hủy thì coi như 100% về mặt tiến độ (cho trạng thái cuối)
     return ((currentIndex + 1) / (statusOrder.length - 1)) * 100;
-  }; 
+  };
 
   if (loading) {
     return (
@@ -249,7 +249,7 @@ export default function TrackOrder() {
           <p className="text-lg text-gray-600">
             Order ID:
             <span className="font-mono font-bold text-red-600">
-              #{order.id?.substring(0, 12).toUpperCase()}
+              #{order.id?.toUpperCase()}
             </span>
           </p>
         </div>
@@ -299,6 +299,7 @@ export default function TrackOrder() {
               (status) => {
                 const stepInfo = getStatusInfo(status);
                 const isDone = order.statusHistory?.[status];
+                console.log("isDone", order.statusHistory);
                 const StepIcon = stepInfo.icon;
                 return (
                   <div key={status} className="flex items-start gap-4 relative">

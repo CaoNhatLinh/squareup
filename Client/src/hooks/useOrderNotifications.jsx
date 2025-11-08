@@ -28,7 +28,6 @@ export const useOrderNotifications = (
     if (isShopRoute || !user || !restaurantId) {
       return;
     }
-
     if (!audioRef.current) {
       audioRef.current = new Audio("/assets/audio/notification.mp3");
       audioRef.current.volume = 0.5;
@@ -36,9 +35,7 @@ export const useOrderNotifications = (
         console.warn("Notification sound file not found. Using fallback beep.");
       };
     }
-
     const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);
-
     const handleOrdersUpdate = (snapshot) => {
       if (!snapshot.exists()) {
         return;
@@ -75,10 +72,6 @@ export const useOrderNotifications = (
             localStorage.setItem("newOrderIds", JSON.stringify(updated));
             return updated;
           });
-          
-          console.log("🔔 New order received:", order);
-          
-          // Show toast notification with custom message (8 seconds)
           success(
             `New Order #${order.orderId?.substring(0, 8).toUpperCase()} - $${order.amount?.toFixed(2)}`,
             8000
@@ -94,7 +87,6 @@ export const useOrderNotifications = (
     });
 
     return () => {
-      console.log("🧹 Cleaning up notification Firebase listener");
       unsubscribe();
     };
   }, [user, restaurantId, isShopRoute, lastOrderCount, navigate, success]);

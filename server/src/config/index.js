@@ -1,4 +1,3 @@
-// config/index.js - central config loader
 const path = require('path');
 require('dotenv').config();
 

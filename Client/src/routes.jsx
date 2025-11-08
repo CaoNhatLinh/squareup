@@ -78,7 +78,6 @@ export const router = createBrowserRouter([
     path: '/track-order/:orderId',
     element: <TrackOrder />
   },
-  // Admin routes (with layout/sidebar)
   {
     path: '/',
     element: <Layout />,

@@ -40,7 +40,7 @@ exports.createCheckoutSession = async (req, res) => {
             description: description || "No options",
             images: item.image ? [item.image] : [],
           },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
+          unit_amount: Math.round(item.price * 100),
         },
         quantity: item.quantity,
       };
@@ -123,9 +123,9 @@ exports.handleWebhook = async (req, res) => {
             return;
           }
 
-          // Create final order ID (generate from restaurant's orders path)
           const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
 
+          const now = Date.now();
           const orderData = {
             id: orderId,
             orderId: orderId,
@@ -155,18 +155,14 @@ exports.handleWebhook = async (req, res) => {
             subtotal: pendingOrder.totalAmount,
             tax: 0, 
             total: session.amount_total / 100,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            createdAt: now,
+            updatedAt: now,
+            statusHistory: {
+              pending: pendingOrder.createdAt || now,
+              paid: now
+            }
           };
-
-          console.log("✅ Saving order from webhook:", orderData);
-
-          // Save FULL order data in restaurant's orders path (one time, all details)
           await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
-
-          console.log(`✅ Order ${orderId} saved successfully to restaurants/${restaurantId}/orders/`);
-
-          // Clean up pending order
           await db.ref(`pendingOrders/${pendingOrderId}`).remove();
         }
       } catch (error) {
@@ -198,7 +194,7 @@ exports.handleWebhook = async (req, res) => {
 exports.getOrderBySession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { restaurantId } = req.query; // Get from query params
+    const { restaurantId } = req.query; 
 
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID is required" });
@@ -288,7 +284,6 @@ exports.getAllOrdersAdmin = async (req, res) => {
       });
     }
 
-    // Aggregate orders from all restaurants
     const allOrders = [];
     for (const [restaurantId, restaurantData] of Object.entries(restaurantsData)) {
       if (restaurantData.orders) {
@@ -297,7 +292,6 @@ exports.getAllOrdersAdmin = async (req, res) => {
       }
     }
 
-    // Sort by createdAt (newest first)
     const orders = allOrders.sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json({
@@ -322,7 +316,6 @@ exports.getOrderById = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    // Search across all restaurants
     const restaurantsSnapshot = await db.ref("restaurants").once("value");
     const restaurantsData = restaurantsSnapshot.val();
 
@@ -369,7 +362,6 @@ exports.getSessionStatus = async (req, res) => {
       return res.status(400).json({ error: "Session ID is required" });
     }
 
-    // Retrieve session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     res.status(200).json({
@@ -402,7 +394,6 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Status is required" });
     }
 
-    // Validate status
     const validStatuses = ['pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
@@ -414,9 +405,6 @@ exports.updateOrderStatus = async (req, res) => {
     if (!orderSnapshot.exists()) {
       return res.status(404).json({ error: "Order not found" });
     }
-
-    // Use a slash path for nested update keys (dots are invalid in RTDB keys)
-    // This will set e.g. /statusHistory/accepted = timestamp without creating an invalid key
     await orderRef.update({
       status,
       updatedAt: Date.now(),
@@ -447,7 +435,6 @@ exports.getPublicOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    // Search for order across all restaurants
     const restaurantsSnapshot = await db.ref('restaurants').once('value');
     const restaurants = restaurantsSnapshot.val();
 
@@ -458,7 +445,6 @@ exports.getPublicOrderStatus = async (req, res) => {
     let foundOrder = null;
     let foundRestaurantId = null;
 
-    // Iterate through all restaurants to find the order
     for (const [restaurantId, restaurantData] of Object.entries(restaurants)) {
       if (restaurantData.orders && restaurantData.orders[orderId]) {
         foundOrder = restaurantData.orders[orderId];
@@ -471,7 +457,6 @@ exports.getPublicOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    // Return only necessary information (no sensitive data)
     const publicOrderData = {
       id: orderId,
       status: foundOrder.status,

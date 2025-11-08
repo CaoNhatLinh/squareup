@@ -1,6 +1,7 @@
 import { createContext, useState, useCallback } from "react";
 import Toast from "../components/Toast";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
@@ -15,8 +16,6 @@ export function ToastProvider({ children }) {
     const toast = { id, message, type, duration };
     
     setToasts((prev) => [...prev, toast]);
-
-    // Auto-remove toast after duration
     if (duration > 0) {
       setTimeout(() => {
         removeToast(id);

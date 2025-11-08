@@ -24,7 +24,6 @@ export default function NotificationPermissionBanner() {
     
     if (granted) {
       setShowBanner(false);
-      // Show success message
       setTimeout(() => {
         alert('✅ Desktop notifications enabled! You will receive alerts for new orders.');
       }, 100);
@@ -36,16 +35,13 @@ export default function NotificationPermissionBanner() {
 
   const handleDismiss = () => {
     setShowBanner(false);
-    // Remember user dismissed the banner (optional)
     localStorage.setItem('notificationBannerDismissed', 'true');
   };
 
-  // Don't show if permission already granted or not supported
   if (permission === 'granted' || permission === 'unsupported' || permission === 'denied') {
     return null;
   }
 
-  // Don't show if user dismissed
   if (!showBanner) {
     return null;
   }
