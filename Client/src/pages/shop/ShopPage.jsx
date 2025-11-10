@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchRestaurantForShop } from "../../api/restaurants";
+import { fetchActiveDiscounts } from "../../api/discounts";
 import { ShopProvider} from "../../context/ShopProvider";
 import { useShop } from "../../context/ShopContext";
 import ShopHeader from "./components/ShopHeader";
 import RestaurantBanner from "./components/RestaurantBanner";
 import RestaurantInfoDrawer from "./components/RestaurantInfoDrawer";
-import OrderTypeSelector from "./components/OrderTypeSelector";
+// import OrderTypeSelector from "./components/OrderTypeSelector";
 import ClosedBanner from "./components/ClosedBanner";
 import CategoryNavigation from "./components/CategoryNavigation";
 import ItemList from "./components/ItemList";
 import ModifierModal from "./components/ModifierModal";
 import CartDrawer from "./components/CartDrawer";
+import PromotionsDrawer from "./components/PromotionsDrawer";
 import Footer from "./components/Footer";
 
 function ShopPageContent() {
@@ -25,6 +27,8 @@ function ShopPageContent() {
     setItems,
     modifiers,
     setModifiers,
+    activeDiscounts,
+    setActiveDiscounts,
     addToCart,
   } = useShop();
 
@@ -32,8 +36,9 @@ function ShopPageContent() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isPromotionsOpen, setIsPromotionsOpen] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
-  const [orderType, setOrderType] = useState("pickup");
+  // const [orderType, setOrderType] = useState("pickup");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -79,7 +84,7 @@ function ShopPageContent() {
           id: data.id,
           isOpen: data.isOpen,
           nextOpenTime: data.nextOpenTime,
-          closureReason: data.closureReason, // NEW: Add closure reason
+          closureReason: data.closureReason, 
           hours: data.hours,
           address: data.address,
           phone: data.phone,
@@ -90,6 +95,18 @@ function ShopPageContent() {
         setCategories(cats);
         setItems(data.items || {});
         setModifiers(data.modifiers || {});
+
+        // Fetch active discounts
+        try {
+          console.log('🔍 Fetching active discounts for restaurant:', restaurantId);
+          const discounts = await fetchActiveDiscounts(restaurantId);
+          console.log('📦 Received discounts:', discounts);
+          setActiveDiscounts(discounts);
+          console.log('✅ Loaded active discounts:', Object.keys(discounts).length);
+        } catch (error) {
+          console.error('❌ Failed to load discounts:', error);
+          // Continue even if discounts fail
+        }
       } catch (error) {
         console.error("Failed to load restaurant data:", error);
         setError("Không thể tải dữ liệu nhà hàng. Vui lòng thử lại sau.");
@@ -99,7 +116,7 @@ function ShopPageContent() {
     };
 
     fetchRestaurantData();
-  }, [restaurantId, setRestaurant, setCategories, setItems, setModifiers]);
+  }, [restaurantId, setRestaurant, setCategories, setItems, setModifiers, setActiveDiscounts]);
 
   const handleAddToCart = (item, selectedOptions = [], quantity = 1, specialInstruction = "", editingCartKey = null) => {
     addToCart(item, selectedOptions, quantity, specialInstruction, editingCartKey);
@@ -144,12 +161,16 @@ function ShopPageContent() {
     <div className="min-h-screen bg-white">
       <ShopHeader 
         onCartClick={() => setIsCartOpen(true)}
+        onPromotionsClick={() => setIsPromotionsOpen(true)}
+        hasActiveDiscounts={Object.keys(activeDiscounts).length > 0}
       />
       
       {/* Restaurant Banner */}
       <RestaurantBanner 
         restaurant={restaurant}
         onInfoClick={() => setIsInfoDrawerOpen(true)}
+        onPromotionsClick={() => setIsPromotionsOpen(true)}
+        activeDiscounts={activeDiscounts}
       />
 
       <RestaurantInfoDrawer
@@ -158,10 +179,12 @@ function ShopPageContent() {
         restaurant={restaurant}
       />
 
+     
+{/* 
       <OrderTypeSelector
         selectedType={orderType}
         onSelectType={setOrderType}
-      />
+      /> */}
       
       {/* Closed Banner */}
       <ClosedBanner restaurant={restaurant} />
@@ -210,6 +233,12 @@ function ShopPageContent() {
             setIsModalOpen(true);
           }
         }}
+      />
+
+      <PromotionsDrawer
+        isOpen={isPromotionsOpen}
+        onClose={() => setIsPromotionsOpen(false)}
+        restaurantId={restaurantId}
       />
     </div>
   );

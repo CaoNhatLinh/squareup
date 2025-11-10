@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HiCheckCircle, HiExclamationCircle, HiInformationCircle, HiX, HiXCircle } from "react-icons/hi";
 
-export default function Toast({ message, type = "info", onClose, duration = 3000 }) {
+export default function Toast({ message, type = "info", onClose, duration = 3000, onClick }) {
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(100);
 
@@ -64,6 +64,13 @@ export default function Toast({ message, type = "info", onClose, duration = 3000
 
   const { icon: Icon, bgColor, borderColor, iconColor, textColor } = config[type] || config.info;
 
+  const handleToastClick = () => {
+    if (onClick) {
+      onClick();
+      handleClose();
+    }
+  };
+
   return (
     <div
       className={`pointer-events-auto transition-all duration-300 transform ${
@@ -71,7 +78,10 @@ export default function Toast({ message, type = "info", onClose, duration = 3000
       }`}
     >
       <div
-        className={`${bgColor} ${borderColor} border-l-4 rounded-lg shadow-lg overflow-hidden min-w-[320px] max-w-md`}
+        className={`${bgColor} ${borderColor} border-l-4 rounded-lg shadow-lg overflow-hidden min-w-[320px] max-w-md ${
+          onClick ? "cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all" : ""
+        }`}
+        onClick={handleToastClick}
       >
         <div className="p-4 flex items-start gap-3">
           <Icon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />

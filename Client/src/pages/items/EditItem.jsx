@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { fetchItems, updateItem } from "../../api/items";
 import { useImageUpload } from "../../hooks/useImageUpload";
+import { useToast } from "../../hooks/useToast";
 import {
   HiXMark,
   HiTag,
@@ -101,6 +102,7 @@ export default function EditItem() {
   const { itemId } = useParams();
   const { user } = useAuth();
   const { uploadImage, uploading } = useImageUpload();
+  const { success, error } = useToast();
   const [formData, setFormData] = useState({
     itemType: "Physical good",
     name: "",
@@ -188,7 +190,7 @@ export default function EditItem() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert("Item name is required");
+      error("Item name is required");
       return;
     }
     setSaving(true);
@@ -206,10 +208,11 @@ export default function EditItem() {
         categoryIds: selectedCategories.map((c) => c.id),
         modifierIds: selectedModifiers.map((m) => m.id),
       });
+      success(`Item "${formData.name}" updated successfully!`);
       navigate("/items");
     } catch (err) {
       console.error("Failed to update item:", err);
-      alert("Failed to update item: " + err.message);
+      error("Failed to update item: " + err.message);
     } finally {
       setSaving(false);
     }

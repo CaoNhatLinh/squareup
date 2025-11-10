@@ -23,6 +23,9 @@ import Modifiers from './pages/modifiers/Modifiers'
 import CreateModifier from './pages/modifiers/CreateModifier'
 import EditModifier from './pages/modifiers/EditModifier'
 import { fetchModifiers } from './api/modifers'
+import Discounts from './pages/discounts/Discounts'
+import CreateDiscount from './pages/discounts/CreateDiscount'
+import EditDiscount from './pages/discounts/EditDiscount'
 import ShopPage from './pages/shop/ShopPage'
 import CheckoutSuccessWrapper from './pages/shop/CheckoutSuccessWrapper'
 import CheckoutCancelled from './pages/shop/CheckoutCancelled'
@@ -96,6 +99,9 @@ export const router = createBrowserRouter([
       { path: 'modifiers', element: <Modifiers />, },
       { path: 'modifiers/new', element: <CreateModifier /> },
       { path: 'modifiers/:modifierId/edit', element: <EditModifier /> },
+      { path: 'discounts', element: <Discounts /> },
+      { path: 'discounts/new', element: <CreateDiscount /> },
+      { path: 'discounts/:discountId/edit', element: <EditDiscount /> },
       { path: 'orders', element: <Orders />, loader: ordersLoader },
       { path: 'orders/:orderId', element: <OrderDetails /> },
       { path: 'settings/business/about', element: <BusinessAbout /> },

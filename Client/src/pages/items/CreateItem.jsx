@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth';
 import { createItem } from '../../api/items'
 import { useImageUpload } from '../../hooks/useImageUpload'
+import { useToast } from '../../hooks/useToast'
 import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' // Updated Icons
 
 export default function CreateItem() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { uploadImage, uploading } = useImageUpload()
+  const { success, error } = useToast()
   const [formData, setFormData] = useState({
     itemType: 'Prepared food and beverage',
     name: '',
@@ -59,7 +61,7 @@ export default function CreateItem() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert('Item name is required')
+      error('Item name is required')
       return
     }
     
@@ -81,10 +83,11 @@ export default function CreateItem() {
         modifierIds: selectedModifiers.map(m => m.id),
       })
       
+      success(`Item "${formData.name}" created successfully!`)
       navigate(-1)
     } catch (err) {
       console.error('Failed to create item:', err)
-      alert('Failed to create item: ' + err.message)
+      error('Failed to create item: ' + err.message)
     } finally {
       setSaving(false)
     }

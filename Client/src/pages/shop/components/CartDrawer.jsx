@@ -6,11 +6,22 @@ import { createCheckoutSession } from "../../../api/checkout";
 
 export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const { restaurantId } = useParams();
-  const { restaurant, cart, removeFromCart, getCartTotal } = useShop();
+  const { restaurant, cart, removeFromCart, getCartTotal, discountCalculation } = useShop();
   const totalAmount = getCartTotal();
   const [itemToRemove, setItemToRemove] = useState(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Use discount calculation from context
+  const {
+    subtotal = totalAmount,
+    totalDiscount = 0,
+    total = totalAmount,
+    itemDiscounts = {},
+    appliedDiscount = null,
+    appliedDiscounts = [],
+    discountAmounts = {}
+  } = discountCalculation || {};
   
   const handleRemoveClick = (item) => {
     setItemToRemove(item);
@@ -98,6 +109,62 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
           </div>
         </div>
 
+        {/* Discount Summary - Show before checkout button */}
+        {cart.length > 0 && totalDiscount > 0 && (
+          <div className="px-6 py-4 bg-green-50 border-b border-green-200">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">Subtotal:</span>
+                <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+              </div>
+              
+              {/* Show all applied discounts */}
+              {appliedDiscounts.length > 0 ? (
+                <div className="space-y-1">
+                  {appliedDiscounts.map((discount, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-green-700 font-medium">
+                          {discount.name}
+                          {discount.amountType === 'percentage' && ` (${discount.amount}%)`}
+                        </span>
+                      </div>
+                      <span className="font-medium text-green-700">
+                        -${(discountAmounts[discount.id] || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between text-sm pt-1 border-t border-green-300 mt-1">
+                    <span className="text-gray-700 font-semibold">Total Savings:</span>
+                    <span className="font-bold text-green-700">-${totalDiscount.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-green-700 font-medium">
+                      {appliedDiscount?.name || 'Discount'}
+                      {appliedDiscount?.amountType === 'percentage' && ` (${appliedDiscount.amount}%)`}
+                    </span>
+                  </div>
+                  <span className="font-medium text-green-700">-${totalDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              
+              <div className="pt-2 border-t border-green-300 flex items-center justify-between">
+                <span className="font-bold text-gray-900">Total:</span>
+                <span className="font-bold text-xl text-gray-900">${total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {cart.length > 0 && (
           <div className="px-6 py-3 bg-white border-b">
             <button 
@@ -116,7 +183,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                   ? "Processing..."
                   : "Checkout"}
               </span>
-              <span>${totalAmount.toFixed(2)}</span>
+              <span>${(total || totalAmount).toFixed(2)}</span>
             </button>
             {restaurant?.isOpen === false && restaurant?.nextOpenTime && (
               <p className="text-sm text-red-600 text-center mt-2">
@@ -158,13 +225,24 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900 text-lg mb-1">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mb-1">${item.price.toFixed(2)}</p>
-
-                      {item.discount && (
+                      
+                      {/* Show discount badge and pricing if discount applied */}
+                      {itemDiscounts[item.groupKey] && itemDiscounts[item.groupKey].discountAmount > 0 ? (
                         <div className="space-y-1 mb-2">
-                          <p className="text-sm text-green-600 font-medium">10% discount applied</p>
-                          <p className="text-sm text-green-600 font-medium">10% promotion</p>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block px-2 py-0.5 bg-pink-100 text-pink-700 text-xs font-bold rounded">
+                              {itemDiscounts[item.groupKey].discountPercentage}% OFF
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400 line-through">${item.price.toFixed(2)}</span>
+                            <span className="text-sm text-red-600 font-semibold">
+                              ${(item.price - (itemDiscounts[item.groupKey].discountAmount / item.quantity)).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
+                      ) : (
+                        <p className="text-sm text-gray-600 mb-1">${item.price.toFixed(2)}</p>
                       )}
 
                       {item.selectedOptions.length > 0 && (

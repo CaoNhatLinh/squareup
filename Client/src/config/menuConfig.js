@@ -1,4 +1,4 @@
-import { HiHome, HiShoppingBag, HiCreditCard, HiGlobeAlt, HiUserGroup, HiChartBar, HiUsers, HiCog } from 'react-icons/hi';
+import { HiHome, HiShoppingBag, HiCreditCard, HiGlobeAlt, HiUserGroup, HiChartBar, HiUsers, HiCog, HiTicket } from 'react-icons/hi';
 
 export const menuItems = [
   { to: '/dashboard', label: 'Home', icon: HiHome },
@@ -12,6 +12,7 @@ export const menuItems = [
     //   { to: '/items/image-library', label: 'Image library' },
       { to: '/modifiers', label: 'Modifiers' },
       { to: '/categories', label: 'Categories' },
+      { to: '/discounts', label: 'Discounts' },
     ]
   },
   {  label: 'Payments & invoices', icon: HiCreditCard,

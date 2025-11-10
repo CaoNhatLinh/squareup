@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { calculateCartDiscounts } = require('../utils/discountCalculator');
 
 const db = admin.database();
 
@@ -23,6 +24,21 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
+    // Calculate discounts
+    const discountResult = await calculateCartDiscounts(restaurantId, items);
+    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    const totalDiscount = discountResult.totalDiscount;
+    const totalAmount = subtotal - totalDiscount;
+
+    console.log('💰 Checkout calculation:', {
+      subtotal,
+      totalDiscount,
+      totalAmount,
+      appliedDiscounts: discountResult.appliedDiscounts.map(d => d.name),
+      itemDiscounts: discountResult.itemDiscounts
+    });
+
+    // Create line items with discounted prices
     const lineItems = items.map((item) => {
       let description = "";
       if (item.selectedOptions && item.selectedOptions.length > 0) {
@@ -30,6 +46,17 @@ exports.createCheckoutSession = async (req, res) => {
       }
       if (item.specialInstruction) {
         description += description ? ` | Note: ${item.specialInstruction}` : `Note: ${item.specialInstruction}`;
+      }
+
+      const itemDiscount = discountResult.itemDiscounts[item.groupKey];
+      let finalPrice = item.price;
+      
+      if (itemDiscount && itemDiscount.discountAmount > 0) {
+        finalPrice = item.price - itemDiscount.discountAmount;
+        const discountInfo = `Discount: ${itemDiscount.discountPercentage}% OFF`;
+        description = description ? `${description} | ${discountInfo}` : discountInfo;
+        
+        console.log(`  Item "${item.name}": $${item.price} → $${finalPrice} (${itemDiscount.discountPercentage}% off)`);
       }
 
       return {
@@ -40,19 +67,24 @@ exports.createCheckoutSession = async (req, res) => {
             description: description || "No options",
             images: item.image ? [item.image] : [],
           },
-          unit_amount: Math.round(item.price * 100),
+          unit_amount: Math.round(finalPrice * 100), // Use discounted price
         },
         quantity: item.quantity,
       };
     });
-
-    const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
     const pendingOrderId = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const pendingOrderData = {
       restaurantId,
       restaurantName: restaurant.name,
       items,
+      subtotal,
+      discount: {
+        totalDiscount,
+        appliedDiscounts: discountResult.appliedDiscounts,
+        discountBreakdown: discountResult.discountBreakdown,
+        itemDiscounts: discountResult.itemDiscounts
+      },
       totalAmount,
       status: "pending",
       createdAt: Date.now(),
@@ -142,6 +174,7 @@ exports.handleWebhook = async (req, res) => {
             
             items: pendingOrder.items.map(item => ({
               itemId: item.itemId || "",
+              groupKey: item.groupKey || "",
               name: item.name || "Unknown Item",
               image: item.image || null,
               price: item.price || 0,
@@ -152,7 +185,8 @@ exports.handleWebhook = async (req, res) => {
               specialInstruction: item.specialInstruction || "",
             })),
             
-            subtotal: pendingOrder.totalAmount,
+            discount: pendingOrder.discount || null,
+            subtotal: pendingOrder.subtotal || pendingOrder.totalAmount,
             tax: 0, 
             total: session.amount_total / 100,
             createdAt: now,

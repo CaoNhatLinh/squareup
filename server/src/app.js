@@ -20,11 +20,9 @@ app.use(cors({
 
 app.use(cookieParser());
 
-// Webhook route MUST come before express.json() to get raw body
 const checkoutRouter = require('./routes/checkout');
 app.use('/api/checkout', checkoutRouter);
 
-// Now parse JSON for other routes
 app.use(express.json());
 
 const authRouter = require('./routes/auth');

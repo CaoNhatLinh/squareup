@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useShop } from "../../../context/ShopContext";
 import { useNavigate } from "react-router-dom";
 
-export default function ShopHeader({ onCartClick }) {
+export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDiscounts }) {
   const { getTotalItemsCount } = useShop();
   const navigate = useNavigate();
   const totalItems = getTotalItemsCount();
@@ -46,7 +46,22 @@ export default function ShopHeader({ onCartClick }) {
                   <span className="font-semibold text-sm">Track Order</span>
                 </button>
 
-                {/* Cart Button */}
+                {/* Promotions Button */}
+                <button 
+                  onClick={onPromotionsClick}
+                  className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 hover:from-orange-600 hover:to-red-600 transition-colors shadow-md"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                  </svg>
+                  <span className="font-semibold text-sm">Offers</span>
+                  {hasActiveDiscounts && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-white">{Object.keys(hasActiveDiscounts).length > 9 ? '9+' : hasActiveDiscounts}</span>
+                    </span>
+                  )}
+                </button>
+
                 <button 
                   onClick={onCartClick}
                   className="bg-black text-white rounded-xl px-4 py-2 flex items-center gap-3 hover:bg-gray-900 transition-colors shadow-md"
@@ -63,7 +78,6 @@ export default function ShopHeader({ onCartClick }) {
         </div>
       </div>
 
-      {/* Track Order Modal */}
       {showTrackOrder && (
         <>
           <div 

@@ -245,7 +245,6 @@ export default function BusinessHours() {
                             />
                             <HiOutlineClock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                           </div>
-
                           <span className="text-gray-500 font-semibold">-</span>
                           <div className="relative w-28 flex-shrink-0">
                             <input

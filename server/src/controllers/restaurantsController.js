@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const db = admin.database();
+const { calculateItemDiscounts } = require('../utils/itemDiscountCalculator');
 
 async function getRestaurant(req, res) {
   const { uid } = req.params;
@@ -99,6 +100,19 @@ async function getRestaurantForShop(req, res) {
                 }
             }
         }
+        
+        let itemsWithDiscounts = data.items || {};
+        try {
+            const discounts = data.discounts || {};
+            itemsWithDiscounts = calculateItemDiscounts(
+                data.items || {}, 
+                data.categories || {}, 
+                discounts
+            );
+        } catch (discountError) {
+            console.error('Error calculating item discounts:', discountError);
+        }
+        
         return res.json({
             id: uid,
             name: data.name || '',
@@ -107,7 +121,7 @@ async function getRestaurantForShop(req, res) {
             phone: data.phone || '',
             email: data.email || '',
             categories: data.categories || {},
-            items: data.items || {},
+            items: itemsWithDiscounts,
             modifiers: data.modifiers || {},
             hours: data.hours || {},
             isOpen,

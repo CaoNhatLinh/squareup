@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { createCategory, fetchCategories } from "../../api/categories";
 import { useImageUpload } from "../../hooks/useImageUpload";
+import { useToast } from "../../hooks/useToast";
 import {
   HiXMark,
   HiPhoto,
@@ -15,6 +16,7 @@ export default function CreateCategory() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { uploadImage, uploading } = useImageUpload();
+  const { success, error } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     parentCategoryId: null,
@@ -90,7 +92,7 @@ export default function CreateCategory() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert("Category name is required");
+      error("Category name is required");
       return;
     }
     setSaving(true);
@@ -105,10 +107,11 @@ export default function CreateCategory() {
         parentCategoryId: formData.parentCategoryId,
         itemIds: selectedItems.map((item) => item.id),
       });
+      success(`Category "${formData.name}" created successfully!`);
       navigate("/categories");
     } catch (err) {
       console.error("Failed to create category:", err);
-      alert("Failed to create category: " + err.message);
+      error("Failed to create category: " + err.message);
     } finally {
       setSaving(false);
     }

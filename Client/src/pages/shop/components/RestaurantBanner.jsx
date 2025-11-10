@@ -1,8 +1,23 @@
 import { HiLocationMarker, HiStar, HiClock, HiChevronRight } from "react-icons/hi";
 
-export default function RestaurantBanner({ restaurant, onInfoClick }) {
+export default function RestaurantBanner({ restaurant, onInfoClick, onPromotionsClick, activeDiscounts }) {
   if (!restaurant) return null;
   const bannerImage = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=400&fit=crop";
+  
+  // Get highest discount
+  const discountsList = Object.values(activeDiscounts || {}).filter(d => d.automaticDiscount);
+  console.log('Discounts List:', discountsList);
+  const highestDiscount = discountsList.length > 0 
+    ? discountsList.reduce((max, discount) => {
+        const currentValue = discount.amountType === 'percentage' 
+          ? parseFloat(discount.amount) 
+          : parseFloat(discount.amount) * 2; // Weight fixed amount higher for comparison
+        const maxValue = max.amountType === 'percentage' 
+          ? parseFloat(max.amount) 
+          : parseFloat(max.amount) * 2;
+        return currentValue > maxValue ? discount : max;
+      })
+    : null;
   return (
     <div className="relative bg-white">
       <div className="relative h-48 md:h-64 overflow-hidden">
@@ -14,7 +29,7 @@ export default function RestaurantBanner({ restaurant, onInfoClick }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 -mt-12 relative z-10 mb-4">
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <div className="flex items-start justify-between gap-4" onClick={onInfoClick}>
             <div className="flex-1">
@@ -61,17 +76,23 @@ export default function RestaurantBanner({ restaurant, onInfoClick }) {
             </div>
           </div>
 
-          {/* <button
-            onClick={onInfoClick}
-            className="mt-4 w-full flex items-center justify-between bg-amber-50 border-2 border-amber-400 rounded-xl px-5 py-3 hover:bg-amber-100 transition-colors group"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-gray-700">Limited Offer:</span>
-              <span className="text-red-600 font-bold">10% OFF</span>
-              <span className="text-gray-700">Today!</span>
-            </div>
-            <HiChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
-          </button> */}
+          {highestDiscount && (
+            <button
+              onClick={onPromotionsClick}
+              className="mt-4 w-full flex items-center justify-between bg-amber-50 border-2 border-amber-400 rounded-xl px-5 py-3 hover:bg-amber-100 transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-gray-700">Limited Offer:</span>
+                <span className="text-red-600 font-bold">
+                  {highestDiscount.amountType === 'percentage' 
+                    ? `${highestDiscount.amount}% OFF` 
+                    : `$${highestDiscount.amount} OFF`}
+                </span>
+                <span className="text-gray-700">Today!</span>
+              </div>
+              <HiChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
         </div>
       </div>
     </div>

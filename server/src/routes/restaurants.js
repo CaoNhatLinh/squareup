@@ -4,6 +4,8 @@ const categoriesRouter = require('./categories');
 const itemsRouter = require('./items');
 const modifiersRouter = require('./modifiers');
 const specialClosuresRouter = require('./specialClosures');
+const discountsRouter = require('./discounts');
+
 const router = express.Router();
 
 const controller = require('../controllers/restaurantsController');
@@ -14,6 +16,5 @@ router.use('/:uid/categories', categoriesRouter);
 router.use('/:uid/items', itemsRouter);
 router.use('/:uid/modifiers', modifiersRouter);
 router.use('/:uid/special-closures', specialClosuresRouter);
-
-
+router.use('/:uid/discounts', discountsRouter);
 module.exports = router;

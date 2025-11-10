@@ -10,9 +10,7 @@ exports.uploadImage = async (req, res) => {
     if (!req.body.image) {
       return res.status(400).json({ error: "No image provided" });
     }
-
     const base64Image = req.body.image.replace(/^data:image\/\w+;base64,/, "");
-
     const formData = new FormData();
     formData.append("key", IMGBB_API_KEY);
     formData.append("image", base64Image);

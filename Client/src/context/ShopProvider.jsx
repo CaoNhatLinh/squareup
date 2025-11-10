@@ -1,5 +1,6 @@
 import  {  useState, useCallback, useEffect } from "react";
 import { ShopContext } from "./ShopContext";
+import { useDiscountCalculation } from "../hooks/useDiscountCalculation";
 
 const CART_STORAGE_KEY = "shop_cart";
 
@@ -8,6 +9,7 @@ export function ShopProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState({});
   const [modifiers, setModifiers] = useState({});
+  const [activeDiscounts, setActiveDiscounts] = useState({});
   const [cart, setCart] = useState(() => {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
@@ -44,6 +46,15 @@ export function ShopProvider({ children }) {
       );
       const pricePerItem = basePrice + optionsPrice;
 
+      // Find categoryId for this item
+      let categoryId = null;
+      for (const category of categories) {
+        if (category.itemIds && category.itemIds.includes(item.id)) {
+          categoryId = category.id;
+          break;
+        }
+      }
+
       setCart((prevCart) => {
         let cartWithoutEditing = prevCart;
         if (editingCartKey) {
@@ -74,6 +85,7 @@ export function ShopProvider({ children }) {
             id: `${item.id}_${Date.now()}`,
             groupKey: groupKey,
             itemId: item.id,
+            categoryId: categoryId, // Add categoryId here
             name: item.name,
             price: pricePerItem,
             image: item.image,
@@ -87,7 +99,7 @@ export function ShopProvider({ children }) {
         }
       });
     },
-    [getCartItemGroupKey]
+    [getCartItemGroupKey, categories]
   );
 
   const removeFromCart = useCallback((groupKey) => {
@@ -128,6 +140,9 @@ export function ShopProvider({ children }) {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
 
+  // Calculate discounts
+  const discountCalculation = useDiscountCalculation(cart, activeDiscounts);
+
   const value = {
     // State
     restaurant,
@@ -135,12 +150,15 @@ export function ShopProvider({ children }) {
     items,
     modifiers,
     cart,
+    activeDiscounts,
+    discountCalculation,
 
     // Setters
     setRestaurant,
     setCategories,
     setItems,
     setModifiers,
+    setActiveDiscounts,
 
     // Cart functions
     addToCart,

@@ -8,6 +8,7 @@ import {
 } from "react-icons/hi2";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 
 import { fetchItems, createItem, deleteItem } from "../../api/items";
 import { fetchCategories } from "../../api/categories";
@@ -18,6 +19,7 @@ import ActionMenu from "../../components/common/ActionMenu";
 export default function ItemLibrary() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { success, error } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [quickCreateMode, setQuickCreateMode] = useState(false);
   const [quickFormData, setQuickFormData] = useState({ name: "", price: "" });
@@ -84,10 +86,11 @@ export default function ItemLibrary() {
       });
       setQuickFormData({ name: "", price: "" });
       setQuickCreateMode(false);
+      success(`Item "${quickFormData.name}" created successfully!`);
       refetchItems();
     } catch (err) {
       console.error("Failed to create item:", err);
-      alert("Failed to create item");
+      error("Failed to create item");
     }
   };
 
@@ -117,20 +120,23 @@ export default function ItemLibrary() {
         selectedItems.map((itemId) => deleteItem(user.uid, itemId))
       );
       setSelectedItems([]);
+      success(`Deleted ${selectedItems.length} item(s) successfully!`);
       refetchItems();
     } catch (err) {
       console.error("Failed to delete items:", err);
-      alert("Failed to delete some items");
+      error("Failed to delete some items");
     }
   };
 
   const handleDeleteItem = async (itemId) => {
+    const item = items.find(i => i.id === itemId);
     if (!window.confirm(`Are you sure you want to delete this item?`)) return;
     try {
       await deleteItem(user.uid, itemId);
+      success(`Item "${item?.name || 'Item'}" deleted successfully!`);
       refetchItems();
     } catch {
-      alert("Failed to delete item");
+      error("Failed to delete item");
     }
   };
 
