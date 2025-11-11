@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useParams } from "react-router-dom";
 import { fetchSpecialClosures, addSpecialClosure, removeSpecialClosure } from "../../api/specialClosures";
 import { HiPlus, HiTrash, HiCalendar, HiCheckCircle, HiExclamationCircle } from "react-icons/hi";
 import DatePicker from "react-datepicker"; 
 export default function SpecialClosures() {
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
   const [refreshKey, setRefreshKey] = useState(0); 
   
   const [closures, setClosures] = useState([]);
@@ -19,11 +19,11 @@ export default function SpecialClosures() {
 
   useEffect(() => {
     const loadClosures = async () => {
-      if (!user?.uid) return;
+      if (!restaurantId) return;
       
       setLoading(true);
       try {
-        const data = await fetchSpecialClosures(user.uid); 
+        const data = await fetchSpecialClosures(restaurantId); 
         const sortedData = (data || []).sort((a, b) => new Date(a.date) - new Date(b.date));
         setClosures(sortedData);
       } catch (err) {
@@ -35,7 +35,7 @@ export default function SpecialClosures() {
     };
 
     loadClosures();
-  }, [user?.uid, refreshKey]); 
+  }, [restaurantId, refreshKey]); 
   
   const handleAddClosure = async () => {
     if (!newClosure.date) {
@@ -58,7 +58,7 @@ export default function SpecialClosures() {
     setMessage("");
 
     try {
-      await addSpecialClosure(user.uid, { ...newClosure, date: dateString }); 
+      await addSpecialClosure(restaurantId, { ...newClosure, date: dateString }); 
       
       setRefreshKey(prev => prev + 1); 
       
@@ -81,7 +81,7 @@ export default function SpecialClosures() {
     setMessage("");
 
     try {
-      await removeSpecialClosure(user.uid, closureId);
+      await removeSpecialClosure(restaurantId, closureId);
       
       setRefreshKey(prev => prev + 1);
       

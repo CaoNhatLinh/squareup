@@ -1,8 +1,6 @@
 import * as apiClient from './apiClient'
+import imageCompression from 'browser-image-compression';
 
-/**
- * Upload image to ImgBB
- */
 export const uploadImage = async (base64Image) => {
   const response = await apiClient.post("/api/upload/image", {
     image: base64Image,
@@ -10,9 +8,6 @@ export const uploadImage = async (base64Image) => {
   return response.data;
 };
 
-/**
- * Upload image file to ImgBB
- */
 export const uploadImageFile = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
@@ -23,4 +18,28 @@ export const uploadImageFile = async (file) => {
     },
   });
   return response.data;
+};
+
+export const uploadCompressedImageFile = async (file) => {
+  try {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    const compressedFile = await imageCompression(file, options);
+
+    const formData = new FormData();
+    formData.append("image", compressedFile);
+
+    const response = await apiClient.post("/api/upload/image-file", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error compressing image:", error);
+    throw error;
+  }
 };

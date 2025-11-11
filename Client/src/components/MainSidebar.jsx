@@ -1,12 +1,15 @@
 import React from 'react'
+import { useParams } from 'react-router-dom'
 import { useRestaurant } from '../hooks/useRestaurant'
 import MenuItem from './navigation/MenuItem'
 import RestaurantDropdown from './navigation/RestaurantDropdown'
-import { menuItems } from '../config/menuConfig'
+import { getMenuItems } from '../config/menuConfig'
 import { HiSearch, HiCreditCard, HiBell, HiCalendar, HiQuestionMarkCircle } from 'react-icons/hi'
 
 export default function Sidebar({ isOpen, onClose }) {
+  const { restaurantId } = useParams()
   const { restaurant } = useRestaurant()
+  const menuItems = restaurantId ? getMenuItems(restaurantId) : []
 
   return (
     <>

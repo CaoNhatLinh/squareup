@@ -12,7 +12,6 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  // Use discount calculation from context
   const {
     subtotal = totalAmount,
     totalDiscount = 0,
@@ -37,8 +36,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    
-    // Block checkout if restaurant is closed
+
     if (restaurant?.isOpen === false) {
       alert("Sorry, the restaurant is currently closed. Please come back during business hours.");
       return;
@@ -51,19 +49,12 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
     
     setCheckoutLoading(true);
     try {
-      console.log("🛒 Starting checkout for restaurant:", restaurantId);
-      console.log("📦 Cart items:", cart.length);
 
-      // Create checkout session (success and cancel URLs handled by backend)
       const response = await createCheckoutSession(
         restaurantId,
         cart
       );
 
-      console.log("✅ Session created:", response.sessionId);
-      console.log("🚀 Redirecting to:", response.url);
-
-      // Redirect to Stripe Checkout using URL
       if (response.url) {
         window.location.href = response.url;
       } else {

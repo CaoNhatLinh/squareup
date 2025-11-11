@@ -19,7 +19,6 @@ export default function ItemList({
       );
   
     });
-    console.log("itemsByCategory:", grouped);
     return grouped;
   }, [items, categories]);
 

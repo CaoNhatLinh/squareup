@@ -1,5 +1,5 @@
 const express = require('express');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken, verifyRestaurantOwnership } = require('../middleware/verifyToken');
 const categoriesRouter = require('./categories');
 const itemsRouter = require('./items');
 const modifiersRouter = require('./modifiers');
@@ -9,12 +9,21 @@ const discountsRouter = require('./discounts');
 const router = express.Router();
 
 const controller = require('../controllers/restaurantsController');
-router.get('/:uid/shop', controller.getRestaurantForShop);
-router.get('/:uid', verifyToken, controller.getRestaurant);
-router.put('/:uid', verifyToken, controller.updateRestaurant);
-router.use('/:uid/categories', categoriesRouter);
-router.use('/:uid/items', itemsRouter);
-router.use('/:uid/modifiers', modifiersRouter);
-router.use('/:uid/special-closures', specialClosuresRouter);
-router.use('/:uid/discounts', discountsRouter);
+
+router.get('/', verifyToken, controller.getUserRestaurants);
+
+router.post('/', verifyToken, controller.createRestaurant);
+
+router.get('/:restaurantId/shop', controller.getRestaurantForShop);
+
+router.get('/:restaurantId', verifyToken, controller.getRestaurant);
+router.put('/:restaurantId', verifyToken, verifyRestaurantOwnership, controller.updateRestaurant);
+router.delete('/:restaurantId', verifyToken, verifyRestaurantOwnership, controller.deleteRestaurant);
+
+router.use('/:restaurantId/categories', categoriesRouter);
+router.use('/:restaurantId/items', itemsRouter);
+router.use('/:restaurantId/modifiers', modifiersRouter);
+router.use('/:restaurantId/special-closures', specialClosuresRouter);
+router.use('/:restaurantId/discounts', discountsRouter);
+
 module.exports = router;

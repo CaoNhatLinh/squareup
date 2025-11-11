@@ -77,13 +77,12 @@ export default function DiscountDetailModal({ discount, onClose }) {
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
           <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-2xl">
             <div className="flex items-start justify-between">
               <div className="flex-1">

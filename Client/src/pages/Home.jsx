@@ -3,17 +3,25 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth';
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user,loading } = useAuth()
   const navigate = useNavigate()
-
   useEffect(() => {
+
     if (user) {
-      navigate('/dashboard')
-    }
+      navigate('/restaurants')}
   }, [user, navigate])
 
   if (user) {
     return null
+  }
+  if (loading) {
+    return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center">
+        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mb-4 mx-auto"></div>
+        <h2 className="text-xl font-semibold text-gray-700">Loading...</h2>
+      </div>
+    </div>
+    )
   }
 
   return (

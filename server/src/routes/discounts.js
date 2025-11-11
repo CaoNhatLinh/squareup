@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const discountsController = require('../controllers/discountsController');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken } = require('../middleware/verifyToken');
 
-// Public route - get active discounts for shop
 router.get('/active', discountsController.getActiveDiscounts);
 
 router.use(verifyToken);

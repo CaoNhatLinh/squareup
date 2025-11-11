@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import { fetchDiscount, updateDiscount } from '../../api/discounts';
 import { fetchCategories } from '../../api/categories';
 import { fetchItems } from '../../api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
-
+import { DAYS_OF_WEEK } from '../../utils/scheduleConstants';
 export default function EditDiscount() {
   const navigate = useNavigate();
-  const { discountId } = useParams();
-  const { user } = useAuth();
+  const { discountId, restaurantId } = useParams();
   const { success, error } = useToast();
   const [loading, setLoading] = useState(true);
   
@@ -20,7 +18,7 @@ export default function EditDiscount() {
     amountType: 'percentage',
     amount: '',
     automaticDiscount: false,
-    discountApplyTo: '', // 'item_category' or 'quantity'
+    discountApplyTo: '',
     quantityRuleType: 'exact',
     purchaseQuantity: 2,
     discountQuantity: 1,
@@ -63,11 +61,11 @@ export default function EditDiscount() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user?.uid && discountId) {
+    if (restaurantId && discountId) {
       Promise.all([
-        fetchDiscount(user.uid, discountId),
-        fetchCategories(user.uid),
-        fetchItems(user.uid)
+        fetchDiscount(restaurantId, discountId),
+        fetchCategories(restaurantId),
+        fetchItems(restaurantId)
       ]).then(([discountData, categoriesData, itemsData]) => {
         setFormData(discountData);
         setCategories(Object.values(categoriesData || {}));
@@ -77,10 +75,10 @@ export default function EditDiscount() {
         error('Failed to load discount data');
       }).finally(() => setLoading(false));
     }
-  }, [user, discountId, error]);
+  }, [restaurantId, discountId, error]);
 
   const handleClose = () => {
-    navigate('/discounts');
+    navigate(`/${restaurantId}/discounts`);
   };
 
   const handleSave = async () => {
@@ -96,9 +94,9 @@ export default function EditDiscount() {
 
     setSaving(true);
     try {
-      await updateDiscount(user.uid, discountId, formData);
+      await updateDiscount(restaurantId, discountId, formData);
       success(`Discount "${formData.name}" updated successfully!`);
-      navigate('/discounts');
+      navigate(`/${restaurantId}/discounts`);
     } catch (err) {
       console.error('Failed to update discount:', err);
       error('Failed to update discount: ' + err.message);
@@ -171,7 +169,6 @@ export default function EditDiscount() {
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 overflow-auto">
       <div className="bg-white w-full max-w-4xl my-8 rounded-2xl shadow-2xl flex flex-col max-h-[95vh]">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Edit Discount</h2>
           <div className="flex items-center gap-3">
@@ -191,9 +188,7 @@ export default function EditDiscount() {
           </div>
         </div>
 
-        {/* Body - Same as CreateDiscount */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
-          {/* Basic Info */}
           <div className="space-y-4">
             <input
               type="text"
@@ -209,7 +204,6 @@ export default function EditDiscount() {
             </div>
           </div>
 
-          {/* Automatic Discount Section - IMPROVED UI */}
           <div className="border-2 border-blue-200 rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -249,7 +243,6 @@ export default function EditDiscount() {
 
             {formData.automaticDiscount && (
               <div className="space-y-4 mt-6 pt-6 border-t-2 border-blue-200">
-                {/* Show selected discount type */}
                 {!formData.discountApplyTo ? (
                   <div className="text-center py-8">
                     <HiSparkles className="w-16 h-16 text-blue-400 mx-auto mb-3" />
@@ -262,7 +255,6 @@ export default function EditDiscount() {
                     </button>
                   </div>
                 ) : formData.discountApplyTo === 'item_category' ? (
-                  /* Item or Category Mode */
                   <div className="bg-white rounded-xl shadow-sm border-2 border-purple-200 hover:border-purple-400 transition-all">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-4">
@@ -351,7 +343,6 @@ export default function EditDiscount() {
                     </div>
                   </div>
                 ) : (
-                  /* Quantity Mode */
                   <>
                     <div className="bg-white rounded-xl shadow-sm border-2 border-green-200 hover:border-green-400 transition-all">
                       <div className="p-5">
@@ -403,7 +394,6 @@ export default function EditDiscount() {
                             </button>
                           </div>
 
-                          {/* Quantity inputs */}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -433,7 +423,6 @@ export default function EditDiscount() {
                             )}
                           </div>
 
-                          {/* Selected items/categories */}
                           {formData.addAllItemsToPurchase ? (
                             <p className="text-sm text-gray-700 font-medium">
                               <HiCheck className="w-4 h-4 inline text-green-600 mr-1" />
@@ -498,7 +487,6 @@ export default function EditDiscount() {
                       </div>
                     </div>
 
-                    {/* Discount Target Card (for BOGO) */}
                     {formData.quantityRuleType === 'bogo' && (
                       <div className="bg-white rounded-xl shadow-sm border-2 border-orange-200 hover:border-orange-400 transition-all">
                         <div className="p-5">
@@ -608,7 +596,6 @@ export default function EditDiscount() {
             )}
           </div>
 
-          {/* Schedule */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -628,7 +615,7 @@ export default function EditDiscount() {
 
             {formData.setSchedule && (
               <div className="space-y-3 mt-4 border-t border-gray-200 pt-4">
-                {Object.keys(formData.scheduleDays).map((day) => (
+                {DAYS_OF_WEEK.map((day) => (
                   <div key={day} className="flex items-center gap-4 bg-white p-3 rounded-lg border border-gray-200">
                     <input
                       type="checkbox"
@@ -661,7 +648,6 @@ export default function EditDiscount() {
             )}
           </div>
 
-          {/* Date Range */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -764,7 +750,6 @@ export default function EditDiscount() {
         </div>
       </div>
 
-      {/* Discount Type Modal - Choose between Item/Category or Quantity */}
       {showDiscountTypeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl">
@@ -887,7 +872,6 @@ export default function EditDiscount() {
         </div>
       )}
 
-      {/* Item/Category Selector Modal */}
       {showItemCategorySelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-3xl max-h-[80vh] flex flex-col">
@@ -904,7 +888,6 @@ export default function EditDiscount() {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4">
-              {/* Categories Section */}
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   📁 Categories ({categories.length})
@@ -949,7 +932,6 @@ export default function EditDiscount() {
                 </div>
               </div>
 
-              {/* Items Section */}
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   🍽️ Items ({items.length})

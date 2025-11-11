@@ -9,24 +9,19 @@ const db = admin.database();
  */
 async function calculateCartDiscounts(restaurantId, cartItems) {
   try {
-    // Fetch all active discounts
     const discountsSnapshot = await db.ref(`restaurants/${restaurantId}/discounts`).once('value');
     const allDiscounts = discountsSnapshot.val() || {};
-    
-    // Filter active discounts
+
     const now = Date.now();
     const activeDiscounts = Object.entries(allDiscounts)
       .map(([id, discount]) => ({ id, ...discount }))
       .filter(discount => {
-        // Check if discount is enabled (assuming there's an 'enabled' field)
-        // Check date range if set
         if (discount.setDateRange) {
           const startTime = discount.dateRangeStart ? new Date(discount.dateRangeStart).getTime() : 0;
           const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd).getTime() : Infinity;
           if (now < startTime || now > endTime) return false;
         }
         
-        // Check schedule if set
         if (discount.setSchedule) {
           const currentDate = new Date();
           const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
@@ -39,7 +34,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
         return true;
       });
 
-    // Calculate discount for each applicable discount
     const discountResults = [];
     
     for (const discount of activeDiscounts) {
@@ -49,7 +43,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
       }
     }
 
-    // Stack multiple discounts - but avoid applying multiple discounts to same item
     if (discountResults.length === 0) {
       return {
         appliedDiscounts: [],
@@ -59,7 +52,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
       };
     }
 
-    // Sort by discount amount descending (apply higher discounts first)
     discountResults.sort((a, b) => b.discountAmount - a.discountAmount);
 
     const appliedDiscounts = [];
@@ -69,27 +61,15 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
     let totalDiscount = 0;
 
     for (const result of discountResults) {
-      // Check if any items in this discount have already been discounted
       const affectedItemKeys = Object.keys(result.itemDiscounts);
       const hasOverlap = affectedItemKeys.some(key => itemsAlreadyDiscounted.has(key));
 
       if (!hasOverlap) {
-        // No overlap - can apply this discount
         appliedDiscounts.push(result.discount);
         totalDiscount += result.discountAmount;
-        
-        // Track discount amount for this specific promotion
         discountAmounts[result.discount.id] = result.discountAmount;
-
-        // Add item discounts
         Object.assign(combinedItemDiscounts, result.itemDiscounts);
-
-        // Mark items as discounted
         affectedItemKeys.forEach(key => itemsAlreadyDiscounted.add(key));
-        
-        console.log(`✅ Applied discount "${result.discount.name}": $${result.discountAmount.toFixed(2)}`);
-      } else {
-        console.log(`⚠️ Skipped discount "${result.discount.name}" - items already discounted`);
       }
     }
 
@@ -122,7 +102,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
  */
 function calculateSingleDiscount(discount, cartItems) {
   if (!discount.automaticDiscount) {
-    // Manual discounts need to be applied explicitly
     return null;
   }
 
@@ -131,7 +110,6 @@ function calculateSingleDiscount(discount, cartItems) {
   const affectedItems = [];
 
   if (discount.discountApplyTo === 'item_category') {
-    // Item/Category mode - apply discount to selected items/categories
     const eligibleItems = cartItems.filter(item => {
       if (discount.addAllItemsToPurchase) return true;
       
@@ -147,7 +125,7 @@ function calculateSingleDiscount(discount, cartItems) {
       const itemKey = item.groupKey || item.id || item.itemId;
       itemDiscounts[itemKey] = {
         originalPrice: item.price,
-        discountAmount: itemDiscount / item.quantity, // per item
+        discountAmount: itemDiscount / item.quantity,
         finalPrice: item.price - (itemDiscount / item.quantity),
         quantityDiscounted: item.quantity,
         discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / item.quantity / item.price) * 100)
@@ -161,20 +139,17 @@ function calculateSingleDiscount(discount, cartItems) {
     });
 
   } else if (discount.discountApplyTo === 'quantity') {
-    // Quantity mode - BOGO, Exact, Minimum
     const result = calculateQuantityDiscount(discount, cartItems);
     discountAmount = result.discountAmount;
     Object.assign(itemDiscounts, result.itemDiscounts);
     affectedItems.push(...result.affectedItems);
   }
 
-  // Apply minimum spend check
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
   if (discount.setMinimumSpend && cartSubtotal < discount.minimumSubtotal) {
     return null;
   }
 
-  // Apply maximum discount cap
   if (discount.setMaximumValue && discountAmount > discount.maximumValue) {
     discountAmount = discount.maximumValue;
   }
@@ -207,7 +182,6 @@ function calculateQuantityDiscount(discount, cartItems) {
   const itemDiscounts = {};
   const affectedItems = [];
 
-  // Filter eligible items for purchase requirement
   const eligibleItems = cartItems.filter(item => {
     if (discount.addAllItemsToPurchase) return true;
     
@@ -220,12 +194,9 @@ function calculateQuantityDiscount(discount, cartItems) {
   const totalEligibleQuantity = eligibleItems.reduce((sum, item) => sum + item.quantity, 0);
 
   if (discount.quantityRuleType === 'exact') {
-    // Exact quantity - apply discount if exact quantity is met
     if (totalEligibleQuantity === discount.purchaseQuantity) {
-      // Apply discount to discountQuantity items (cheapest items)
       const discountQty = discount.discountQuantity || discount.purchaseQuantity;
       
-      // Get discount target items
       let discountTargetItems = [];
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
         discountTargetItems = [...eligibleItems];
@@ -239,12 +210,10 @@ function calculateQuantityDiscount(discount, cartItems) {
         discountTargetItems = [...eligibleItems];
       }
       
-      // Sort by price ascending (cheapest first for discount application)
       const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);
       
       let remainingDiscountQty = discountQty;
       
-      // Apply discount to cheapest items up to discountQty
       for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {
         const item = sortedItems[i];
         const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);
@@ -273,12 +242,9 @@ function calculateQuantityDiscount(discount, cartItems) {
     }
 
   } else if (discount.quantityRuleType === 'minimum') {
-    // Minimum quantity - apply discount if minimum is met
     if (totalEligibleQuantity >= discount.purchaseQuantity) {
-      // Apply discount to discountQuantity items (cheapest items)
       const discountQty = discount.discountQuantity || totalEligibleQuantity;
       
-      // Get discount target items
       let discountTargetItems = [];
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
         discountTargetItems = [...eligibleItems];
@@ -292,12 +258,10 @@ function calculateQuantityDiscount(discount, cartItems) {
         discountTargetItems = [...eligibleItems];
       }
       
-      // Sort by price ascending (cheapest first for discount application)
       const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);
       
       let remainingDiscountQty = discountQty;
       
-      // Apply discount to cheapest items up to discountQty
       for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {
         const item = sortedItems[i];
         const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);
@@ -326,19 +290,15 @@ function calculateQuantityDiscount(discount, cartItems) {
     }
 
   } else if (discount.quantityRuleType === 'bogo') {
-    // BOGO - Buy X Get Y with "equal or lesser value" rule
     const purchaseQty = discount.purchaseQuantity || 1;
     const discountQty = discount.discountQuantity || 1;
 
     if (totalEligibleQuantity >= purchaseQty + discountQty) {
-      // Get items for discount target
       let discountTargetItems = [];
       
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
-        // Use same items as purchase requirement
         discountTargetItems = [...eligibleItems];
       } else {
-        // Use different items specified in discountTarget
         discountTargetItems = cartItems.filter(item => {
           const matchesCategory = discount.discountTargetCategories?.some(cat => cat.id === item.categoryId);
           const matchesItem = discount.discountTargetItems?.some(i => i.id === item.itemId);
@@ -346,14 +306,10 @@ function calculateQuantityDiscount(discount, cartItems) {
         });
       }
 
-      // Apply "equal or lesser value" rule
-      // Sort items by price descending
       const sortedItems = [...discountTargetItems].sort((a, b) => b.price - a.price);
       
-      // Calculate how many BOGO sets we can apply
       const bogoSets = Math.floor(totalEligibleQuantity / (purchaseQty + discountQty));
       
-      // Apply discount to the cheaper items (discountQty items per set)
       let itemsToDiscount = bogoSets * discountQty;
       
       for (let i = sortedItems.length - 1; i >= 0 && itemsToDiscount > 0; i--) {

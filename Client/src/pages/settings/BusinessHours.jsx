@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useRestaurant } from "../../hooks/useRestaurant";
 import { updateBusinessHours } from "../../api/restaurants";
@@ -23,6 +24,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function BusinessHours() {
+  const { restaurantId } = useParams();
   const { user } = useAuth();
   const { restaurant, updateRestaurant } = useRestaurant();
   const [hours, setHours] = useState({});
@@ -129,7 +131,7 @@ export default function BusinessHours() {
     setMessage("");
     try {
       const token = await user.getIdToken();
-      await updateBusinessHours(user.uid, hours, token);
+      await updateBusinessHours(restaurantId, hours, token);
       updateRestaurant({ hours });
       setMessage("Business hours updated successfully!");
       setTimeout(() => setMessage(""), 4000);

@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { getRestaurantOrders, updateOrderStatus } from "../../api/orders";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useNavigate, useLoaderData, useParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { HiCheck } from "react-icons/hi2";
 import { HiRefresh } from "react-icons/hi";
 import { useOrderNotification } from "../../hooks/useOrderNotification";
-import { useRestaurant } from "../../hooks/useRestaurant";
 import { ref, onValue } from "firebase/database";
 import { rtdb } from "../../firebase";
 
@@ -27,7 +26,7 @@ const getStatusClasses = (status) => {
 
 export default function Orders() {
   useLoaderData();
-  const { restaurant } = useRestaurant();
+  const { restaurantId } = useParams();
   const { isNewOrder, newOrderIds, markAllAsRead } = useOrderNotification();
 
   const [orders, setOrders] = useState([]);
@@ -37,7 +36,7 @@ export default function Orders() {
   const navigate = useNavigate();
 
   const fetchOrders = useCallback(async () => {
-    if (!restaurant?.id) {
+    if (!restaurantId) {
       setError("Restaurant not found");
       setLoading(false);
       return;
@@ -46,7 +45,7 @@ export default function Orders() {
     try {
       setLoading(true);
       setError(null);
-      const response = await getRestaurantOrders(restaurant.id);
+      const response = await getRestaurantOrders(restaurantId);
       setOrders(response.orders || []);
     } catch (err) {
       console.error("Error fetching orders:", err);
@@ -54,18 +53,18 @@ export default function Orders() {
     } finally {
       setLoading(false);
     }
-  }, [restaurant?.id]);
+  }, [restaurantId]);
 
   useEffect(() => {
-    if (restaurant?.id) {
+    if (restaurantId) {
       fetchOrders();
     }
-  }, [restaurant?.id, fetchOrders]);
+  }, [restaurantId, fetchOrders]);
 
   useEffect(() => {
-    if (!restaurant?.id) return;
+    if (!restaurantId) return;
 
-    const ordersRef = ref(rtdb, `restaurants/${restaurant.id}/orders`);
+    const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);
 
     const handleOrdersUpdate = (snapshot) => {
       if (!snapshot.exists()) {
@@ -93,19 +92,18 @@ export default function Orders() {
     });
 
     return () => {
-      console.log("🧹 Cleaning up Orders page Firebase listener");
       unsubscribe();
     };
-  }, [restaurant?.id]);
+  }, [restaurantId]);
 
   const openOrderDetails = (orderId) => {
-    navigate(`/orders/${orderId}`);
+    navigate(`/${restaurantId}/orders/${orderId}`);
   };
 
   const handleAcceptOrder = async (orderId, e) => {
     e.stopPropagation();
     try {
-      await updateOrderStatus(restaurant.id, orderId, "accepted");
+      await updateOrderStatus(restaurantId, orderId, "accepted");
     } catch (err) {
       console.error("Error accepting order:", err);
     }

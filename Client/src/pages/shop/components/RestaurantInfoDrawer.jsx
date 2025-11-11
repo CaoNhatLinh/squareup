@@ -35,8 +35,7 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
 
   const hoursData = formatBusinessHours(restaurant.hours);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  
-  // Check if today matches any special closure
+
   const todayDateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const todaySpecialClosure = restaurant.specialClosures?.find(closure => {
     if (typeof closure === 'string') {

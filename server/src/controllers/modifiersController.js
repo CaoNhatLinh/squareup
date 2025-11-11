@@ -2,9 +2,10 @@ const admin = require('firebase-admin');
 const db = admin.database();
 
 async function listModifiers(req, res) {
-  const { uid } = req.params;
+  const { restaurantId } = req.params;
   try {
-    const snap = await db.ref(`restaurants/${uid}/modifiers`).get();
+    const snap = await db.ref(`restaurants/${restaurantId}/modifiers`).get();
+
     return res.json(snap.exists() ? snap.val() : {});
   } catch (err) {
     console.error(err);
@@ -12,9 +13,9 @@ async function listModifiers(req, res) {
   }
 }
 async function getModifier(req, res) {
-  const { uid, modifierId } = req.params;
+  const { restaurantId, modifierId } = req.params;
   try {
-    const snap = await db.ref(`restaurants/${uid}/modifiers/${modifierId}`).get();
+    const snap = await db.ref(`restaurants/${restaurantId}/modifiers/${modifierId}`).get();
     if (!snap.exists()) return res.status(404).json({ error: 'Modifier not found' });
     return res.json(snap.val());
   } catch (err) {
@@ -24,20 +25,19 @@ async function getModifier(req, res) {
 }
 
 async function createModifier(req, res) {
-  const { uid } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId } = req.params;
   
   const { name, displayName, options = [], selectionType = 'multiple', required = false } = req.body;
   if (!name) return res.status(400).json({ error: 'Missing name' });
   if (!Array.isArray(options)) return res.status(400).json({ error: 'options must be an array' });
   
   try {
-    const ref = db.ref(`restaurants/${uid}/modifiers`).push();
+    const ref = db.ref(`restaurants/${restaurantId}/modifiers`).push();
     const id = ref.key;
     
     const optionsObject = {};
     options.forEach(option => {
-      const optionRef = db.ref(`restaurants/${uid}/modifiers/${id}/options`).push();
+      const optionRef = db.ref(`restaurants/${restaurantId}/modifiers/${id}/options`).push();
       const optionId = optionRef.key;
       optionsObject[optionId] = {
         id: optionId,
@@ -72,8 +72,7 @@ async function createModifier(req, res) {
 }
 
 async function updateModifier(req, res) {
-  const { uid, modifierId } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId, modifierId } = req.params;
   
   const { name, displayName, options, selectionType, required } = req.body;
   if (!name && options === undefined && selectionType === undefined && required === undefined && displayName === undefined) {
@@ -84,7 +83,7 @@ async function updateModifier(req, res) {
   }
   
   try {
-    const modRef = db.ref(`restaurants/${uid}/modifiers/${modifierId}`);
+    const modRef = db.ref(`restaurants/${restaurantId}/modifiers/${modifierId}`);
     const snap = await modRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Modifier not found' });
     
@@ -97,7 +96,7 @@ async function updateModifier(req, res) {
     if (options !== undefined) {
       const optionsObject = {};
       options.forEach(option => {
-        const optionId = option.id || db.ref(`restaurants/${uid}/modifiers/${modifierId}/options`).push().key;
+        const optionId = option.id || db.ref(`restaurants/${restaurantId}/modifiers/${modifierId}/options`).push().key;
         optionsObject[optionId] = {
           id: optionId,
           name: option.name || '',
@@ -120,11 +119,10 @@ async function updateModifier(req, res) {
 }
 
 async function deleteModifier(req, res) {
-  const { uid, modifierId } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId, modifierId } = req.params;
   
   try {
-    const modRef = db.ref(`restaurants/${uid}/modifiers/${modifierId}`);
+    const modRef = db.ref(`restaurants/${restaurantId}/modifiers/${modifierId}`);
     const snap = await modRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Modifier not found' });
     await modRef.remove();

@@ -1,41 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
 import { createDiscount } from '../../api/discounts';
 import { fetchCategories } from '../../api/categories';
 import { fetchItems } from '../../api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
+import { DAYS_OF_WEEK } from '../../utils/scheduleConstants';
 export default function CreateDiscount() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
   const { success, error } = useToast();
   
   const [formData, setFormData] = useState({
     name: '',
-    amountType: 'percentage', // percentage, fixed, variable_amount, variable_percentage
+    amountType: 'percentage', 
     amount: '',
-    
-    // Automatic discount rules
     automaticDiscount: false,
-    discountApplyTo: '', // 'item_category' or 'quantity'
-    
-    // Quantity rules (only for discountApplyTo = 'quantity')
-    quantityRuleType: 'exact', // exact, minimum, bogo
+    discountApplyTo: '', 
+    quantityRuleType: 'exact', 
     purchaseQuantity: 2,
     discountQuantity: 1,
     purchaseCategories: [],
     purchaseItems: [],
     addAllItemsToPurchase: false,
-    
-    // Discount target (for BOGO)
     discountTargetCategories: [],
     discountTargetItems: [],
     addAllItemsToDiscount: false,
     copyEligibleItems: false,
-    
-    // Schedule
     setSchedule: false,
     scheduleDays: {
       monday: false,
@@ -48,19 +40,13 @@ export default function CreateDiscount() {
     },
     scheduleTimeStart: '09:00',
     scheduleTimeEnd: '17:00',
-    
-    // Date range
     setDateRange: false,
     dateRangeStart: '',
     dateRangeEnd: '',
     timeRangeStart: '00:00',
     timeRangeEnd: '23:59',
-    
-    // Minimum spend
     setMinimumSpend: false,
     minimumSubtotal: 0,
-    
-    // Maximum discount value
     setMaximumValue: false,
     maximumValue: 0,
   });
@@ -74,19 +60,19 @@ export default function CreateDiscount() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user?.uid) {
+    if (restaurantId) {
       Promise.all([
-        fetchCategories(user.uid),
-        fetchItems(user.uid)
+        fetchCategories(restaurantId),
+        fetchItems(restaurantId)
       ]).then(([categoriesData, itemsData]) => {
         setCategories(Object.values(categoriesData || {}));
         setItems(Object.values(itemsData || {}));
       }).catch(err => console.error('Error loading data:', err));
     }
-  }, [user]);
+  }, [restaurantId]);
 
   const handleClose = () => {
-    navigate('/discounts');
+    navigate(`/${restaurantId}/discounts`);
   };
 
   const handleSave = async () => {
@@ -102,9 +88,9 @@ export default function CreateDiscount() {
 
     setSaving(true);
     try {
-      await createDiscount(user.uid, formData);
+      await createDiscount(restaurantId, formData);
       success(`Discount "${formData.name}" created successfully!`);
-      navigate('/discounts');
+      navigate(`/${restaurantId}/discounts`);
     } catch (err) {
       console.error('Failed to create discount:', err);
       error('Failed to create discount: ' + err.message);
@@ -220,7 +206,6 @@ export default function CreateDiscount() {
                       onChange={(e) => {
                         const checked = e.target.checked;
                         if (checked && !formData.discountApplyTo) {
-                          // Show modal to select discount type
                           setShowDiscountTypeModal(true);
                         }
                         setFormData({ ...formData, automaticDiscount: checked });
@@ -623,7 +608,7 @@ export default function CreateDiscount() {
 
             {formData.setSchedule && (
               <div className="space-y-3 mt-4 border-t border-gray-200 pt-4">
-                {Object.keys(formData.scheduleDays).map((day) => (
+                {DAYS_OF_WEEK.map((day) => (
                   <div key={day} className="flex items-center gap-4 bg-white p-3 rounded-lg border border-gray-200">
                     <input
                       type="checkbox"

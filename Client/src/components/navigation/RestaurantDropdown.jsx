@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useRestaurantSelection } from "../../hooks/useRestaurantSelection";
 import {
   HiXMark,
   HiUserCircle,
   HiCog8Tooth,
   HiCreditCard,
+  HiArrowLeftOnRectangle,
+  HiBuildingStorefront,
 } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
 
 export default function RestaurantDropdown({ restaurantName }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { setSelectedRestaurantId } = useRestaurantSelection();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -25,6 +30,12 @@ export default function RestaurantDropdown({ restaurantName }) {
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
+
+  const handleSwitchRestaurant = () => {
+    setSelectedRestaurantId(null);
+    setIsOpen(false);
+    navigate("/restaurants");
+  };
 
   return (
     <>
@@ -66,44 +77,64 @@ export default function RestaurantDropdown({ restaurantName }) {
                 isOpen ? "translate-x-0" : "translate-x-full"
               }`}
             >
-              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-xl font-bold text-gray-900">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-red-500 to-red-600">
+                <h2 className="text-xl font-bold text-white">
                   Your Account
                 </h2>
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
                   aria-label="Close menu"
                 >
-                  <HiXMark className="w-6 h-6 text-gray-600" />
+                  <HiXMark className="w-6 h-6 text-white" />
                 </button>
               </div>
-              <div className="flex-grow p-6 space-y-8">
-                <div className="p-5 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+              
+              <div className="flex-grow p-6 space-y-6">
+                {/* Restaurant Info Card */}
+                <div className="p-5 bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3 mb-4 border-b border-red-100 pb-3">
-                    <HiUserCircle className="w-8 h-8 text-red-600" />
-
-                    <p className="font-bold text-lg text-gray-900">
-                      {user?.displayName || "User Admin"}
-                    </p>
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                      <HiUserCircle className="w-7 h-7 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-gray-900">
+                        {user?.displayName || "User Admin"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {user?.email || "N/A"}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-1">
-                    Email:
-                    <span className="font-medium text-gray-700">
-                      {user?.email || "N/A"}
-                    </span>
-                  </p>
-
-                  <p className="text-sm text-gray-600">
-                    Restaurant:
-                    <span className="font-medium text-gray-700">
-                      {restaurantName}
-                    </span>
-                  </p>
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                    <HiBuildingStorefront className="w-5 h-5 text-red-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Current Restaurant
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {restaurantName}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <nav className="space-y-1 border border-gray-200 rounded-xl p-2 bg-white">
+
+                {/* Switch Restaurant Button */}
+                <button
+                  onClick={handleSwitchRestaurant}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium"
+                >
+                  <HiArrowLeftOnRectangle className="w-5 h-5" />
+                  <span>Switch Restaurant</span>
+                  <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Navigation Menu */}
+                <nav className="space-y-2 border border-gray-200 rounded-xl p-2 bg-white shadow-sm">
                   <Link
                     to="/settings/profile"
                     className="flex items-center gap-3 w-full px-4 py-3 text-left text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors font-medium"
@@ -122,6 +153,8 @@ export default function RestaurantDropdown({ restaurantName }) {
                     Billing & Plans
                   </Link>
                 </nav>
+
+                {/* Sign Out Button */}
                 <Link
                   to="/signout"
                   className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors mt-6 font-semibold"

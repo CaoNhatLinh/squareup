@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams, useLoaderData } from "react-router-dom";
 import {
   HiPlus,
   HiOutlineTag,
@@ -7,17 +7,16 @@ import {
   HiOutlinePlusCircle,
 } from "react-icons/hi2";
 
-import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 
-import { fetchItems, createItem, deleteItem } from "../../api/items";
-import { fetchCategories } from "../../api/categories";
+import { createItem, deleteItem } from "../../api/items";
 import SearchBar from "../../components/common/SearchBar";
 import BulkActionBar from "../../components/common/BulkActionBar";
 import ActionMenu from "../../components/common/ActionMenu";
 
 export default function ItemLibrary() {
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
+  const loaderData = useLoaderData();
   const navigate = useNavigate();
   const { success, error } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,48 +26,27 @@ export default function ItemLibrary() {
   const [itemMenus, setItemMenus] = useState({});
   const [items, setItems] = useState([]);
   const [_categories, setCategories] = useState([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.uid) return;
-    const loadData = async () => {
-      setItemsLoading(true);
-      try {
-        const [itemsData, categoriesData] = await Promise.all([
-          fetchItems(user.uid),
-          fetchCategories(user.uid),
-        ]);
-        const itemsArray = Object.values(itemsData || {});
-        const categoriesArray = Object.values(categoriesData || {});
-        const itemsWithCategories = itemsArray.map((item) => {
-          const categoryNames = categoriesArray
-            .filter((cat) => cat.itemIds && cat.itemIds.includes(item.id))
-            .map((cat) => cat.name);
-          return {
-            ...item,
-            categoryNames: categoryNames.length > 0 ? categoryNames : null,
-          };
-        });
-        setItems(itemsWithCategories);
-        setCategories(categoriesArray);
-      } catch (err) {
-        console.error("Failed to load data:", err);
-      } finally {
-        setItemsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [user?.uid]);
+    if (loaderData) {
+      const itemsArray = Object.values(loaderData.items || {});
+      const categoriesArray = Object.values(loaderData.categories || {});
+      const itemsWithCategories = itemsArray.map((item) => {
+        const categoryNames = categoriesArray
+          .filter((cat) => cat.itemIds && cat.itemIds.includes(item.id))
+          .map((cat) => cat.name);
+        return {
+          ...item,
+          categoryNames: categoryNames.length > 0 ? categoryNames : null,
+        };
+      });
+      setItems(itemsWithCategories);
+      setCategories(categoriesArray);
+    }
+  }, [loaderData]);
 
   const refetchItems = async () => {
-    if (!user?.uid) return;
-    try {
-      const data = await fetchItems(user.uid);
-      setItems(Object.values(data || {}));
-    } catch (err) {
-      console.error("Failed to refetch items:", err);
-    }
+    navigate(0);
   };
 
   const getCategoryNames = (item) => {
@@ -79,7 +57,7 @@ export default function ItemLibrary() {
   const handleQuickCreate = async () => {
     if (!quickFormData.name.trim()) return;
     try {
-      await createItem(user.uid, {
+      await createItem(restaurantId, {
         name: quickFormData.name,
         price: parseFloat(quickFormData.price) || 0,
         type: "Physical good",
@@ -117,7 +95,7 @@ export default function ItemLibrary() {
 
     try {
       await Promise.all(
-        selectedItems.map((itemId) => deleteItem(user.uid, itemId))
+        selectedItems.map((itemId) => deleteItem(restaurantId, itemId))
       );
       setSelectedItems([]);
       success(`Deleted ${selectedItems.length} item(s) successfully!`);
@@ -132,7 +110,7 @@ export default function ItemLibrary() {
     const item = items.find(i => i.id === itemId);
     if (!window.confirm(`Are you sure you want to delete this item?`)) return;
     try {
-      await deleteItem(user.uid, itemId);
+      await deleteItem(restaurantId, itemId);
       success(`Item "${item?.name || 'Item'}" deleted successfully!`);
       refetchItems();
     } catch {
@@ -164,7 +142,7 @@ export default function ItemLibrary() {
             className="w-72"
           />
           <Link
-            to="/items/new"
+            to={`/${restaurantId}/items/new`}
             className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
           >
             <HiPlus className="w-5 h-5" /> Create New Item
@@ -286,16 +264,7 @@ export default function ItemLibrary() {
                 </td>
               </tr>
             )}
-            {itemsLoading ? (
-              <tr>
-                <td
-                  colSpan="6"
-                  className="px-6 py-8 text-center text-sm text-gray-500"
-                >
-                  Loading items...
-                </td>
-              </tr>
-            ) : filteredItems.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <tr>
                 <td
                   colSpan="6"
@@ -370,7 +339,7 @@ export default function ItemLibrary() {
                         onToggle={(open) =>
                           setItemMenus({ ...itemMenus, [item.id]: open })
                         }
-                        editPath={`/items/${item.id}/edit`}
+                        editPath={`/${restaurantId}/items/${item.id}/edit`}
                         onDelete={() => handleDeleteItem(item.id)}
                         itemName={item.name}
                       />

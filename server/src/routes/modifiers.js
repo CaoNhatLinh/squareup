@@ -1,5 +1,5 @@
 const express = require('express');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken, verifyRestaurantOwnership } = require('../middleware/verifyToken');
 const router = express.Router({ mergeParams: true });
 
 const {
@@ -13,8 +13,8 @@ const {
 router.use(verifyToken);
 router.get('/', listModifiers);
 router.get('/:modifierId', getModifier);
-router.post('/', createModifier);
-router.put('/:modifierId', updateModifier);
-router.delete('/:modifierId', deleteModifier);
+router.post('/', verifyRestaurantOwnership, createModifier);
+router.put('/:modifierId', verifyRestaurantOwnership, updateModifier);
+router.delete('/:modifierId', verifyRestaurantOwnership, deleteModifier);
 
 module.exports = router;

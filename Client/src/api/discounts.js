@@ -13,9 +13,9 @@ export const fetchActiveDiscounts = async (restaurantId) => {
   }
 };
 
-export const fetchDiscounts = async (uid) => {
+export const fetchDiscounts = async (restaurantId) => {
   try {
-    const response = await client.get(`api/restaurants/${uid}/discounts`);
+    const response = await client.get(`api/restaurants/${restaurantId}/discounts`);
     return response.data;
   } catch (error) {
     console.error('Error fetching discounts:', error);
@@ -23,9 +23,9 @@ export const fetchDiscounts = async (uid) => {
   }
 };
 
-export const fetchDiscount = async (uid, discountId) => {
+export const fetchDiscount = async (restaurantId, discountId) => {
   try {
-    const response = await client.get(`api/restaurants/${uid}/discounts/${discountId}`);
+    const response = await client.get(`api/restaurants/${restaurantId}/discounts/${discountId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching discount:', error);
@@ -33,9 +33,9 @@ export const fetchDiscount = async (uid, discountId) => {
   }
 };
 
-export const createDiscount = async (uid, discountData) => {
+export const createDiscount = async (restaurantId, discountData) => {
   try {
-    const response = await client.post(`api/restaurants/${uid}/discounts`, discountData);
+    const response = await client.post(`api/restaurants/${restaurantId}/discounts`, discountData);
     return response.data;
   } catch (error) {
     console.error('Error creating discount:', error);
@@ -43,9 +43,9 @@ export const createDiscount = async (uid, discountData) => {
   }
 };
 
-export const updateDiscount = async (uid, discountId, discountData) => {
+export const updateDiscount = async (restaurantId, discountId, discountData) => {
   try {
-    const response = await client.put(`api/restaurants/${uid}/discounts/${discountId}`, discountData);
+    const response = await client.put(`api/restaurants/${restaurantId}/discounts/${discountId}`, discountData);
     return response.data;
   } catch (error) {
     console.error('Error updating discount:', error);
@@ -53,9 +53,9 @@ export const updateDiscount = async (uid, discountId, discountData) => {
   }
 };
 
-export const deleteDiscount = async (uid, discountId) => {
+export const deleteDiscount = async (restaurantId, discountId) => {
   try {
-    const response = await client.del(`api/restaurants/${uid}/discounts/${discountId}`);
+    const response = await client.del(`api/restaurants/${restaurantId}/discounts/${discountId}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting discount:', error);

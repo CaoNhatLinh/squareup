@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 
 import { getModifier, updateModifier } from "../../api/modifers";
 import {
@@ -13,9 +12,8 @@ import {
 import { HiXMark } from "react-icons/hi2";
 
 export default function EditModifier() {
-  const { modifierId } = useParams();
+  const { modifierId, restaurantId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,11 +27,11 @@ export default function EditModifier() {
   const [draggingIndex, setDraggingIndex] = useState(null);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!restaurantId) return;
     let mounted = true;
     (async () => {
       try {
-        const mod = await getModifier(user.uid, modifierId);
+        const mod = await getModifier(restaurantId, modifierId);
         if (!mounted) return;
         setFormData({
           name: mod.name || "",
@@ -46,7 +44,7 @@ export default function EditModifier() {
       } catch (err) {
         console.error("Failed to load modifier", err);
         alert("Failed to load modifier details.");
-        navigate("/modifiers");
+        navigate(`/${restaurantId}/modifiers`);
       } finally {
         setLoading(false);
       }
@@ -54,7 +52,7 @@ export default function EditModifier() {
     return () => {
       mounted = false;
     };
-  }, [user?.uid, modifierId, navigate]);
+  }, [restaurantId, modifierId, navigate]);
 
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.displayName.trim()) {
@@ -75,14 +73,14 @@ export default function EditModifier() {
         ...o,
         index: o.index !== undefined ? Number(o.index) : idx,
       }));
-      await updateModifier(user.uid, modifierId, {
+      await updateModifier(restaurantId, modifierId, {
         name: formData.name,
         displayName: formData.displayName,
         options: opts,
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate("/modifiers");
+      navigate(`/${restaurantId}/modifiers`);
     } catch (err) {
       console.error("Failed to update modifier", err);
       alert("Failed to update modifier: " + (err.message || err));

@@ -1,28 +1,37 @@
 import * as client from './apiClient'
 
-export async function fetchRestaurant(uid) {
-  const res = await client.get(`/api/restaurants/${uid}`, )
+export async function getUserRestaurants() {
+  const res = await client.get('/api/restaurants')
   return res.data
 }
 
-export async function fetchRestaurantForShop(uid) {
-  // Public endpoint - no authentication required
-  const res = await client.get(`/api/restaurants/${uid}/shop`)
+export async function createRestaurant(data) {
+  const res = await client.post('/api/restaurants', data)
   return res.data
 }
 
-export async function upsertRestaurant(uid, body) {
-  const res = await client.put(`/api/restaurants/${uid}`, body, )
+export async function fetchRestaurant(restaurantId) {
+  const res = await client.get(`/api/restaurants/${restaurantId}`, )
   return res.data
 }
 
-export async function updateBusinessHours(uid, hours) {
-  const res = await client.put(`/api/restaurants/${uid}`, { hours } )
+export async function fetchRestaurantForShop(restaurantId) {
+  const res = await client.get(`/api/restaurants/${restaurantId}/shop`)
   return res.data
 }
 
-export async function updateBusinessLocation(uid, location) {
-  const res = await client.put(`/api/restaurants/${uid}`, { 
+export async function upsertRestaurant(restaurantId, body) {
+  const res = await client.put(`/api/restaurants/${restaurantId}`, body, )
+  return res.data
+}
+
+export async function updateBusinessHours(restaurantId, hours) {
+  const res = await client.put(`/api/restaurants/${restaurantId}`, { hours } )
+  return res.data
+}
+
+export async function updateBusinessLocation(restaurantId, location) {
+  const res = await client.put(`/api/restaurants/${restaurantId}`, {
     address: location.address,
     phone: location.phone,
     email: location.email
@@ -30,3 +39,7 @@ export async function updateBusinessLocation(uid, location) {
   return res.data
 }
 
+export async function deleteRestaurant(restaurantId) {
+  const res = await client.del(`/api/restaurants/${restaurantId}`)
+  return res.data
+}

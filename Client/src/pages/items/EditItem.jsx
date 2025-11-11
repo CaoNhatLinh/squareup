@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import { fetchItems, updateItem } from "../../api/items";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { useToast } from "../../hooks/useToast";
@@ -99,8 +98,7 @@ const renderFilterList = (
 
 export default function EditItem() {
   const navigate = useNavigate();
-  const { itemId } = useParams();
-  const { user } = useAuth();
+  const { itemId, restaurantId } = useParams();
   const { uploadImage, uploading } = useImageUpload();
   const { success, error } = useToast();
   const [formData, setFormData] = useState({
@@ -121,15 +119,15 @@ export default function EditItem() {
   const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
-    if (!user || !itemId) return;
+    if (!restaurantId || !itemId) return;
     setLoading(true);
     Promise.all([
-      fetchItems(user.uid),
+      fetchItems(restaurantId),
       import("../../api/categories").then(({ fetchCategories }) =>
-        fetchCategories(user.uid)
+        fetchCategories(restaurantId)
       ),
       import("../../api/modifers").then(({ fetchModifiers }) =>
-        fetchModifiers(user.uid)
+        fetchModifiers(restaurantId)
       ),
     ])
       .then(([itemsData, categoriesData, modifiersData]) => {
@@ -170,10 +168,10 @@ export default function EditItem() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user, itemId]);
+  }, [restaurantId, itemId]);
 
   const handleClose = () => {
-    navigate("/items"); // Điều hướng về thư viện món ăn sau khi Edit
+    navigate(`/${restaurantId}/items`);
   };
 
   const handleImageSelect = (e) => {
@@ -199,7 +197,7 @@ export default function EditItem() {
       if (imageFile) {
         imageUrl = await uploadImage(imageFile, "items");
       }
-      await updateItem(user.uid, itemId, {
+      await updateItem(restaurantId, itemId, {
         type: formData.itemType,
         name: formData.name,
         price: parseFloat(formData.price) || 0,
@@ -209,7 +207,7 @@ export default function EditItem() {
         modifierIds: selectedModifiers.map((m) => m.id),
       });
       success(`Item "${formData.name}" updated successfully!`);
-      navigate("/items");
+      navigate(`/${restaurantId}/items`);
     } catch (err) {
       console.error("Failed to update item:", err);
       error("Failed to update item: " + err.message);

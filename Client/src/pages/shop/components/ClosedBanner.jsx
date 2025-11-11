@@ -12,7 +12,6 @@ export default function ClosedBanner({ restaurant }) {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-red-200">
           <div className="text-center space-y-4">
-            {/* Icon */}
             <div className="flex justify-center">
               <div className={`p-4 rounded-full ${
                 isSpecialClosure 

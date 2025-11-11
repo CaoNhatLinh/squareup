@@ -1,29 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { fetchRestaurant } from '../api/restaurants';
+import { useParams } from 'react-router-dom';
 import { RestaurantContext } from './RestaurantContext';
+import { fetchRestaurant } from '../api/restaurants';
 
-export function RestaurantProvider({ children }) {
-  const { user } = useAuth();
-  const [restaurant, setRestaurant] = useState(null);
-  const [loading, setLoading] = useState(true);
+export function RestaurantProvider({ children, initialRestaurantData }) {
+  const [restaurant, setRestaurant] = useState(initialRestaurantData || null);
+  const params = useParams();
+
+  const restaurantId = params.restaurantId;
 
   useEffect(() => {
-    if (!user?.uid) {
-      setRestaurant(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    fetchRestaurant(user.uid)
-      .then((data) => setRestaurant(data))
-      .catch((err) => {
-        console.error('Failed to load restaurant:', err);
+    const loadRestaurant = async () => {
+      if (!restaurantId) {
         setRestaurant(null);
-      })
-      .finally(() => setLoading(false));
-  }, [user?.uid]);
+        return;
+      }
+
+      if (restaurant?.id === restaurantId) {
+        return;
+      }
+
+      try {
+        const data = await fetchRestaurant(restaurantId);
+        setRestaurant(data);
+      } catch (error) {
+        console.error("❌ Error fetching restaurant:", error);
+        setRestaurant(null);
+      }
+    };
+
+    loadRestaurant();
+  }, [restaurantId, restaurant?.id]);
 
   useEffect(() => {
     const handleUpdate = (event) => {
@@ -41,7 +48,7 @@ export function RestaurantProvider({ children }) {
   };
 
   return (
-    <RestaurantContext.Provider value={{ restaurant, loading, updateRestaurant }}>
+    <RestaurantContext.Provider value={{ restaurant, updateRestaurant }}>
       {children}
     </RestaurantContext.Provider>
   );

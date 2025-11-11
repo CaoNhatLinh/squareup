@@ -72,12 +72,10 @@ export const useOrderNotifications = (
             localStorage.setItem("newOrderIds", JSON.stringify(updated));
             return updated;
           });
-          
-          // Show toast with click handler to navigate to order details
           success(
             `New Order #${order.orderId?.substring(0, 8).toUpperCase()} - $${order.amount?.toFixed(2)}`,
             8000,
-            () => navigate(`/orders/${order.id}`)
+            () => navigate(`/${restaurantId}/orders/${order.id}`)
           );
         });
       }

@@ -1,4 +1,3 @@
-// Export all shop components
 export { default as ShopHeader } from './ShopHeader';
 export { default as RestaurantBanner } from './RestaurantBanner';
 export { default as RestaurantInfoDrawer } from './RestaurantInfoDrawer';

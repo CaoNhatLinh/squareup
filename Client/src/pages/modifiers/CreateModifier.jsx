@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { createModifier } from "../../api/modifers";
 import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
@@ -8,7 +7,7 @@ import { HiXMark } from "react-icons/hi2";
 
 export default function CreateModifier() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
   const [formData, setFormData] = useState({
     name: "",
     displayName: "",
@@ -43,14 +42,14 @@ export default function CreateModifier() {
         }))
         .sort((a, b) => (a.index || 0) - (b.index || 0));
 
-      await createModifier(user.uid, {
+      await createModifier(restaurantId, {
         name: formData.name,
         displayName: formData.displayName,
         options: opts,
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate("/modifiers");
+      navigate(`/${restaurantId}/modifiers`);
     } catch (err) {
       console.error("Failed to create modifier:", err);
       alert("Failed to create modifier: " + (err.message || err));

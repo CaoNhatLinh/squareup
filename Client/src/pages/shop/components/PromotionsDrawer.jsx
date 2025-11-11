@@ -10,7 +10,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
   
   const discountsList = Object.values(allDiscounts || {}).filter(d => d.automaticDiscount);
 
-  // Fetch all discounts when drawer opens
   useEffect(() => {
     const loadDiscounts = async () => {
       try {
@@ -31,50 +30,33 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
 
   const getDiscountStatus = (discount) => {
     const now = Date.now();
-    
-    console.log(`\n[PromotionsDrawer] Checking status for "${discount.name}"`);
-    
-    // Check date range
     if (discount.setDateRange) {
       const startTime = discount.dateRangeStart ? new Date(discount.dateRangeStart + 'T00:00:00').getTime() : 0;
       const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd + 'T23:59:59').getTime() : Infinity;
       
-      console.log('  Date range check:');
-      console.log(`    - Start: ${discount.dateRangeStart} (${startTime})`);
-      console.log(`    - End: ${discount.dateRangeEnd} (${endTime})`);
-      console.log(`    - Now: ${now}`);
-      
       if (now < startTime) {
-        console.log('  → Status: UPCOMING (before start date)');
         return 'upcoming';
       }
       if (now > endTime) {
-        console.log('  → Status: EXPIRED (after end date)');
         return 'expired';
       }
     }
     
-    // Check schedule if within date range
     if (discount.setSchedule) {
       const currentDate = new Date();
       const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       const currentTime = currentDate.toTimeString().slice(0, 5);
-      
       const isDayEnabled = discount.scheduleDays?.[dayName];
+
       const isTimeInRange = currentTime >= (discount.scheduleTimeStart || '00:00') && 
                            currentTime <= (discount.scheduleTimeEnd || '23:59');
-      
       if (!isDayEnabled || !isTimeInRange) {
-        console.log('  → Status: INACTIVE (schedule not met)');
         return 'inactive';
       }
     }
-    
-    console.log('  → Status: ACTIVE');
     return 'active';
   };
 
-  // Sort: active → inactive → upcoming → expired
   const sortedDiscounts = [...discountsList].sort((a, b) => {
     const statusOrder = { active: 0, inactive: 1, upcoming: 2, expired: 3 };
     const statusA = getDiscountStatus(a);
@@ -103,7 +85,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
       const count = items.length + categories.length;
       return `Applied to ${count} item(s)`;
     } else if (discount.discountApplyTo === 'quantity') {
-      // 3 loại: exact, minimum, bogo
       const purchaseQty = discount.purchaseQuantity || 1;
       const discountText = discount.amountType === 'percentage' 
         ? `${discount.amount}% off` 
@@ -130,21 +111,17 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black/50 transition-opacity z-40 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
-
-      {/* Drawer */}
       <div
         className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-orange-500 to-red-500">
           <h2 className="text-2xl font-bold text-white">Promotions</h2>
           <button
@@ -155,7 +132,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="overflow-y-auto h-[calc(100%-80px)] bg-gray-50">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full p-8">
@@ -191,7 +167,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                     }`}
                   >
                     <div className="flex">
-                      {/* Left side - Discount badge */}
                       <div className={`w-32 flex flex-col items-center justify-center p-4 ${
                         isActive ? 'bg-gradient-to-br from-orange-400 to-orange-500' : 
                         isExpired ? 'bg-gray-400' : 

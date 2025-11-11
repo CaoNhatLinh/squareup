@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLoaderData, useParams } from "react-router-dom";
 import {
   HiPlus,
   HiOutlineSquares2X2,
   HiOutlineAdjustmentsHorizontal,
-} from "react-icons/hi2"; 
-import { useAuth } from "../../hooks/useAuth";
+} from "react-icons/hi2";
 
 import { fetchModifiers, deleteModifier } from "../../api/modifers";
 import SearchBar from "../../components/common/SearchBar";
@@ -13,22 +12,19 @@ import BulkActionBar from "../../components/common/BulkActionBar";
 import ActionMenu from "../../components/common/ActionMenu";
 
 export default function Modifiers() {
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
+  const loaderData = useLoaderData();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState([]);
-  const [modifiers, setModifiers] = useState([]);
+  const [modifiers, setModifiers] = useState(loaderData?.modifiers || []);
   const [itemMenus, setItemMenus] = useState({});
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.uid) return;
-    setLoading(true);
-    fetchModifiers(user.uid)
-      .then((data) => setModifiers(Object.values(data || {})))
-      .catch((err) => console.error("Failed to load modifiers", err))
-      .finally(() => setLoading(false));
-  }, [user?.uid]);
+    if (loaderData?.modifiers) {
+      setModifiers(loaderData.modifiers);
+    }
+  }, [loaderData]);
 
   const filteredModifiers = React.useMemo(() => {
     if (!modifiers) return [];
@@ -40,15 +36,12 @@ export default function Modifiers() {
   }, [modifiers, searchQuery]);
 
   const refetch = async () => {
-    if (!user?.uid) return;
-    setLoading(true);
+    if (!restaurantId) return;
     try {
-      const data = await fetchModifiers(user.uid);
+      const data = await fetchModifiers(restaurantId);
       setModifiers(Object.values(data || {}));
     } catch (err) {
       console.error("Failed to refetch modifiers:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -60,7 +53,7 @@ export default function Modifiers() {
     )
       return;
     try {
-      await deleteModifier(user.uid, modifierId);
+      await deleteModifier(restaurantId, modifierId);
       refetch();
       setSelectedModifiers(selectedModifiers.filter((id) => id !== modifierId));
     } catch (err) {
@@ -85,7 +78,7 @@ export default function Modifiers() {
       return;
     try {
       await Promise.all(
-        selectedModifiers.map((id) => deleteModifier(user.uid, id))
+        selectedModifiers.map((id) => deleteModifier(restaurantId, id))
       );
       setSelectedModifiers([]);
       refetch();
@@ -115,7 +108,7 @@ export default function Modifiers() {
           />
 
           <Link
-            to="/modifiers/new"
+            to={`/${restaurantId}/modifiers/new`}
             className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
           >
             <HiPlus className="w-5 h-5" /> New Modifier Set
@@ -154,17 +147,7 @@ export default function Modifiers() {
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-6 py-10 text-center text-base text-gray-500"
-                >
-                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-4 border-red-600 mb-2"></div>
-                  <p>Loading modifier sets...</p>
-                </td>
-              </tr>
-            ) : filteredModifiers.length === 0 ? (
+            {filteredModifiers.length === 0 ? (
               <tr>
                 <td
                   colSpan="5"
@@ -173,7 +156,7 @@ export default function Modifiers() {
                   <p className="mb-2">No modifier sets found.</p>
 
                   <Link
-                    to="/modifiers/new"
+                    to={`/${restaurantId}/modifiers/new`}
                     className="text-red-600 hover:text-red-800 font-medium flex items-center justify-center gap-1"
                   >
                     <HiPlus className="w-4 h-4" /> Create your first one!
@@ -185,7 +168,7 @@ export default function Modifiers() {
                 <tr
                   key={modifier.id}
                   className="group hover:bg-red-50/30 transition-colors duration-200 cursor-pointer"
-                  onClick={() => navigate(`/modifiers/${modifier.id}/edit`)}
+                  onClick={() => navigate(`/${restaurantId}/modifiers/${modifier.id}/edit`)}
                 >
                   <td
                     className="px-6 py-4"
@@ -249,7 +232,7 @@ export default function Modifiers() {
                         onToggle={(open) =>
                           setItemMenus({ ...itemMenus, [modifier.id]: open })
                         }
-                        editPath={`/modifiers/${modifier.id}/edit`}
+                        editPath={`/${restaurantId}/modifiers/${modifier.id}/edit`}
                         onDelete={() => handleDeleteModifier(modifier.id)}
                         itemName={modifier.displayName || modifier.name}
                       />

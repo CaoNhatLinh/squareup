@@ -4,9 +4,6 @@ const { calculateCartDiscounts } = require('../utils/discountCalculator');
 
 const db = admin.database();
 
-/**
- * Create Stripe Checkout Session
- */
 exports.createCheckoutSession = async (req, res) => {
   try {
     const { restaurantId, items, returnUrl } = req.body;
@@ -24,21 +21,11 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    // Calculate discounts
     const discountResult = await calculateCartDiscounts(restaurantId, items);
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const totalDiscount = discountResult.totalDiscount;
     const totalAmount = subtotal - totalDiscount;
 
-    console.log('💰 Checkout calculation:', {
-      subtotal,
-      totalDiscount,
-      totalAmount,
-      appliedDiscounts: discountResult.appliedDiscounts.map(d => d.name),
-      itemDiscounts: discountResult.itemDiscounts
-    });
-
-    // Create line items with discounted prices
     const lineItems = items.map((item) => {
       let description = "";
       if (item.selectedOptions && item.selectedOptions.length > 0) {
@@ -50,13 +37,11 @@ exports.createCheckoutSession = async (req, res) => {
 
       const itemDiscount = discountResult.itemDiscounts[item.groupKey];
       let finalPrice = item.price;
-      
+
       if (itemDiscount && itemDiscount.discountAmount > 0) {
         finalPrice = item.price - itemDiscount.discountAmount;
         const discountInfo = `Discount: ${itemDiscount.discountPercentage}% OFF`;
         description = description ? `${description} | ${discountInfo}` : discountInfo;
-        
-        console.log(`  Item "${item.name}": $${item.price} → $${finalPrice} (${itemDiscount.discountPercentage}% off)`);
       }
 
       return {
@@ -67,7 +52,7 @@ exports.createCheckoutSession = async (req, res) => {
             description: description || "No options",
             images: item.image ? [item.image] : [],
           },
-          unit_amount: Math.round(finalPrice * 100), // Use discounted price
+          unit_amount: Math.round(finalPrice * 100),
         },
         quantity: item.quantity,
       };
@@ -91,7 +76,7 @@ exports.createCheckoutSession = async (req, res) => {
     };
 
     await db.ref(`pendingOrders/${pendingOrderId}`).set(pendingOrderData);
-    const successUrl = returnUrl 
+    const successUrl = returnUrl
       ? returnUrl.replace('checkout-return', 'success')
       : `${req.headers.origin}/shop/${restaurantId}/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${req.headers.origin}/shop/${restaurantId}/cancelled`;
@@ -102,7 +87,7 @@ exports.createCheckoutSession = async (req, res) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
-        pendingOrderId, 
+        pendingOrderId,
         restaurantId,
       },
     });
@@ -111,14 +96,11 @@ exports.createCheckoutSession = async (req, res) => {
       url: session.url,
     });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-/**
- * Webhook handler for Stripe events
- */
 exports.handleWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -127,21 +109,19 @@ exports.handleWebhook = async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   switch (event.type) {
     case "checkout.session.completed":
       const session = event.data.object;
-      
+
       try {
         if (session.payment_status === "paid") {
           const pendingOrderId = session.metadata.pendingOrderId;
           const restaurantId = session.metadata.restaurantId;
 
           if (!pendingOrderId) {
-            console.error("❌ No pending order ID in metadata");
             return;
           }
 
@@ -151,7 +131,6 @@ exports.handleWebhook = async (req, res) => {
           const pendingOrder = pendingOrderSnapshot.val();
 
           if (!pendingOrder) {
-            console.error(`❌ Pending order ${pendingOrderId} not found`);
             return;
           }
 
@@ -171,7 +150,7 @@ exports.handleWebhook = async (req, res) => {
             paymentStatus: session.payment_status,
             customerEmail: session.customer_details?.email || null,
             customerName: session.customer_details?.name || null,
-            
+
             items: pendingOrder.items.map(item => ({
               itemId: item.itemId || "",
               groupKey: item.groupKey || "",
@@ -184,10 +163,10 @@ exports.handleWebhook = async (req, res) => {
               selectedOptions: item.selectedOptions || [],
               specialInstruction: item.specialInstruction || "",
             })),
-            
+
             discount: pendingOrder.discount || null,
             subtotal: pendingOrder.subtotal || pendingOrder.totalAmount,
-            tax: 0, 
+            tax: 0,
             total: session.amount_total / 100,
             createdAt: now,
             updatedAt: now,
@@ -203,7 +182,7 @@ exports.handleWebhook = async (req, res) => {
         console.error("❌ Error saving order from webhook:", error);
       }
       break;
-      
+
     case "payment_intent.succeeded":
       const paymentIntent = event.data.object;
       break;
@@ -215,20 +194,15 @@ exports.handleWebhook = async (req, res) => {
     case "charge.updated":
       break;
     default:
-      console.log(`⚠️ Unhandled event type: ${event.type}`);
   }
 
   res.json({ received: true });
 };
 
-/**
- * Get order by sessionId
- * Frontend calls this to retrieve order saved by webhook
- */
 exports.getOrderBySession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { restaurantId } = req.query; 
+    const { restaurantId } = req.query;
 
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID is required" });
@@ -247,10 +221,10 @@ exports.getOrderBySession = async (req, res) => {
     const orders = ordersSnapshot.val();
 
     if (!orders) {
-      return res.status(404).json({ 
-        error: "Order not found", 
+      return res.status(404).json({
+        error: "Order not found",
         processing: true,
-        message: "Payment is being processed. Please wait..." 
+        message: "Payment is being processed. Please wait..."
       });
     }
     const orderData = Object.values(orders)[0];
@@ -265,9 +239,6 @@ exports.getOrderBySession = async (req, res) => {
   }
 };
 
-/**
- * Get all orders for a restaurant
- */
 exports.getAllOrders = async (req, res) => {
   try {
     const { restaurantId } = req.params;
@@ -303,9 +274,6 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-/**
- * Get all orders (admin) - aggregates orders from all restaurants
- */
 exports.getAllOrdersAdmin = async (req, res) => {
   try {
     const restaurantsSnapshot = await db.ref("restaurants").once("value");
@@ -339,9 +307,6 @@ exports.getAllOrdersAdmin = async (req, res) => {
   }
 };
 
-/**
- * Get order by ID - searches across all restaurants
- */
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -385,9 +350,6 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-/**
- * Get Stripe session status
- */
 exports.getSessionStatus = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -412,9 +374,6 @@ exports.getSessionStatus = async (req, res) => {
   }
 };
 
-/**
- * Update order status
- */
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { restaurantId, orderId } = req.params;
@@ -457,10 +416,6 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-/**
- * Public endpoint: Get order status by orderId (no authentication required)
- * This allows guest customers to track their orders
- */
 exports.getPublicOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;

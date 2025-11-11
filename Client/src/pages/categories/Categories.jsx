@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   HiPlus,
   HiOutlineSquares2X2,
   HiChevronRight,
   HiOutlineTag,
 } from "react-icons/hi2";
-import { useAuth } from "../../hooks/useAuth";
 import { fetchCategories, deleteCategory } from "../../api/categories";
 import SearchBar from "../../components/common/SearchBar";
 import BulkActionBar from "../../components/common/BulkActionBar";
 import ActionMenu from "../../components/common/ActionMenu";
 
 export default function Categories() {
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -22,11 +21,11 @@ export default function Categories() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!restaurantId) return;
     const loadCategories = async () => {
       setLoading(true);
       try {
-        const data = await fetchCategories(user.uid);
+        const data = await fetchCategories(restaurantId);
         setCategories(Object.values(data || {}));
       } catch (err) {
         console.error("Failed to load categories:", err);
@@ -36,12 +35,12 @@ export default function Categories() {
     };
 
     loadCategories();
-  }, [user?.uid]);
+  }, [restaurantId]);
 
   const refetchCategories = async () => {
-    if (!user?.uid) return;
+    if (!restaurantId) return;
     try {
-      const data = await fetchCategories(user.uid);
+      const data = await fetchCategories(restaurantId);
       setCategories(Object.values(data || {}));
     } catch (err) {
       console.error("Failed to refetch categories:", err);
@@ -101,7 +100,7 @@ export default function Categories() {
 
     try {
       await Promise.all(
-        selectedCategories.map((catId) => deleteCategory(user.uid, catId))
+        selectedCategories.map((catId) => deleteCategory(restaurantId, catId))
       );
       setSelectedCategories([]);
       refetchCategories();
@@ -115,7 +114,7 @@ export default function Categories() {
     if (!window.confirm(`Are you sure you want to delete this category?`))
       return;
     try {
-      await deleteCategory(user.uid, categoryId);
+      await deleteCategory(restaurantId, categoryId);
       refetchCategories();
     } catch {
       alert("Failed to delete category");
@@ -144,7 +143,7 @@ export default function Categories() {
             className="w-72"
           />
           <Link
-            to="/categories/new"
+            to={`/${restaurantId}/categories/new`}
             className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
           >
             <HiPlus className="w-5 h-5" /> Create Category
@@ -211,7 +210,7 @@ export default function Categories() {
                   className={`hover:bg-red-50/50 cursor-pointer ${
                     isSubcategory(category) ? "bg-gray-50/50" : "bg-white"
                   }`}
-                  onClick={() => navigate(`/categories/${category.id}/edit`)}
+                  onClick={() => navigate(`/${restaurantId}/categories/${category.id}/edit`)}
                 >
                   <td
                     className="px-6 py-4"
@@ -281,7 +280,7 @@ export default function Categories() {
                             [category.id]: open,
                           })
                         }
-                        editPath={`/categories/${category.id}/edit`}
+                        editPath={`/${restaurantId}/categories/${category.id}/edit`}
                         onDelete={() => handleDeleteCategory(category.id)}
                         itemName={category.name}
                       />

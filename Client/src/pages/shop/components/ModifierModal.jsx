@@ -87,7 +87,6 @@ export default function ModifierModal({
       alert("Please select all required options");
       return;
     }
-    // Truyền cả specialInstruction và editingCartKey (nếu đang edit)
     onAddToCart(
       item,
       selectedOptions,

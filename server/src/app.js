@@ -23,7 +23,7 @@ app.use(cookieParser());
 const checkoutRouter = require('./routes/checkout');
 app.use('/api/checkout', checkoutRouter);
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');

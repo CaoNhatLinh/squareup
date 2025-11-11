@@ -1,13 +1,12 @@
-import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useLoaderData } from 'react-router-dom';
 import { HiOutlineEye } from 'react-icons/hi';
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const shopUrl = `/shop/${user?.uid || 'unknown'}`;
+  const { restaurant } = useLoaderData();
+  const shopUrl = `/shop/${restaurant?.id || 'unknown'}`;
   
   const copyToClipboard = () => {
-    const urlToCopy = `${window.location.origin}/shop/${user.uid}`;
+    const urlToCopy = `${window.location.origin}/shop/${restaurant?.id}`;
     navigator.clipboard.writeText(urlToCopy);
     alert('Shop link copied to clipboard!');
   };
@@ -23,12 +22,7 @@ export default function Dashboard() {
         <p className="text-gray-600 mb-6 max-w-lg">
           Customers can view your full menu and place orders using the dedicated public shop link below.
         </p>
-        
-        {!user?.uid ? (
-          <div className="text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
-            ⚠️ User ID is not available. Please try signing in again.
-          </div>
-        ) : null}
+       
         
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <Link
@@ -36,7 +30,7 @@ export default function Dashboard() {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50"
-            disabled={!user?.uid}
+            disabled={!restaurant?.id}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -45,10 +39,10 @@ export default function Dashboard() {
             View Shop Now
           </Link>
           
-          {user?.uid && (
+          {restaurant?.id && (
             <div className="flex-1 w-full flex items-stretch">
               <code className="flex-1 p-3 bg-gray-100 text-gray-700 text-sm rounded-l-lg border border-gray-300 overflow-x-auto whitespace-nowrap">
-                {window.location.origin}/shop/{user.uid}
+                {window.location.origin}/shop/{restaurant.id}
               </code>
               <button
                 onClick={copyToClipboard}

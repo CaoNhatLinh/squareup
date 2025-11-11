@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 
 import {
   updateCategory,
@@ -21,8 +20,7 @@ import {
 
 export default function EditCategory() {
   const navigate = useNavigate();
-  const { categoryId } = useParams();
-  const { user } = useAuth();
+  const { categoryId, restaurantId } = useParams();
   const { uploadImage, uploading } = useImageUpload();
   const [formData, setFormData] = useState({
     name: "",
@@ -42,12 +40,12 @@ export default function EditCategory() {
   const [itemSearch, setItemSearch] = useState("");
 
   useEffect(() => {
-    if (!user || !categoryId) return;
+    if (!restaurantId || !categoryId) return;
     setLoading(true);
     Promise.all([
-      fetchCategory(user.uid, categoryId),
-      fetchCategories(user.uid),
-      import("../../api/items").then(({ fetchItems }) => fetchItems(user.uid)),
+      fetchCategory(restaurantId, categoryId),
+      fetchCategories(restaurantId),
+      import("../../api/items").then(({ fetchItems }) => fetchItems(restaurantId)),
     ])
       .then(([categoryData, allCategories, itemsData]) => {
         setFormData({
@@ -87,12 +85,12 @@ export default function EditCategory() {
       .catch((err) => {
         console.error("Error loading category:", err);
         alert("Failed to load category");
-        navigate("/categories");
+        navigate(`/${restaurantId}/categories`);
       });
-  }, [user, categoryId, navigate]);
+  }, [restaurantId, categoryId, navigate]);
 
   const handleClose = () => {
-    navigate("/categories");
+    navigate(`/${restaurantId}/categories`);
   };
 
   const handleParentSelect = (category) => {
@@ -152,14 +150,14 @@ export default function EditCategory() {
         imageUrl = null;
       }
 
-      await updateCategory(user.uid, categoryId, {
+      await updateCategory(restaurantId, categoryId, {
         name: formData.name,
         image: imageUrl,
         parentCategoryId: formData.parentCategoryId,
         itemIds: selectedItems.map((item) => item.id),
       });
 
-      navigate("/categories");
+      navigate(`/${restaurantId}/categories`);
     } catch (err) {
       console.error("Failed to update category:", err);
       alert("Failed to update category: " + err.message);

@@ -1,5 +1,5 @@
 const express = require('express');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken } = require('../middleware/verifyToken');
 const router = express.Router({ mergeParams: true });
 const { 
     fetchSpecialClosures,

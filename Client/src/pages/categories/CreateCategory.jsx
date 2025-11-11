@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useNavigate, useParams } from "react-router-dom";
 import { createCategory, fetchCategories } from "../../api/categories";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { useToast } from "../../hooks/useToast";
@@ -14,7 +13,7 @@ import {
 
 export default function CreateCategory() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
   const { uploadImage, uploading } = useImageUpload();
   const { success, error } = useToast();
   const [formData, setFormData] = useState({
@@ -33,11 +32,11 @@ export default function CreateCategory() {
   const [itemSearch, setItemSearch] = useState("");
 
   useEffect(() => {
-    if (user?.uid) {
+    if (restaurantId) {
       Promise.all([
-        fetchCategories(user.uid),
+        fetchCategories(restaurantId),
         import("../../api/items").then(({ fetchItems }) =>
-          fetchItems(user.uid)
+          fetchItems(restaurantId)
         ),
       ])
         .then(([categoriesData, itemsData]) => {
@@ -49,10 +48,10 @@ export default function CreateCategory() {
         })
         .catch((err) => console.error("Error loading data:", err));
     }
-  }, [user]);
+  }, [restaurantId]);
 
   const handleClose = () => {
-    navigate("/categories");
+    navigate(`/${restaurantId}/categories`);
   };
 
   const handleParentSelect = (category) => {
@@ -101,14 +100,14 @@ export default function CreateCategory() {
       if (imageFile) {
         imageUrl = await uploadImage(imageFile, "categories");
       }
-      await createCategory(user.uid, {
+      await createCategory(restaurantId, {
         name: formData.name,
         image: imageUrl,
         parentCategoryId: formData.parentCategoryId,
         itemIds: selectedItems.map((item) => item.id),
       });
       success(`Category "${formData.name}" created successfully!`);
-      navigate("/categories");
+      navigate(`/${restaurantId}/categories`);
     } catch (err) {
       console.error("Failed to create category:", err);
       error("Failed to create category: " + err.message);

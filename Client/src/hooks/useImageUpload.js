@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { uploadImageFile } from '../api/upload'
+import { uploadCompressedImageFile } from '../api/upload'
 
 export function useImageUpload() {
   const [uploading, setUploading] = useState(false)
@@ -12,7 +12,7 @@ export function useImageUpload() {
     setError(null)
     
     try {
-      const response = await uploadImageFile(file)
+      const response = await uploadCompressedImageFile(file)
       
       setUploading(false)
       return response.url

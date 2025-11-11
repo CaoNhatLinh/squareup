@@ -1,0 +1,10 @@
+import { useContext } from 'react';
+import { RestaurantSelectionContext } from '../context/RestaurantSelectionContext';
+
+export function useRestaurantSelection() {
+  const context = useContext(RestaurantSelectionContext);
+  if (!context) {
+    throw new Error('useRestaurantSelection must be used within RestaurantSelectionProvider');
+  }
+  return context;
+}

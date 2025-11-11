@@ -6,16 +6,15 @@ export default function Toast({ message, type = "info", onClose, duration = 3000
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    // Trigger animation
     setTimeout(() => setIsVisible(true), 10);
   }, []);
 
   useEffect(() => {
     if (duration <= 0) return;
 
-    const interval = 50; // Update every 50ms
+    const interval = 50;
     const decrement = (100 / duration) * interval;
-    
+
     const timer = setInterval(() => {
       setProgress((prev) => {
         const next = prev - decrement;
@@ -28,7 +27,7 @@ export default function Toast({ message, type = "info", onClose, duration = 3000
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 300); // Wait for animation
+    setTimeout(onClose, 300);
   };
 
   const config = {
@@ -94,7 +93,6 @@ export default function Toast({ message, type = "info", onClose, duration = 3000
             <HiX className="w-5 h-5" />
           </button>
         </div>
-        {/* Progress bar */}
         {duration > 0 && (
           <div className="h-1 bg-gray-200">
             <div

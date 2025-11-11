@@ -6,10 +6,45 @@ const instance = axios.create({
   withCredentials: true, 
 })
 
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      window.location.href = '/signin';
+    }
+    return Promise.reject(error);
+  }
+);
+
+let authReadyPromise = null;
+function waitForAuthReady() {
+  if (authReadyPromise) return authReadyPromise;
+  
+  authReadyPromise = new Promise((resolve) => {
+    if (auth.currentUser) {
+      resolve(auth.currentUser);
+      return;
+    }
+    
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      unsubscribe();
+      resolve(user);
+    });
+    
+    setTimeout(() => {
+      unsubscribe();
+      resolve(null);
+    }, 5000);
+  });
+  
+  return authReadyPromise;
+}
+
 async function buildAuthHeaders(contentType, idTokenOverride) {
   let token = idTokenOverride
   if (!token) {
     try {
+      await waitForAuthReady();
       token = auth.currentUser ? await auth.currentUser.getIdToken() : null
     } catch {
       token = null
@@ -33,7 +68,12 @@ export async function post(url, body, opts = {}) {
   if (opts.headers) {
     Object.assign(headers, opts.headers)
   }
-  
+
+  console.log('API POST request:', url);
+  console.log('Request headers:', headers);
+  console.log('Request body type:', typeof body);
+  console.log('Request body length:', body ? (typeof body === 'string' ? body.length : JSON.stringify(body).length) : 0);
+
   return instance.post(url, body, { headers })
 }
 export async function put(url, body, opts = {}) {

@@ -1,9 +1,3 @@
-/**
- * Desktop Notification Utility
- * Handles browser desktop notifications for new orders
- */
-
-// Request notification permission
 export const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
     console.warn('This browser does not support desktop notifications');
@@ -22,12 +16,10 @@ export const requestNotificationPermission = async () => {
   return false;
 };
 
-// Check if notification is supported and permitted
 export const isNotificationSupported = () => {
   return 'Notification' in window && Notification.permission === 'granted';
 };
 
-// Show desktop notification
 export const showDesktopNotification = (order) => {
   if (!isNotificationSupported()) {
     return null;
@@ -50,12 +42,10 @@ export const showDesktopNotification = (order) => {
   try {
     const notification = new Notification('🔔 New Order Received!', options);
 
-    // Handle click event
     notification.onclick = (event) => {
       event.preventDefault();
       window.focus();
       
-      // Navigate to order details
       if (order.id) {
         window.location.href = `/orders/${order.id}`;
       }
@@ -63,7 +53,6 @@ export const showDesktopNotification = (order) => {
       notification.close();
     };
 
-    // Auto-close after 10 seconds
     setTimeout(() => {
       notification.close();
     }, 10000);
@@ -75,7 +64,6 @@ export const showDesktopNotification = (order) => {
   }
 };
 
-// Check notification permission status
 export const getNotificationPermissionStatus = () => {
   if (!('Notification' in window)) {
     return 'unsupported';

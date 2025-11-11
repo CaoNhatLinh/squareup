@@ -46,7 +46,6 @@ export function ShopProvider({ children }) {
       );
       const pricePerItem = basePrice + optionsPrice;
 
-      // Find categoryId for this item
       let categoryId = null;
       for (const category of categories) {
         if (category.itemIds && category.itemIds.includes(item.id)) {
@@ -85,7 +84,7 @@ export function ShopProvider({ children }) {
             id: `${item.id}_${Date.now()}`,
             groupKey: groupKey,
             itemId: item.id,
-            categoryId: categoryId, // Add categoryId here
+            categoryId: categoryId,
             name: item.name,
             price: pricePerItem,
             image: item.image,
@@ -140,11 +139,9 @@ export function ShopProvider({ children }) {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
 
-  // Calculate discounts
   const discountCalculation = useDiscountCalculation(cart, activeDiscounts);
 
   const value = {
-    // State
     restaurant,
     categories,
     items,
@@ -153,14 +150,12 @@ export function ShopProvider({ children }) {
     activeDiscounts,
     discountCalculation,
 
-    // Setters
     setRestaurant,
     setCategories,
     setItems,
     setModifiers,
     setActiveDiscounts,
 
-    // Cart functions
     addToCart,
     removeFromCart,
     updateCartItemQuantity,

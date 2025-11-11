@@ -1,6 +1,5 @@
 const { db } = require('../config/firebaseAdmin');
 
-// Get active discounts for shop (public endpoint)
 exports.getActiveDiscounts = async (req, res) => {
   const { uid } = req.params;
   const restaurantId = uid;
@@ -14,7 +13,6 @@ exports.getActiveDiscounts = async (req, res) => {
       .filter(([id, discount]) => {
         try {
           if (!discount?.automaticDiscount) {
-            console.log('Not automatic discount');
             return false;
           }
           if (discount.setDateRange) {

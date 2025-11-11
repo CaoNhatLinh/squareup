@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 
-/**
- * Component Dropdown Tái Sử Dụng
- * @param {Array<{value: string, label: string}>} options - Danh sách các tùy chọn.
- * @param {string} value - Giá trị hiện tại được chọn.
- * @param {function(string): void} onChange - Hàm callback khi chọn một giá trị mới.
- * @param {string} [label] - Nhãn hiển thị phía trên dropdown (Tùy chọn).
- */
 const ReusableDropdown = ({ options, value, onChange, label }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -41,8 +34,8 @@ const ReusableDropdown = ({ options, value, onChange, label }) => {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-4 py-3 text-left border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white shadow-sm flex justify-between items-center transition duration-150 ease-in-out hover:border-red-400"
-        aria-haspopup="listbox" 
-        aria-expanded={isOpen} 
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
         <span>{selectedOption?.label || "Select an option"}</span>
         <svg
@@ -77,8 +70,8 @@ const ReusableDropdown = ({ options, value, onChange, label }) => {
                   ? "bg-red-50 text-red-700 font-bold"
                   : "hover:bg-gray-50"
               } flex items-center justify-between`}
-              role="option" 
-              aria-selected={value === option.value} 
+              role="option"
+              aria-selected={value === option.value}
             >
               {option.label}
               {value === option.value && (

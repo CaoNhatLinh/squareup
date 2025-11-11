@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useShop } from "../../../context/ShopContext";
 import { useNavigate } from "react-router-dom";
 
-export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDiscounts }) {
+export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDiscounts, isRestaurantActive = true }) {
   const { getTotalItemsCount } = useShop();
   const navigate = useNavigate();
   const totalItems = getTotalItemsCount();
@@ -38,7 +38,12 @@ export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDi
               <div className="flex-1 flex justify-end gap-3 pr-4">
                 <button 
                   onClick={() => setShowTrackOrder(true)}
-                  className="bg-white text-black border-2 border-black rounded-xl px-4 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  disabled={!isRestaurantActive}
+                  className={`border-2 rounded-xl px-4 py-2 flex items-center gap-2 transition-colors ${
+                    isRestaurantActive 
+                      ? 'bg-white text-black border-black hover:bg-gray-50' 
+                      : 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -49,7 +54,12 @@ export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDi
                 {/* Promotions Button */}
                 <button 
                   onClick={onPromotionsClick}
-                  className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl px-4 py-2 flex items-center gap-2 hover:from-orange-600 hover:to-red-600 transition-colors shadow-md"
+                  disabled={!isRestaurantActive}
+                  className={`rounded-xl px-4 py-2 flex items-center gap-2 shadow-md transition-colors ${
+                    isRestaurantActive 
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600' 
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
@@ -64,7 +74,12 @@ export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDi
 
                 <button 
                   onClick={onCartClick}
-                  className="bg-black text-white rounded-xl px-4 py-2 flex items-center gap-3 hover:bg-gray-900 transition-colors shadow-md"
+                  disabled={!isRestaurantActive}
+                  className={`rounded-xl px-4 py-2 flex items-center gap-3 shadow-md transition-colors ${
+                    isRestaurantActive 
+                      ? 'bg-black text-white hover:bg-gray-900' 
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />

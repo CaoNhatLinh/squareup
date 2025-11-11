@@ -33,7 +33,7 @@ export default function SignUp() {
         console.warn('sessionLogin (signup) failed', e);
       }
 
-      navigate('/dashboard');
+      navigate('/restaurants');
     } catch (err) {
       console.error(err);
       alert(err.message);

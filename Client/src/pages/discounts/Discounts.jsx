@@ -1,34 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLoaderData, useParams } from 'react-router-dom';
 import { HiPlus, HiTag, HiPencil, HiTrash } from 'react-icons/hi2';
-import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import { fetchDiscounts, deleteDiscount } from '../../api/discounts';
 import SearchBar from '../../components/common/SearchBar';
 
 export default function Discounts() {
-  const { user } = useAuth();
+  const { restaurantId } = useParams();
+  const loaderData = useLoaderData();
   const navigate = useNavigate();
   const { success, error } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [discounts, setDiscounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [discounts, setDiscounts] = useState(loaderData?.discounts || []);
 
   useEffect(() => {
-    if (!user?.uid) return;
-    loadDiscounts();
-  }, [user?.uid]);
+    if (loaderData?.discounts) {
+      setDiscounts(loaderData.discounts);
+    }
+  }, [loaderData]);
 
   const loadDiscounts = async () => {
-    setLoading(true);
     try {
-      const data = await fetchDiscounts(user.uid);
+      const data = await fetchDiscounts(restaurantId);
       setDiscounts(Object.values(data || {}));
     } catch (err) {
       console.error('Failed to load discounts:', err);
       error('Failed to load discounts');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -36,7 +33,7 @@ export default function Discounts() {
     if (!window.confirm(`Are you sure you want to delete discount "${discountName}"?`)) return;
     
     try {
-      await deleteDiscount(user.uid, discountId);
+      await deleteDiscount(restaurantId, discountId);
       success(`Discount "${discountName}" deleted successfully!`);
       loadDiscounts();
     } catch (err) {
@@ -62,17 +59,6 @@ export default function Discounts() {
     return '-';
   };
 
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
-          <p className="text-lg text-gray-700 font-medium">Loading discounts...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 pb-24 bg-gray-50 min-h-screen">
       <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -88,7 +74,7 @@ export default function Discounts() {
             className="w-72"
           />
           <Link
-            to="/discounts/new"
+            to={`/${restaurantId}/discounts/new`}
             className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
           >
             <HiPlus className="w-5 h-5" /> Create Discount
@@ -102,7 +88,7 @@ export default function Discounts() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">No discounts yet</h2>
           <p className="text-gray-600 mb-6">Create your first discount to start offering promotions to your customers.</p>
           <Link
-            to="/discounts/new"
+            to={`/${restaurantId}/discounts/new`}
             className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
           >
             <HiPlus className="w-5 h-5" /> Create Your First Discount
@@ -162,7 +148,7 @@ export default function Discounts() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => navigate(`/discounts/${discount.id}/edit`)}
+                        onClick={() => navigate(`/${restaurantId}/discounts/${discount.id}/edit`)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Edit"
                       >

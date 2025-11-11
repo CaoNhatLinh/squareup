@@ -16,4 +16,28 @@ async function verifyToken(req, res, next) {
   }
 }
 
-module.exports = verifyToken;
+async function verifyRestaurantOwnership(req, res, next) {
+  const userId = req.user.uid;
+  const restaurantId = req.params.restaurantId;
+  
+  if (!restaurantId) {
+    return res.status(400).json({ error: 'Restaurant ID is required' });
+  }
+  
+  try {
+    const db = admin.database();
+    const snapshot = await db.ref(`users/${userId}/restaurants/${restaurantId}`).once('value');
+    
+    if (!snapshot.exists()) {
+      return res.status(403).json({ error: 'Not authorized to access this restaurant' });
+    }
+    
+    req.restaurantId = restaurantId;
+    next();
+  } catch (err) {
+    console.error('Restaurant ownership verification failed', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
+module.exports = { verifyToken, verifyRestaurantOwnership };

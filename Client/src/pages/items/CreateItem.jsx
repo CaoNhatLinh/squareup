@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate, useParams } from 'react-router-dom'
 import { createItem } from '../../api/items'
 import { useImageUpload } from '../../hooks/useImageUpload'
 import { useToast } from '../../hooks/useToast'
@@ -8,7 +7,7 @@ import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup
 
 export default function CreateItem() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { restaurantId } = useParams()
   const { uploadImage, uploading } = useImageUpload()
   const { success, error } = useToast()
   const [formData, setFormData] = useState({
@@ -28,23 +27,23 @@ export default function CreateItem() {
   const [selectedCategories, setSelectedCategories] = useState([])
 
   React.useEffect(() => {
-    if (!user) return
+    if (!restaurantId) return
     import('../../api/categories').then(({ fetchCategories }) => {
-      fetchCategories(user.uid)
+      fetchCategories(restaurantId)
         .then((data) => {
           setCategories(Object.values(data || {}))
         })
         .catch(() => {})
     })
     import('../../api/modifers').then(({ fetchModifiers }) => {
-      fetchModifiers(user.uid)
+      fetchModifiers(restaurantId)
         .then((data) => setModifiers(Object.values(data || {})))
         .catch(() => {})
     })
-  }, [user])
+  }, [restaurantId])
 
   const handleClose = () => {
-    navigate(-1)
+    navigate(`/${restaurantId}/items`)
   }
 
   const handleImageSelect = (e) => {
@@ -73,7 +72,7 @@ export default function CreateItem() {
         imageUrl = await uploadImage(imageFile, 'items')
       }
       
-      await createItem(user.uid, {
+      await createItem(restaurantId, {
         type: formData.itemType,
         name: formData.name,
         price: parseFloat(formData.price) || 0,
@@ -84,7 +83,7 @@ export default function CreateItem() {
       })
       
       success(`Item "${formData.name}" created successfully!`)
-      navigate(-1)
+      navigate(`/${restaurantId}/items`)
     } catch (err) {
       console.error('Failed to create item:', err)
       error('Failed to create item: ' + err.message)

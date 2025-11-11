@@ -12,7 +12,6 @@ export default function MenuItem({ item, level = 0 }) {
     if (!item.children) return false;
     const checkActive = (children) => {
       return children.some((child) => {
-        // Kiểm tra NavLink (link cấp thấp)
         if (child.to && location.pathname.startsWith(child.to)) return true;
         if (child.children) return checkActive(child.children);
         return false;

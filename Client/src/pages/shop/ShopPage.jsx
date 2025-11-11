@@ -7,7 +7,6 @@ import { useShop } from "../../context/ShopContext";
 import ShopHeader from "./components/ShopHeader";
 import RestaurantBanner from "./components/RestaurantBanner";
 import RestaurantInfoDrawer from "./components/RestaurantInfoDrawer";
-// import OrderTypeSelector from "./components/OrderTypeSelector";
 import ClosedBanner from "./components/ClosedBanner";
 import CategoryNavigation from "./components/CategoryNavigation";
 import ItemList from "./components/ItemList";
@@ -38,7 +37,6 @@ function ShopPageContent() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPromotionsOpen, setIsPromotionsOpen] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
-  // const [orderType, setOrderType] = useState("pickup");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -81,6 +79,7 @@ function ShopPageContent() {
 
         setRestaurant({ 
           name: data.name, 
+          description: data.description,
           id: data.id,
           isOpen: data.isOpen,
           nextOpenTime: data.nextOpenTime,
@@ -89,23 +88,24 @@ function ShopPageContent() {
           address: data.address,
           phone: data.phone,
           email: data.email,
-          specialClosures: data.specialClosures
+          website: data.website,
+          logo: data.logo,
+          coverImage: data.coverImage,
+          featuredImage: data.featuredImage,
+          socialMedia: data.socialMedia,
+          specialClosures: data.specialClosures,
+          active: data.active
         });
         const cats = data.categories ? Object.values(data.categories) : [];
         setCategories(cats);
         setItems(data.items || {});
         setModifiers(data.modifiers || {});
 
-        // Fetch active discounts
         try {
-          console.log('🔍 Fetching active discounts for restaurant:', restaurantId);
           const discounts = await fetchActiveDiscounts(restaurantId);
-          console.log('📦 Received discounts:', discounts);
           setActiveDiscounts(discounts);
-          console.log('✅ Loaded active discounts:', Object.keys(discounts).length);
         } catch (error) {
           console.error('❌ Failed to load discounts:', error);
-          // Continue even if discounts fail
         }
       } catch (error) {
         console.error("Failed to load restaurant data:", error);
@@ -125,6 +125,10 @@ function ShopPageContent() {
   };
 
   const handleItemClick = (item) => {
+    if (restaurant.active === false) {
+      return; // Don't allow ordering when restaurant is inactive
+    }
+    
     if (item.modifierIds && item.modifierIds.length > 0) {
       setSelectedItem(item);
       setIsModalOpen(true);
@@ -163,7 +167,20 @@ function ShopPageContent() {
         onCartClick={() => setIsCartOpen(true)}
         onPromotionsClick={() => setIsPromotionsOpen(true)}
         hasActiveDiscounts={Object.keys(activeDiscounts).length > 0}
+        isRestaurantActive={restaurant.active}
       />
+      
+      {/* Inactive Restaurant Banner */}
+      {restaurant.active === false && (
+        <div className="bg-red-600 text-white text-center py-4 px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold mb-2">🏪 Restaurant Temporarily Closed</h2>
+            <p className="text-sm opacity-90">
+              This restaurant is currently inactive. Please check back later or contact the restaurant for more information.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Restaurant Banner */}
       <RestaurantBanner 
@@ -179,14 +196,6 @@ function ShopPageContent() {
         restaurant={restaurant}
       />
 
-     
-{/* 
-      <OrderTypeSelector
-        selectedType={orderType}
-        onSelectType={setOrderType}
-      /> */}
-      
-      {/* Closed Banner */}
       <ClosedBanner restaurant={restaurant} />
 
       <CategoryNavigation

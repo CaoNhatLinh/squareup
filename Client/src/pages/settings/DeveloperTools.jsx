@@ -9,16 +9,18 @@ import {
   HiExclamationCircle,
   HiLightBulb,
 } from "react-icons/hi2"; 
+import { useParams } from "react-router-dom";
 
 export default function DeveloperTools() {
   const { user } = useAuth();
   const { restaurant } = useRestaurant();
+  const { restaurantId } = useParams();
   const [loading, setLoading] = useState(false);
   const [lastOrderId, setLastOrderId] = useState(null);
   const [error, setError] = useState(null);
 
   const createTestOrder = async () => {
-    if (!restaurant?.id) {
+    if (!restaurantId) {
       setError("Restaurant not found. Please set up your restaurant first.");
       return;
     }
@@ -32,7 +34,7 @@ export default function DeveloperTools() {
       const testOrder = {
         id: orderId,
         orderId: orderId,
-        restaurantId: restaurant.id,
+        restaurantId: restaurantId,
         restaurantName: restaurant.name || "Test Restaurant",
         customerName: "Test Customer (Dev Tool)",
         customerEmail: user?.email || "test@example.com",
@@ -62,7 +64,7 @@ export default function DeveloperTools() {
         updatedAt: Date.now(),
       };
 
-      const ordersRef = ref(rtdb, `restaurants/${restaurant.id}/orders`);
+      const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);
       const newOrderRef = push(ordersRef);
       await set(newOrderRef, testOrder);
 
@@ -133,9 +135,9 @@ export default function DeveloperTools() {
 
           <button
             onClick={createTestOrder}
-            disabled={loading || !restaurant?.id}
+            disabled={loading || !restaurantId}
             className={`w-full px-6 py-3 rounded-xl font-bold text-white transition-colors shadow-lg ${
-              loading || !restaurant?.id
+              loading || !restaurantId
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-red-600 hover:bg-red-700 shadow-red-300" 
             }`}
@@ -160,7 +162,7 @@ export default function DeveloperTools() {
                 </svg>
                 Creating Test Order...
               </span>
-            ) : !restaurant?.id ? (
+            ) : !restaurantId ? (
               "⚠️ Restaurant Not Set Up"
             ) : (
               "🔥 Create Full Test Order"

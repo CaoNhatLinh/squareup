@@ -22,7 +22,7 @@ export default function SignIn() {
       } catch (e) {
         console.warn('sessionLogin (email) failed', e);
       }
-      navigate('/dashboard');
+      navigate('/restaurants'); 
     } catch (err) {
       console.error(err);
       alert(err.message);
@@ -40,8 +40,7 @@ export default function SignIn() {
       
       const idToken = await user.getIdToken();
       console.log('Got ID token');
-      
-      // Only create/upsert restaurant if it doesn't already exist to avoid overwriting custom name
+
       try {
         const existing = await fetchRestaurant(user.uid, idToken).catch(() => null);
         if (!existing) {
@@ -63,7 +62,7 @@ export default function SignIn() {
         console.warn('sessionLogin failed', e);
       }
       
-      navigate('/dashboard');
+      navigate('/restaurants'); // Changed from /dashboard
     } catch (err) {
       console.error('Google sign in error:', err);
       alert(err.message);

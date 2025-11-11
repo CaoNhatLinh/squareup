@@ -2,9 +2,9 @@ const admin = require('firebase-admin');
 const db = admin.database();
 
 async function listCategories(req, res) {
-  const { uid } = req.params;
+  const { restaurantId } = req.params;
   try {
-    const snap = await db.ref(`restaurants/${uid}/categories`).get();
+    const snap = await db.ref(`restaurants/${restaurantId}/categories`).get();
     return res.json(snap.exists() ? snap.val() : {});
   } catch (err) {
     console.error(err);
@@ -13,9 +13,9 @@ async function listCategories(req, res) {
 }
 
 async function getCategory(req, res) {
-  const { uid, categoryId } = req.params;
+  const { restaurantId, categoryId } = req.params;
   try {
-    const snap = await db.ref(`restaurants/${uid}/categories/${categoryId}`).get();
+    const snap = await db.ref(`restaurants/${restaurantId}/categories/${categoryId}`).get();
     if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
     return res.json(snap.val());
   } catch (err) {
@@ -25,15 +25,14 @@ async function getCategory(req, res) {
 }
 
 async function createCategory(req, res) {
-  const { uid } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId } = req.params;
   const { name, image = null, parentCategoryId = null, itemIds = [] } = req.body;
   if (!name) return res.status(400).json({ error: 'Missing name' });
   if (itemIds && !Array.isArray(itemIds)) return res.status(400).json({ error: 'itemIds must be an array' });
   
   try {
     if (parentCategoryId) {
-      const parentRef = db.ref(`restaurants/${uid}/categories/${parentCategoryId}`);
+      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);
       const parentSnap = await parentRef.get();
       if (!parentSnap.exists()) {
         return res.status(400).json({ error: 'Parent category not found' });
@@ -44,7 +43,7 @@ async function createCategory(req, res) {
       }
     }
     
-    const ref = db.ref(`restaurants/${uid}/categories`).push();
+    const ref = db.ref(`restaurants/${restaurantId}/categories`).push();
     const id = ref.key;
     await ref.set({ 
       id, 
@@ -62,8 +61,7 @@ async function createCategory(req, res) {
 }
 
 async function updateCategory(req, res) {
-  const { uid, categoryId } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId, categoryId } = req.params;
   const { name, image, parentCategoryId, itemIds } = req.body;
   if (!name && image === undefined && parentCategoryId === undefined && itemIds === undefined) {
     return res.status(400).json({ error: 'Nothing to update' });
@@ -73,14 +71,14 @@ async function updateCategory(req, res) {
   }
   
   try {
-    const catRef = db.ref(`restaurants/${uid}/categories/${categoryId}`);
+    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);
     const snap = await catRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
     
     const currentData = snap.val();
     
     if (parentCategoryId !== undefined && parentCategoryId !== null) {
-      const parentRef = db.ref(`restaurants/${uid}/categories/${parentCategoryId}`);
+      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);
       const parentSnap = await parentRef.get();
       if (!parentSnap.exists()) {
         return res.status(400).json({ error: 'Parent category not found' });
@@ -89,7 +87,7 @@ async function updateCategory(req, res) {
       if (parentData.parentCategoryId) {
         return res.status(400).json({ error: 'Cannot make this a subcategory of a subcategory. Maximum 2 levels allowed.' });
       }
-      const allCategoriesSnap = await db.ref(`restaurants/${uid}/categories`).get();
+      const allCategoriesSnap = await db.ref(`restaurants/${restaurantId}/categories`).get();
       if (allCategoriesSnap.exists()) {
         const allCategories = allCategoriesSnap.val();
         const hasSubcategories = Object.values(allCategories).some(
@@ -117,10 +115,9 @@ async function updateCategory(req, res) {
 }
 
 async function deleteCategory(req, res) {
-  const { uid, categoryId } = req.params;
-  if (req.user.uid !== uid) return res.status(403).json({ error: 'Forbidden' });
+  const { restaurantId, categoryId } = req.params;
   try {
-    const catRef = db.ref(`restaurants/${uid}/categories/${categoryId}`);
+    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);
     const snap = await catRef.get();
     if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
     await catRef.remove();
