@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { useRestaurant } from "../../hooks/useRestaurant";
-import { upsertRestaurant } from "../../api/restaurants";
-import { uploadImage } from "../../api/upload";
+import { useRestaurant } from "@/hooks/useRestaurant";
+import { upsertRestaurant } from "@/api/restaurants";
+import { uploadImage } from "@/api/upload";
 import {
   HiPhone,
   HiEnvelope,
@@ -18,7 +17,6 @@ import {
   HiXMark,
   HiPlus,
   HiSparkles,
-  HiBuildingStorefront,
   HiInformationCircle,
   HiRectangleStack,
   HiStar,
@@ -27,7 +25,6 @@ import {
 
 export default function BusinessAbout() {
   const { restaurantId } = useParams();
-  const { user } = useAuth();
   const { restaurant, updateRestaurant } = useRestaurant();
   const [restaurantName, setRestaurantName] = useState("");
   const [description, setDescription] = useState("");
@@ -255,7 +252,6 @@ export default function BusinessAbout() {
     setMessage("");
 
     try {
-      const token = await user.getIdToken();
       const updateData = {
         name: restaurantName,
         description,
@@ -268,12 +264,11 @@ export default function BusinessAbout() {
         coverImage,
         featuredImage,
       };
-      await upsertRestaurant(restaurantId, updateData, token);
+      await upsertRestaurant(restaurantId, updateData);
       setMessage("Restaurant information updated successfully!");
       setTimeout(() => setMessage(""), 4000);
       updateRestaurant(updateData);
-    } catch (err) {
-      console.error("Error updating restaurant:", err);
+    } catch {
       setMessage("Failed to update restaurant information");
     } finally {
       setSaving(false);

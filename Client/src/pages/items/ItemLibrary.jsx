@@ -7,12 +7,12 @@ import {
   HiOutlinePlusCircle,
 } from "react-icons/hi2";
 
-import { useToast } from "../../hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 
-import { createItem, deleteItem } from "../../api/items";
-import SearchBar from "../../components/common/SearchBar";
-import BulkActionBar from "../../components/common/BulkActionBar";
-import ActionMenu from "../../components/common/ActionMenu";
+import { createItem, deleteItem } from "@/api/items.js";
+import SearchBar from "@/components/common/SearchBar";
+import BulkActionBar from "@/components/common/BulkActionBar";
+import ActionMenu from "@/components/common/ActionMenu";
 
 export default function ItemLibrary() {
   const { restaurantId } = useParams();
@@ -122,9 +122,9 @@ export default function ItemLibrary() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const openEditItem = (itemId) => {
-    navigate(`/items/${itemId}/edit`);
+    navigate(`/${restaurantId}/items/${itemId}/edit`);
   };
-
+  
   return (
     <div className="p-8 pb-24 bg-gray-50 min-h-screen">
       <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -150,7 +150,7 @@ export default function ItemLibrary() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 ">
         <table className="w-full min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
             <tr>

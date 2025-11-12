@@ -5,6 +5,7 @@ export default function ItemList({
   categories,
   items,
   onItemClick,
+  onQuickAdd,
 }) {
   const itemsByCategory = useMemo(() => {
     const itemsArray = Object.values(items);
@@ -62,7 +63,7 @@ export default function ItemList({
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {categoryItems.map((item) => (
-                <ItemCard key={item.id} item={item} onItemClick={onItemClick} />
+                <ItemCard key={item.id} item={item} onItemClick={onItemClick} onQuickAdd={onQuickAdd} />
               ))}
             </div>
           </div>

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ref, push, set } from "firebase/database";
-import { rtdb } from "../../firebase";
-import { useAuth } from "../../hooks/useAuth";
-import { useRestaurant } from "../../hooks/useRestaurant";
+import { rtdb } from "@/firebase";
+import { useAuth } from "@/hooks/useAuth";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import {
   HiFire,
   HiCheckCircle,

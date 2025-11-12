@@ -1,44 +1,44 @@
 import React from "react";
 import { createBrowserRouter, redirect } from "react-router-dom";
-import Layout from "./components/Layout";
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
-import SignOut from "./pages/auth/SignOut";
-import Dashboard from "./pages/Dashboard";
-import Home from "./pages/Home";
-import RestaurantSelector from "./pages/restaurants/RestaurantSelector";
-import Categories from "./pages/categories/Categories";
-import CreateCategory from "./pages/categories/CreateCategory";
-import EditCategory from "./pages/categories/EditCategory";
-import ItemLibrary from "./pages/items/ItemLibrary";
-import CreateItem from "./pages/items/CreateItem";
-import EditItem from "./pages/items/EditItem";
-import BusinessAbout from "./pages/settings/BusinessAbout";
-import BusinessHours from "./pages/settings/BusinessHours";
-import SpecialClosures from "./pages/settings/SpecialClosures";
-import { fetchRestaurant } from "./api/restaurants";
-import { fetchCategories } from "./api/categories";
-import { fetchItems } from "./api/items";
-import Modifiers from "./pages/modifiers/Modifiers";
-import CreateModifier from "./pages/modifiers/CreateModifier";
-import EditModifier from "./pages/modifiers/EditModifier";
-import { fetchModifiers } from "./api/modifers";
-import Discounts from "./pages/discounts/Discounts";
-import CreateDiscount from "./pages/discounts/CreateDiscount";
-import EditDiscount from "./pages/discounts/EditDiscount";
-import { fetchDiscounts } from "./api/discounts";
-import ShopPage from "./pages/shop/ShopPage";
-import CheckoutSuccessWrapper from "./pages/shop/CheckoutSuccessWrapper";
-import CheckoutCancelled from "./pages/shop/CheckoutCancelled";
-import Orders from "./pages/orders/Orders";
-import NotFound from "./pages/NotFound";
-import OrderDetails from "./pages/orders/OrderDetails";
-import DeveloperTools from "./pages/settings/DeveloperTools";
-import TrackOrder from "./pages/public/TrackOrder";
-import RestaurantSettings from "./pages/settings/RestaurantSettings";
-export const homeLoader = async () => {
-  return null;
-};
+import Layout from "@/components/Layout";
+import AdminRoute from "@/components/AdminRoute";
+import SignIn from "@/pages/auth/SignIn";
+import SignUp from "@/pages/auth/SignUp";
+import SignOut from "@/pages/auth/SignOut";
+import Dashboard from "@/pages/Dashboard";
+import Home from "@/pages/Home";
+import RestaurantSelector from "@/pages/restaurants/RestaurantSelector";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import Categories from "@/pages/categories/Categories";
+import CreateCategory from "@/pages/categories/CreateCategory";
+import EditCategory from "@/pages/categories/EditCategory";
+import ItemLibrary from "@/pages/items/ItemLibrary";
+import CreateItem from "@/pages/items/CreateItem";
+import EditItem from "@/pages/items/EditItem";
+import BusinessAbout from "@/pages/settings/BusinessAbout";
+import BusinessHours from "@/pages/settings/BusinessHours";
+import SpecialClosures from "@/pages/settings/SpecialClosures";
+import { fetchRestaurant } from "@/api/restaurants";
+import { fetchCategories } from "@/api/categories";
+import { fetchItems } from "@/api/items";
+import Modifiers from "@/pages/modifiers/Modifiers";
+import CreateModifier from "@/pages/modifiers/CreateModifier";
+import EditModifier from "@/pages/modifiers/EditModifier";
+import { fetchModifiers } from "@/api/modifers";
+import Discounts from "@/pages/discounts/Discounts";
+import CreateDiscount from "@/pages/discounts/CreateDiscount";
+import EditDiscount from "@/pages/discounts/EditDiscount";
+import { fetchDiscounts } from "@/api/discounts";
+import ShopPage from "@/pages/shop/ShopPage";
+import CheckoutSuccessWrapper from "@/pages/shop/checkout/CheckoutSuccessWrapper";
+import CheckoutCancelled from "@/pages/shop/checkout/CheckoutCancelled";
+import Orders from "@/pages/orders/Orders";
+import NotFound from "@/pages/NotFound";
+import OrderDetails from "@/pages/orders/OrderDetails";
+import DeveloperTools from "@/pages/settings/DeveloperTools";
+import TrackOrder from "@/pages/public/TrackOrder";
+import RestaurantSettings from "@/pages/settings/RestaurantSettings";
+
 
 export const dashboardLoader = async ({ params }) => {
   try {
@@ -132,6 +132,7 @@ export const ordersLoader = async ({ params }) => {
   }
 };
 
+
 export const router = createBrowserRouter([
   {
     path: "/shop/:restaurantId",
@@ -155,14 +156,31 @@ export const router = createBrowserRouter([
     loader: async () => {
       return {};
     },
-  }, 
+  },
+  {
+    path: "/admin",
+    element: <AdminRoute><Layout /></AdminRoute>,
+    children: [
+      {
+        index: true,
+        element: <AdminDashboard />,
+      },
+    ],
+  },
+  { index: true, element: <Home /> }, 
+  { path: "signin", element: <SignIn /> },
+  { path: "signup", element: <SignUp /> },
+  { path: "signout", element: <SignOut /> }, 
   {
     element: <Layout />,
     children: [
-      { index: true, element: <Home />, loader: homeLoader }, 
-      { path: "signin", element: <SignIn /> },
-      { path: "signup", element: <SignUp /> },
-      { path: "signout", element: <SignOut /> }, 
+
+      {
+        path: "dashboard",
+        loader: async () => {
+          throw redirect("/restaurants");
+        },
+      }, 
       {
         path: ":restaurantId",
         children: [
@@ -181,8 +199,8 @@ export const router = createBrowserRouter([
             element: <ItemLibrary />,
             loader: itemsLoader,
           },
-          { path: "items/new", element: <CreateItem /> },
-          { path: "items/:itemId/edit", element: <EditItem /> },
+          { path: "items/new", element: <CreateItem />, loader: itemsLoader },
+          { path: "items/:itemId/edit", element: <EditItem /> ,loader: itemsLoader },
           {
             path: "categories",
             element: <Categories />,

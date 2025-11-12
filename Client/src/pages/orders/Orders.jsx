@@ -1,28 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { getRestaurantOrders, updateOrderStatus } from "../../api/orders";
+import { getRestaurantOrders, updateOrderStatus } from "@/api/orders.js";
 import { useNavigate, useLoaderData, useParams } from "react-router-dom";
 import { BsEye } from "react-icons/bs";
 import { HiCheck } from "react-icons/hi2";
 import { HiRefresh } from "react-icons/hi";
-import { useOrderNotification } from "../../hooks/useOrderNotification";
+import { useOrderNotification } from "@/hooks/useOrderNotification";
 import { ref, onValue } from "firebase/database";
-import { rtdb } from "../../firebase";
-
-const getStatusClasses = (status) => {
-  if (status === "paid" || status === "pending")
-    return "bg-yellow-100 text-yellow-800 border border-yellow-300 font-semibold";
-  if (status === "accepted")
-    return "bg-blue-100 text-blue-800 border border-blue-300 font-semibold";
-  if (status === "preparing")
-    return "bg-purple-100 text-purple-800 border border-purple-300 font-semibold";
-  if (status === "ready")
-    return "bg-green-100 text-green-800 border border-green-300 font-semibold";
-  if (status === "completed")
-    return "bg-gray-200 text-gray-700 border border-gray-300";
-  if (status === "cancelled")
-    return "bg-red-100 text-red-800 border border-red-300";
-  return "bg-gray-100 text-gray-800";
-};
+import { rtdb } from "@/firebase";
+import { getStatusClasses } from "@/utils/statusUtils";
+import { formatDate } from "@/utils/dateUtils";
 
 export default function Orders() {
   useLoaderData();
@@ -119,16 +105,6 @@ export default function Orders() {
   const totalRevenue = orders
     .filter((o) => o.status === "completed" || o.status === "ready")
     .reduce((sum, order) => sum + (order.amount || 0), 0);
-
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   if (loading && orders.length === 0) {
     return (

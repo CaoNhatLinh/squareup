@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getModifier, updateModifier } from "../../api/modifers";
+import { getModifier, updateModifier } from "@/api/modifers";
 import {
   MdOutlineDelete,
   MdAdd,

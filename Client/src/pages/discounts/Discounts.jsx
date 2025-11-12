@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLoaderData, useParams } from 'react-router-dom';
-import { HiPlus, HiTag, HiPencil, HiTrash } from 'react-icons/hi2';
-import { useToast } from '../../hooks/useToast';
-import { fetchDiscounts, deleteDiscount } from '../../api/discounts';
-import SearchBar from '../../components/common/SearchBar';
+import { useState, useEffect } from "react";
+import { Link, useLoaderData, useParams } from "react-router-dom";
+import { HiPlus, HiTag } from "react-icons/hi2";
+import { useToast } from "@/hooks/useToast";
+import { fetchDiscounts, deleteDiscount } from "@/api/discounts.js";
+import SearchBar from "@/components/common/SearchBar";
+import ActionMenu from "@/components/common/ActionMenu";
 
 export default function Discounts() {
   const { restaurantId } = useParams();
   const loaderData = useLoaderData();
-  const navigate = useNavigate();
   const { success, error } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [discounts, setDiscounts] = useState(loaderData?.discounts || []);
+  const [discountMenus, setDiscountMenus] = useState({});
 
   useEffect(() => {
     if (loaderData?.discounts) {
@@ -24,21 +25,25 @@ export default function Discounts() {
       const data = await fetchDiscounts(restaurantId);
       setDiscounts(Object.values(data || {}));
     } catch (err) {
-      console.error('Failed to load discounts:', err);
-      error('Failed to load discounts');
+      console.error("Failed to load discounts:", err);
+      error("Failed to load discounts");
     }
   };
-
   const handleDelete = async (discountId, discountName) => {
-    if (!window.confirm(`Are you sure you want to delete discount "${discountName}"?`)) return;
-    
+    if (
+      !window.confirm(
+        `Are you sure you want to delete discount "${discountName}"?`
+      )
+    )
+      return;
+
     try {
       await deleteDiscount(restaurantId, discountId);
       success(`Discount "${discountName}" deleted successfully!`);
       loadDiscounts();
     } catch (err) {
-      console.error('Failed to delete discount:', err);
-      error('Failed to delete discount');
+      console.error("Failed to delete discount:", err);
+      error("Failed to delete discount");
     }
   };
 
@@ -47,16 +52,16 @@ export default function Discounts() {
   );
 
   const getAmountDisplay = (discount) => {
-    if (discount.amountType === 'percentage') {
+    if (discount.amountType === "percentage") {
       return `${discount.amount}%`;
-    } else if (discount.amountType === 'fixed') {
+    } else if (discount.amountType === "fixed") {
       return `₫${discount.amount}`;
-    } else if (discount.amountType === 'variable_amount') {
-      return 'Variable amount';
-    } else if (discount.amountType === 'variable_percentage') {
-      return 'Variable %';
+    } else if (discount.amountType === "variable_amount") {
+      return "Variable amount";
+    } else if (discount.amountType === "variable_percentage") {
+      return "Variable %";
     }
-    return '-';
+    return "-";
   };
 
   return (
@@ -85,8 +90,13 @@ export default function Discounts() {
       {filteredDiscounts.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">
           <HiTag className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No discounts yet</h2>
-          <p className="text-gray-600 mb-6">Create your first discount to start offering promotions to your customers.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            No discounts yet
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Create your first discount to start offering promotions to your
+            customers.
+          </p>
           <Link
             to={`/${restaurantId}/discounts/new`}
             className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
@@ -95,7 +105,7 @@ export default function Discounts() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
@@ -114,17 +124,22 @@ export default function Discounts() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 w-24">Actions</th>
+                <th className="px-6 py-3 w-24"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredDiscounts.map((discount) => (
-                <tr key={discount.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={discount.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-900">{discount.name}</div>
+                    <div className="font-semibold text-gray-900">
+                      {discount.name}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 capitalize">
-                    {discount.amountType.replace('_', ' ')}
+                    {discount.amountType.replace("_", " ")}
                   </td>
                   <td className="px-6 py-4 text-gray-700 font-medium">
                     {getAmountDisplay(discount)}
@@ -145,24 +160,23 @@ export default function Discounts() {
                       Active
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => navigate(`/${restaurantId}/discounts/${discount.id}/edit`)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <HiPencil className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(discount.id, discount.name)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <HiTrash className="w-5 h-5" />
-                      </button>
+                  <td
+                    className="px-6 py-4 w-16"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-end">
+                      <ActionMenu
+                        isOpen={discountMenus[discount.id]}
+                        onToggle={(open) =>
+                          setDiscountMenus({ ...discountMenus, [discount.id]: open })
+                        }
+                        editPath={`/${restaurantId}/discounts/${discount.id}/edit`}
+                        onDelete={() => handleDelete(discount.id, discount.name)}
+                        itemName={discount.name}
+                      />
                     </div>
                   </td>
+                 
                 </tr>
               ))}
             </tbody>

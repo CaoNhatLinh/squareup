@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
-import { getOrderBySession } from "../../api/orders";
-import { useShop } from "../../context/ShopContext";
-import { useToast } from "../../hooks/useToast";
+import { getOrderBySession } from "@/api/orders";
+import { useShop } from "@/context/ShopContext.jsx";
+import { useToast } from "@/hooks/useToast";
 import { HiCheckCircle, HiXCircle, HiOutlineDocumentDuplicate, HiOutlineShoppingBag, HiOutlineMagnifyingGlass } from "react-icons/hi2";
 
 export default function CheckoutSuccess() {

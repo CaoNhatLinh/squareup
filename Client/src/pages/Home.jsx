@@ -1,12 +1,11 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
   const { user,loading } = useAuth()
   const navigate = useNavigate()
   useEffect(() => {
-
     if (user) {
       navigate('/restaurants')}
   }, [user, navigate])
@@ -23,7 +22,6 @@ export default function Home() {
     </div>
     )
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <nav className="bg-white shadow-sm">

@@ -1,0 +1,37 @@
+import React from 'react';
+
+/**
+ * UI utility components and functions
+ */
+
+/**
+ * StatusBadge component for displaying order status
+ * @param {object} props - Component props
+ * @param {string} props.status - Status to display
+ * @returns {JSX.Element} StatusBadge component
+ */
+export const StatusBadge = ({ status }) => {
+  let classes = "";
+  if (status === "paid" || status === "pending") {
+    classes = "bg-red-100 text-red-800 border border-red-300 font-bold";
+  } else if (status === "accepted") {
+    classes = "bg-teal-100 text-teal-800 border border-teal-300 font-semibold";
+  } else if (status === "preparing") {
+    classes = "bg-purple-100 text-purple-800 border border-purple-300 font-semibold";
+  } else if (status === "ready") {
+    classes = "bg-green-100 text-green-800 border border-green-300 font-semibold";
+  } else if (status === "completed") {
+    classes = "bg-gray-200 text-gray-700 border border-gray-300";
+  } else if (status === "cancelled") {
+    classes = "bg-gray-100 text-gray-500 border border-gray-300";
+  } else {
+    classes = "bg-gray-100 text-gray-800";
+  }
+  return (
+    <span
+      className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full uppercase ${classes}`}
+    >
+      {status}
+    </span>
+  );
+};

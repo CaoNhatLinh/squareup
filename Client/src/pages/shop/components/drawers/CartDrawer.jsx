@@ -1,16 +1,27 @@
 import { useState } from "react";
-import { useShop } from "../../../context/ShopContext";
+import { useShop } from "@/context/ShopContext.jsx";
 import { useParams } from "react-router-dom";
-import RemoveItemModal from "./RemoveItemModal";
-import { createCheckoutSession } from "../../../api/checkout";
+import RemoveItemModal from "@/pages/shop/components/modals/RemoveItemModal";
+import { createCheckoutSession } from "@/api/checkout";
+import { useToast } from "@/hooks/useToast";
+import { 
+  HiArrowLeft, 
+  HiTrash, 
+  HiMapPin, 
+  HiCheck, 
+  HiPlus, 
+  HiShoppingCart 
+} from "react-icons/hi2";
 
 export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const { restaurantId } = useParams();
-  const { restaurant, cart, removeFromCart, getCartTotal, discountCalculation } = useShop();
+  const { restaurant, cart, removeFromCart, clearCart, getCartTotal, discountCalculation } = useShop();
+  const { error: showError } = useToast();
   const totalAmount = getCartTotal();
   const [itemToRemove, setItemToRemove] = useState(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false);
 
   const {
     subtotal = totalAmount,
@@ -34,16 +45,27 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
     }
   };
 
+  const handleClearCart = () => {
+    if (cart.length > 0) {
+      setShowClearCartConfirm(true);
+    }
+  };
+
+  const handleConfirmClearCart = () => {
+    clearCart();
+    setShowClearCartConfirm(false);
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
     if (restaurant?.isOpen === false) {
-      alert("Sorry, the restaurant is currently closed. Please come back during business hours.");
+      showError("Sorry, the restaurant is currently closed. Please come back during business hours.");
       return;
     }
     
     if (!restaurantId) {
-      alert("Restaurant ID không hợp lệ. Vui lòng tải lại trang.");
+      showError("Restaurant ID is invalid. Please reload the page.");
       return;
     }
     
@@ -62,7 +84,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
       }
     } catch (error) {
       console.error("❌ Checkout error:", error);
-      alert(`Lỗi thanh toán: ${error.response?.data?.error || error.message || "Vui lòng thử lại"}`);
+      showError(`Payment error: ${error.response?.data?.error || error.message || "Please try again"}`);
       setCheckoutLoading(false);
     }
   };
@@ -75,49 +97,51 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-3">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="text-gray-600 hover:text-gray-900 transition-colors"
               aria-label="Back"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <HiArrowLeft className="w-5 h-5" />
             </button>
-            <h2 className="text-2xl font-bold text-gray-900">Your Order</h2>
+            <h2 className="text-lg font-bold text-gray-900">Your Order</h2>
           </div>
+          {cart.length > 0 && (
+            <button
+              onClick={handleClearCart}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm"
+              title="Clear all items from cart"
+            >
+              <HiTrash className="w-4 h-4" />
+              <span>Clear</span>
+            </button>
+          )}
         </div>
-        <div className="px-6 py-4 bg-white border-b">
-          <h3 className="text-xl font-bold text-red-600 mb-1">{restaurant?.name || "Restaurant"}</h3>
+        <div className="px-4 py-2 bg-white border-b">
+          <h3 className="text-lg font-bold text-red-600 mb-1">{restaurant?.name || "Restaurant"}</h3>
           <div className="flex items-start gap-2 text-sm text-gray-600">
-            <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <span>địa chỉ</span>
+            <HiMapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <span>{restaurant?.address || "restaurant address"}</span>
           </div>
         </div>
 
-        {/* Discount Summary - Show before checkout button */}
         {cart.length > 0 && totalDiscount > 0 && (
-          <div className="px-6 py-4 bg-green-50 border-b border-green-200">
-            <div className="space-y-2">
+          <div className="px-4 py-2 bg-green-50 border-b border-green-200">
+            <div className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">Subtotal:</span>
                 <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
               </div>
               
-              {/* Show all applied discounts */}
               {appliedDiscounts.length > 0 ? (
                 <div className="space-y-1">
                   {appliedDiscounts.map((discount, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
+                        <HiCheck className="w-3 h-3 text-green-600" />
                         <span className="text-green-700 font-medium">
                           {discount.name}
                           {discount.amountType === 'percentage' && ` (${discount.amount}%)`}
@@ -136,9 +160,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
               ) : (
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <HiCheck className="w-3 h-3 text-green-600" />
                     <span className="text-green-700 font-medium">
                       {appliedDiscount?.name || 'Discount'}
                       {appliedDiscount?.amountType === 'percentage' && ` (${appliedDiscount.amount}%)`}
@@ -148,20 +170,20 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                 </div>
               )}
               
-              <div className="pt-2 border-t border-green-300 flex items-center justify-between">
+              <div className="pt-1 border-t border-green-300 flex items-center justify-between">
                 <span className="font-bold text-gray-900">Total:</span>
-                <span className="font-bold text-xl text-gray-900">${total.toFixed(2)}</span>
+                <span className="font-bold text-lg text-gray-900">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>
         )}
 
         {cart.length > 0 && (
-          <div className="px-6 py-3 bg-white border-b">
+          <div className="px-4 py-2 bg-white ">
             <button 
               onClick={handleCheckout}
               disabled={checkoutLoading || restaurant?.isOpen === false}
-              className={`w-full py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-between px-6 ${
+              className={`w-full py-3 rounded-full font-bold text-base transition-colors flex items-center justify-between px-4 ${
                 restaurant?.isOpen === false
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -177,7 +199,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
               <span>${(total || totalAmount).toFixed(2)}</span>
             </button>
             {restaurant?.isOpen === false && restaurant?.nextOpenTime && (
-              <p className="text-sm text-red-600 text-center mt-2">
+              <p className="text-xs text-red-600 text-center mt-1">
                 Opens {restaurant.nextOpenTime}
               </p>
             )}
@@ -185,14 +207,12 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
         )}
 
         {cart.length > 0 && (
-          <div className="px-6 py-3 bg-white border-b">
+          <div className="px-4 py-2 bg-white">
             <button 
               onClick={onClose}
-              className="w-full border-2 border-gray-900 text-gray-900 py-4 rounded-xl font-bold text-base hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full border-2 border-gray-900 text-gray-900 py-2 rounded-full font-bold text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+              <HiPlus className="w-4 h-4" />
               <span>Add More Items</span>
             </button>
           </div>
@@ -201,9 +221,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
         <div className="flex-1 overflow-y-auto bg-white px-6 py-4">
           {cart.length === 0 ? (
             <div className="text-center py-12 h-full flex flex-col justify-center items-center">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <HiShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-gray-500">Your cart is empty</p>
             </div>
           ) : (
@@ -272,6 +290,36 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
           )}
         </div>
       </div>
+
+      {showClearCartConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 ">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <HiTrash className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2 ">Clear Cart</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to remove all items from your cart? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowClearCartConfirm(false)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmClearCart}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Clear Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <RemoveItemModal
         isOpen={showRemoveModal}

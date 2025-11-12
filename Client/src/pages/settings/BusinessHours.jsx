@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { useRestaurant } from "../../hooks/useRestaurant";
-import { updateBusinessHours } from "../../api/restaurants";
+import { useRestaurant } from "@/hooks/useRestaurant";
+import { updateBusinessHours } from "@/api/restaurants";
 import {
   HiPlus,
   HiTrash,
@@ -25,7 +24,6 @@ const DAYS_OF_WEEK = [
 
 export default function BusinessHours() {
   const { restaurantId } = useParams();
-  const { user } = useAuth();
   const { restaurant, updateRestaurant } = useRestaurant();
   const [hours, setHours] = useState({});
   const [saving, setSaving] = useState(false);
@@ -130,13 +128,11 @@ export default function BusinessHours() {
     setSaving(true);
     setMessage("");
     try {
-      const token = await user.getIdToken();
-      await updateBusinessHours(restaurantId, hours, token);
+      await updateBusinessHours(restaurantId, hours);
       updateRestaurant({ hours });
       setMessage("Business hours updated successfully!");
       setTimeout(() => setMessage(""), 4000);
-    } catch (err) {
-      console.error("Error updating business hours:", err);
+    } catch {
       setMessage("Failed to update business hours");
     } finally {
       setSaving(false);
@@ -272,7 +268,7 @@ export default function BusinessHours() {
                               <HiTrash className="w-5 h-5" />
                             </button>
                           ) : (
-                            <div className="w-9 h-9"></div> // Spacer
+                            <div className="w-9 h-9"></div> 
                           )}
                           {index === dayHours.timeSlots.length - 1 && (
                             <button

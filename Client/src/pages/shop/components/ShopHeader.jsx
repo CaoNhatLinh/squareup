@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useShop } from "../../../context/ShopContext";
+import { useShop } from "@/context/ShopContext.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDiscounts, isRestaurantActive = true }) {

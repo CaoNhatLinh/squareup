@@ -56,6 +56,8 @@ async function sessionLogin(req, res) {
       displayName: userRecord.displayName || userRecord.email?.split('@')[0] || 'User',
       photoURL: userRecord.photoURL || null,
       emailVerified: userRecord.emailVerified,
+      role: userRecord.customClaims?.admin ? 'admin' : 'user',
+      isAdmin: userRecord.customClaims?.admin || false,
       lastLoginAt: Date.now(),
     };
 
@@ -113,7 +115,15 @@ async function verifySession(req, res) {
     const sessionCookie = req.cookies && req.cookies.session;
     if (!sessionCookie) return res.status(401).json({ error: 'No session' });
     const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
-    return res.json({ uid: decoded.uid, email: decoded.email });
+    
+    const userRecord = await admin.auth().getUser(decoded.uid);
+    
+    return res.json({ 
+      uid: decoded.uid, 
+      email: decoded.email,
+      isAdmin: userRecord.customClaims?.admin || false,
+      role: userRecord.customClaims?.admin ? 'admin' : 'user'
+    });
   } catch (err) {
     console.error(err);
     return res.status(401).json({ error: 'Invalid session' });

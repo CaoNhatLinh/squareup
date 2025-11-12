@@ -1,4 +1,4 @@
-import { HiHome, HiShoppingBag, HiCreditCard, HiGlobeAlt, HiUserGroup, HiChartBar, HiUsers, HiCog, HiTicket } from 'react-icons/hi';
+import { HiHome, HiShoppingBag, HiCreditCard, HiCog, } from 'react-icons/hi';
 
 export const getMenuItems = (restaurantId) => [
   { to: `/${restaurantId}/dashboard`, label: 'Home', icon: HiHome },
@@ -7,8 +7,8 @@ export const getMenuItems = (restaurantId) => [
     icon: HiShoppingBag,
     children: [
       { to: `/${restaurantId}/items`, label: 'Item library' },
-      { to: `/${restaurantId}/modifiers`, label: 'Modifiers' },
       { to: `/${restaurantId}/categories`, label: 'Categories' },
+      { to: `/${restaurantId}/modifiers`, label: 'Modifiers' },
       { to: `/${restaurantId}/discounts`, label: 'Discounts' },
     ]
   },

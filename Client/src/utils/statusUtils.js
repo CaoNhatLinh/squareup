@@ -1,0 +1,68 @@
+/**
+ * @param {string} status - Order status
+ */
+export const getStatusClasses = (status) => {
+  if (status === "paid" || status === "pending")
+    return "bg-yellow-100 text-yellow-800 border border-yellow-300 font-semibold";
+  if (status === "accepted")
+    return "bg-blue-100 text-blue-800 border border-blue-300 font-semibold";
+  if (status === "preparing")
+    return "bg-purple-100 text-purple-800 border border-purple-300 font-semibold";
+  if (status === "ready")
+    return "bg-green-100 text-green-800 border border-green-300 font-semibold";
+  if (status === "completed")
+    return "bg-gray-200 text-gray-700 border border-gray-300";
+  if (status === "cancelled")
+    return "bg-red-100 text-red-800 border border-red-300";
+  return "bg-gray-100 text-gray-800";
+};
+
+/**
+ * Get the next status in the order flow
+ * @param {string} currentStatus - Current order status
+ * @returns {string|null} Next status or null if no next status
+ */
+export const getNextStatus = (currentStatus) => {
+  const statusFlow = {
+    paid: "accepted",
+    pending: "accepted",
+    accepted: "preparing",
+    preparing: "ready",
+    ready: "completed",
+  };
+  return statusFlow[currentStatus] || null;
+};
+
+/**
+ * Get button text for status change action
+ * @param {string} currentStatus - Current order status
+ * @returns {string} Button text
+ */
+export const getStatusButtonText = (currentStatus) => {
+  const textMap = {
+    paid: "Accept Order",
+    pending: "Accept Order",
+    accepted: "Start Preparing",
+    preparing: "Mark as Ready",
+    ready: "Complete Order",
+  };
+  return textMap[currentStatus] || "Update Status";
+};
+
+/**
+ * Get status configuration for display
+ * @param {string} status - Status to get config for
+ * @returns {object} Status configuration with color, text, etc.
+ */
+export const getStatusInfo = (status) => {
+  const configs = {
+    paid: { color: "yellow", text: "Paid", bgClass: "bg-yellow-100", textClass: "text-yellow-800" },
+    pending: { color: "yellow", text: "Pending", bgClass: "bg-yellow-100", textClass: "text-yellow-800" },
+    accepted: { color: "blue", text: "Accepted", bgClass: "bg-blue-100", textClass: "text-blue-800" },
+    preparing: { color: "purple", text: "Preparing", bgClass: "bg-purple-100", textClass: "text-purple-800" },
+    ready: { color: "green", text: "Ready", bgClass: "bg-green-100", textClass: "text-green-800" },
+    completed: { color: "gray", text: "Completed", bgClass: "bg-gray-200", textClass: "text-gray-700" },
+    cancelled: { color: "red", text: "Cancelled", bgClass: "bg-red-100", textClass: "text-red-800" },
+  };
+  return configs[status] || { color: "gray", text: status || "Unknown", bgClass: "bg-gray-100", textClass: "text-gray-800" };
+};

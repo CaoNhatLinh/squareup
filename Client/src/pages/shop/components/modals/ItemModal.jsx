@@ -1,7 +1,7 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { MdClose } from "react-icons/md";
 
-export default function ModifierModal({
+export default function ItemModal({
   item,
   modifiers,
   onClose,
@@ -31,6 +31,8 @@ export default function ModifierModal({
           : [],
       }));
   }, [item.modifierIds, modifiers]);
+
+  const hasModifiers = itemModifiers.length > 0;
 
   const totalPrice = useMemo(() => {
     const basePrice = item.price || 0;
@@ -99,7 +101,8 @@ export default function ModifierModal({
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
       <div className="bg-white w-full h-full grid grid-cols-1 md:grid-cols-12">
-        <div className="md:col-span-4 bg-gray-100 flex flex-col ">
+        {/* Sidebar */}
+        <div className="md:col-span-4 bg-gray-100 flex flex-col">
           <div className="relativerounded-lg overflow-hidden">
             {item.image ? (
               <img
@@ -138,6 +141,7 @@ export default function ModifierModal({
         </div>
 
         <div className="md:col-span-8 flex flex-col bg-white relative max-h-screen">
+          {/* Header */}
           <div className="absolute top-4 right-4 z-10">
             <button
               onClick={onClose}
@@ -146,72 +150,79 @@ export default function ModifierModal({
               <MdClose className="w-6 h-6" />
             </button>
           </div>
+
+          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 pb-24">
             <div className="w-full max-w-[560px] mx-auto space-y-6">
-              {itemModifiers.map((modifier) => {
-                const isSingle = modifier.selectionType === "single";
-                return (
-                  <div
-                    key={modifier.id}
-                    className="border-t pt-5 first:border-t-0 first:pt-0"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {modifier.displayName || modifier.name}
-                      </h3>
-                      {modifier.required && (
-                        <span className="text-xs font-bold text-red-600 uppercase bg-red-50 px-2 py-1 rounded">
-                          Required
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {isSingle
-                        ? "Choose one option"
-                        : "Choose multiple options"}
-                    </p>
-                    <div className="space-y-2">
-                      {modifier.options.map((option) => {
-                        const isSelected = isOptionSelected(
-                          modifier.id,
-                          option.id
-                        );
-                        return (
-                          <label
-                            key={option.id}
-                            className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all ${
-                              isSelected
-                                ? "border-red-600 bg-red-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type={isSingle ? "radio" : "checkbox"}
-                                name={modifier.id}
-                                checked={isSelected}
-                                onChange={() =>
-                                  handleOptionChange(modifier, option, isSingle)
-                                }
-                                className="w-5 h-5 text-red-600 "
-                              />
-                              <span className="font-medium text-gray-900 ">
-                                {option.name}
-                              </span>
-                            </div>
-                            <span className="text-gray-700 font-medium">
-                              {option.price > 0
-                                ? `+ $${option.price.toFixed(2)}`
-                                : "$0"}
+              {hasModifiers && (
+                <>
+                  {itemModifiers.map((modifier) => {
+                    const isSingle = modifier.selectionType === "single";
+                    return (
+                      <div
+                        key={modifier.id}
+                        className="border-t pt-5 first:border-t-0 first:pt-0"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {modifier.displayName || modifier.name}
+                          </h3>
+                          {modifier.required && (
+                            <span className="text-xs font-bold text-red-600 uppercase bg-red-50 px-2 py-1 rounded">
+                              Required
                             </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="border-t pt-6">
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {isSingle
+                            ? "Choose one option"
+                            : "Choose multiple options"}
+                        </p>
+                        <div className="space-y-2">
+                          {modifier.options.map((option) => {
+                            const isSelected = isOptionSelected(
+                              modifier.id,
+                              option.id
+                            );
+                            return (
+                              <label
+                                key={option.id}
+                                className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all ${
+                                  isSelected
+                                    ? "border-red-600 bg-red-50"
+                                    : "border-gray-300 hover:border-gray-400"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <input
+                                    type={isSingle ? "radio" : "checkbox"}
+                                    name={modifier.id}
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      handleOptionChange(modifier, option, isSingle)
+                                    }
+                                    className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                  />
+                                  <span className="text-gray-900">
+                                    {option.name}
+                                  </span>
+                                </div>
+                                {option.price > 0 && (
+                                  <span className="text-gray-900 font-medium">
+                                    +${option.price.toFixed(2)}
+                                  </span>
+                                )}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+
+              <div className={`${hasModifiers ? 'border-t pt-6' : ''}`}>
                 <h3 className="text-base font-semibold text-gray-900 mb-2">
                   Special Instruction
                 </h3>
@@ -234,6 +245,7 @@ export default function ModifierModal({
             </div>
           </div>
 
+          {/* Footer */}
           <div className="absolute bottom-0 left-0 right-0 border-t px-6 py-4 bg-white flex items-center justify-end gap-4 shadow-lg">
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
               <button

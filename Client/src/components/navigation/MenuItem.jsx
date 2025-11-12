@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { HiChevronRight } from "react-icons/hi";
-import { useOrderNotification } from "../../hooks/useOrderNotification";
+import { useOrderNotification } from "@/hooks/useOrderNotification";
 
 export default function MenuItem({ item, level = 0 }) {
   const location = useLocation();
@@ -31,11 +31,12 @@ export default function MenuItem({ item, level = 0 }) {
     return (
       <NavLink
         to={item.to}
+        onClick={item.onClick}
         className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+          `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
             isActive
-              ? "bg-red-100 text-red-800 font-semibold shadow-sm" 
-              : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           }`
         }
         style={{ paddingLeft }}
@@ -44,14 +45,14 @@ export default function MenuItem({ item, level = 0 }) {
           <Icon
             className={`w-5 h-5 flex-shrink-0 ${
               item.to && location.pathname.startsWith(item.to)
-                ? "text-red-600"
-                : "text-gray-500"
+                ? "text-blue-600"
+                : "text-gray-400"
             }`}
           />
         )}
         <span className="flex-1">{item.label}</span>
         {showBadge && (
-          <span className="flex items-center justify-center min-w-[22px] h-5 px-1.5 text-xs font-bold bg-red-600 text-white rounded-full animate-pulse">
+          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold bg-red-500 text-white rounded-full">
             {newOrderIds.length}
           </span>
         )}
@@ -63,29 +64,29 @@ export default function MenuItem({ item, level = 0 }) {
       <div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
             hasActiveChild
-              ? "bg-gray-100 text-gray-900 font-semibold" 
-              : "text-gray-700 hover:bg-gray-100"
+              ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           }`}
           style={{ paddingLeft }}
         >
           {Icon && (
             <Icon
               className={`w-5 h-5 flex-shrink-0 ${
-                hasActiveChild ? "text-red-600" : "text-gray-500"
+                hasActiveChild ? "text-blue-600" : "text-gray-400"
               }`}
             />
           )}
           <span className="flex-1 text-left">{item.label}</span>
           <HiChevronRight
-            className={`w-4 h-4 transition-transform flex-shrink-0 text-gray-500 ${
+            className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 text-gray-400 ${
               expanded ? "rotate-90" : ""
             }`}
           />
         </button>
         {expanded && (
-          <div className="mt-1 space-y-1">
+          <div className="mt-2 ml-4 space-y-1">
             {item.children.map((child, idx) => (
               <MenuItem key={idx} item={child} level={level + 1} />
             ))}

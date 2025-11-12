@@ -5,7 +5,7 @@ const IMGBB_API_KEY = "a7ea3dc4669ef60f39d7367d9de5571e";
 /**
  * Upload image to ImgBB
  */
-exports.uploadImage = async (req, res) => {
+const uploadImage = async (req, res) => {
   try {
     if (!req.body.image) {
       return res.status(400).json({ error: "No image provided" });
@@ -42,7 +42,7 @@ exports.uploadImage = async (req, res) => {
 /**
  * Upload image from file (multipart/form-data)
  */
-exports.uploadImageFile = async (req, res) => {
+const uploadImageFile = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -74,4 +74,9 @@ exports.uploadImageFile = async (req, res) => {
     console.error("Error uploading image:", error);
     res.status(500).json({ error: error.message });
   }
+};
+
+module.exports = {
+  uploadImage,
+  uploadImageFile,
 };

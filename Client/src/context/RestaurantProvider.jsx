@@ -5,6 +5,7 @@ import { fetchRestaurant } from '../api/restaurants';
 
 export function RestaurantProvider({ children, initialRestaurantData }) {
   const [restaurant, setRestaurant] = useState(initialRestaurantData || null);
+  const [loading, setLoading] = useState(false);
   const params = useParams();
 
   const restaurantId = params.restaurantId;
@@ -13,19 +14,31 @@ export function RestaurantProvider({ children, initialRestaurantData }) {
     const loadRestaurant = async () => {
       if (!restaurantId) {
         setRestaurant(null);
+        setLoading(false);
+        return;
+      }
+
+      const skipPaths = ['signin', 'signup', 'signout', 'admin', 'dashboard', 'restaurants', 'shop', 'track-order'];
+      if (skipPaths.includes(restaurantId)) {
+        setRestaurant(null);
+        setLoading(false);
         return;
       }
 
       if (restaurant?.id === restaurantId) {
+        setLoading(false);
         return;
       }
 
       try {
+        setLoading(true);
         const data = await fetchRestaurant(restaurantId);
         setRestaurant(data);
       } catch (error) {
         console.error("❌ Error fetching restaurant:", error);
         setRestaurant(null);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -48,7 +61,7 @@ export function RestaurantProvider({ children, initialRestaurantData }) {
   };
 
   return (
-    <RestaurantContext.Provider value={{ restaurant, updateRestaurant }}>
+    <RestaurantContext.Provider value={{ restaurant, loading, updateRestaurant }}>
       {children}
     </RestaurantContext.Provider>
   );

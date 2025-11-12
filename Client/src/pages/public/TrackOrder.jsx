@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { trackOrderStatus } from "../../api/orders";
+import { trackOrderStatus } from "@/api/orders";
 import {
   HiCheckCircle,
   HiClock,

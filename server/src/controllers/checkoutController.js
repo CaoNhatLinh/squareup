@@ -4,7 +4,7 @@ const { calculateCartDiscounts } = require('../utils/discountCalculator');
 
 const db = admin.database();
 
-exports.createCheckoutSession = async (req, res) => {
+const createCheckoutSession = async (req, res) => {
   try {
     const { restaurantId, items, returnUrl } = req.body;
 
@@ -101,7 +101,7 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
-exports.handleWebhook = async (req, res) => {
+const handleWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -199,7 +199,7 @@ exports.handleWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-exports.getOrderBySession = async (req, res) => {
+const getOrderBySession = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { restaurantId } = req.query;
@@ -239,7 +239,7 @@ exports.getOrderBySession = async (req, res) => {
   }
 };
 
-exports.getAllOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
   try {
     const { restaurantId } = req.params;
 
@@ -274,7 +274,7 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-exports.getAllOrdersAdmin = async (req, res) => {
+const getAllOrdersAdmin = async (req, res) => {
   try {
     const restaurantsSnapshot = await db.ref("restaurants").once("value");
     const restaurantsData = restaurantsSnapshot.val();
@@ -307,7 +307,7 @@ exports.getAllOrdersAdmin = async (req, res) => {
   }
 };
 
-exports.getOrderById = async (req, res) => {
+const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
 
@@ -350,7 +350,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-exports.getSessionStatus = async (req, res) => {
+const getSessionStatus = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
@@ -374,7 +374,7 @@ exports.getSessionStatus = async (req, res) => {
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
   try {
     const { restaurantId, orderId } = req.params;
     const { status } = req.body;
@@ -416,7 +416,7 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-exports.getPublicOrderStatus = async (req, res) => {
+const getPublicOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
 
@@ -467,4 +467,16 @@ exports.getPublicOrderStatus = async (req, res) => {
     console.error("Error fetching public order status:", error);
     res.status(500).json({ error: "Failed to fetch order status" });
   }
+};
+
+module.exports = {
+  createCheckoutSession,
+  handleWebhook,
+  getOrderBySession,
+  getAllOrders,
+  getAllOrdersAdmin,
+  getOrderById,
+  getSessionStatus,
+  updateOrderStatus,
+  getPublicOrderStatus,
 };

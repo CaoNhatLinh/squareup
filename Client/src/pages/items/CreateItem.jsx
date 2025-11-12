@@ -3,13 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { createItem } from '../../api/items'
 import { useImageUpload } from '../../hooks/useImageUpload'
 import { useToast } from '../../hooks/useToast'
-import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' // Updated Icons
-
+import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' 
+import { useLoaderData } from 'react-router-dom'
 export default function CreateItem() {
   const navigate = useNavigate()
   const { restaurantId } = useParams()
   const { uploadImage, uploading } = useImageUpload()
   const { success, error } = useToast()
+ const loaderData = useLoaderData();
+ const { categories, modifiers } = loaderData;
+
   const [formData, setFormData] = useState({
     itemType: 'Prepared food and beverage',
     name: '',
@@ -19,28 +22,10 @@ export default function CreateItem() {
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [categories, setCategories] = useState([])
-  const [modifiers, setModifiers] = useState([])
   const [modifierSearch, setModifierSearch] = useState('')
   const [selectedModifiers, setSelectedModifiers] = useState([])
   const [categorySearch, setCategorySearch] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
-
-  React.useEffect(() => {
-    if (!restaurantId) return
-    import('../../api/categories').then(({ fetchCategories }) => {
-      fetchCategories(restaurantId)
-        .then((data) => {
-          setCategories(Object.values(data || {}))
-        })
-        .catch(() => {})
-    })
-    import('../../api/modifers').then(({ fetchModifiers }) => {
-      fetchModifiers(restaurantId)
-        .then((data) => setModifiers(Object.values(data || {})))
-        .catch(() => {})
-    })
-  }, [restaurantId])
 
   const handleClose = () => {
     navigate(`/${restaurantId}/items`)

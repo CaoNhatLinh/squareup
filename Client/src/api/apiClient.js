@@ -69,10 +69,6 @@ export async function post(url, body, opts = {}) {
     Object.assign(headers, opts.headers)
   }
 
-  console.log('API POST request:', url);
-  console.log('Request headers:', headers);
-  console.log('Request body type:', typeof body);
-  console.log('Request body length:', body ? (typeof body === 'string' ? body.length : JSON.stringify(body).length) : 0);
 
   return instance.post(url, body, { headers })
 }

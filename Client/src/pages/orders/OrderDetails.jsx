@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getOrderById, updateOrderStatus } from "../../api/orders";
+import { getOrderById, updateOrderStatus } from "@/api/orders";
 import {
   HiArrowCircleLeft,
   HiCheck,
@@ -9,11 +9,12 @@ import {
   HiClock,
   HiCurrencyDollar,
   HiCheckCircle,
-  HiOutlineInformationCircle, // Icon thông tin cho Item Discount
-  HiOutlineArrowLeft,
-  HiOutlineTag, // Dùng cho Badge trong Summary
-} from "react-icons/hi"; // Sử dụng Hi2 cho tất cả các icon
-import { useOrderNotification } from "../../hooks/useOrderNotification";
+  HiOutlineInformationCircle,
+} from "react-icons/hi";
+import { useOrderNotification } from "@/hooks/useOrderNotification";
+import { getNextStatus, getStatusButtonText } from "@/utils/statusUtils";
+import { formatDate } from "@/utils/dateUtils";
+import { StatusBadge } from "@/utils/uiUtils";
 
 export default function OrderDetails() {
   const navigate = useNavigate();
@@ -69,67 +70,6 @@ export default function OrderDetails() {
     } finally {
       setUpdating(false);
     }
-  };
-
-  const getNextStatus = (currentStatus) => {
-    const statusFlow = {
-      paid: "accepted",
-      pending: "accepted",
-      accepted: "preparing",
-      preparing: "ready",
-      ready: "completed",
-    };
-    return statusFlow[currentStatus];
-  };
-
-  const getStatusButtonText = (currentStatus) => {
-    const textMap = {
-      paid: "Accept Order",
-      pending: "Accept Order",
-      accepted: "Start Preparing",
-      preparing: "Mark as Ready",
-      ready: "Complete Order",
-    };
-    return textMap[currentStatus] || "Update Status";
-  };
-
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }; // Giữ các màu trạng thái chức năng (semantic colors)
-
-  const StatusBadge = ({ status }) => {
-    let classes = "";
-    if (status === "paid" || status === "pending") {
-      classes = "bg-red-100 text-red-800 border border-red-300 font-bold";
-    } else if (status === "accepted") {
-      classes =
-        "bg-teal-100 text-teal-800 border border-teal-300 font-semibold";
-    } else if (status === "preparing") {
-      classes =
-        "bg-purple-100 text-purple-800 border border-purple-300 font-semibold";
-    } else if (status === "ready") {
-      classes =
-        "bg-green-100 text-green-800 border border-green-300 font-semibold";
-    } else if (status === "completed") {
-      classes = "bg-gray-200 text-gray-700 border border-gray-300";
-    } else if (status === "cancelled") {
-      classes = "bg-gray-100 text-gray-500 border border-gray-300";
-    } else {
-      classes = "bg-gray-100 text-gray-800";
-    }
-    return (
-      <span
-        className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full uppercase ${classes}`}
-      >
-        {status}
-      </span>
-    );
   };
 
   if (loading) {
@@ -238,9 +178,7 @@ export default function OrderDetails() {
             </div>
           </div>
         )}
-        {/* ORDER DETAILS & CUSTOMER */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Cột 1: Thông tin Đơn hàng */}
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase flex items-center gap-2">
               <HiTag className="w-4 h-4 text-red-500" /> Order Details
@@ -266,7 +204,6 @@ export default function OrderDetails() {
               </p>
             </div>
           </div>
-          {/* Cột 2: Thông tin Khách hàng */}
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">
               Customer
@@ -280,7 +217,6 @@ export default function OrderDetails() {
 
             <p className="text-gray-600">{order.customerEmail || "No Email"}</p>
           </div>
-          {/* Cột 3: Địa chỉ/Giao hàng */}
           <div>
             <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase">
               Delivery/Pickup
@@ -297,7 +233,6 @@ export default function OrderDetails() {
             )}
           </div>
         </div>
-        {/* Order Items */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Order Items ({order.items?.length || 0})
@@ -319,14 +254,11 @@ export default function OrderDetails() {
                   )}
 
                   <div>
-                    {/* Logic hiển thị tên món và Badge giảm giá */}
                     {(() => {
                       const itemDiscountData =
                         order.discount?.itemDiscounts?.[item.groupKey];
                       const isItemDiscounted =
                         itemDiscountData?.discountAmount > 0;
-                      const discountName =
-                        order.discount?.appliedDiscounts?.[0]?.name;
 
                       if (!isItemDiscounted) {
                         return (
@@ -346,26 +278,19 @@ export default function OrderDetails() {
                               <HiTag className="w-4 h-4" />
                               {itemDiscountData.discountPercentage}% OFF
                             </span>
-                            {discountName && (
-                              <span className="text-xs text-gray-500 italic">
-                                ({discountName})
-                              </span>
-                            )}
                           </div>
-                          {/* Giá gốc bị gạch ngang */}
-                          <p className="text-sm text-gray-500 line-through">
-                            Original Price: $
-                            {Number(
-                              itemDiscountData.originalPrice || 0
-                            ).toFixed(2)}
-                          </p>
+                          
                         </div>
                       );
                     })()}
-                    {/* End Logic hiển thị tên món */}
                     <p className="text-sm text-gray-600 mt-1">
                       <span className="font-semibold">{item.quantity}x</span> @
-                      ${item.price.toFixed(2)}
+                      ${(() => {
+                        const basePrice = item.price || 0;
+                        const optionsTotal = item.selectedOptions?.reduce((sum, opt) => sum - (opt.price || 0), 0) || 0;
+                        const originalPrice = basePrice + optionsTotal;
+                        return (originalPrice / item.quantity).toFixed(2);
+                      })()} each
                     </p>
 
                     {item.specialInstruction && (
@@ -434,7 +359,6 @@ export default function OrderDetails() {
           </h2>
 
           <div className="space-y-3">
-            {/* Subtotal */}
             <div className="flex items-center justify-between text-gray-600">
               <span className="font-medium">
                 Subtotal ({order.items?.length || 0} items)
@@ -493,7 +417,7 @@ export default function OrderDetails() {
                   Object.keys(order.discount.itemDiscounts).length > 0 && (
                     <div className="mt-3 pt-3 border-t border-cyan-200">
                       <p className="text-xs font-bold text-cyan-700 mb-2">
-                        Item Discounts/BOGO:
+                        Item Discounts:
                       </p>
 
                       <div className="space-y-1">
@@ -504,26 +428,18 @@ export default function OrderDetails() {
                             return null;
 
                           const appliedDiscountName =
-                            itemDiscount.name || "Automatic Discount";
-
+                            order.discount?.appliedDiscounts?.[0]?.name || "Automatic Discount";
                           return (
                             <div
                               key={item.groupKey}
                               className="flex items-center justify-between text-xs text-cyan-700"
                             >
                               <span className="flex items-center gap-1">
-                                <span className="font-medium">
-                                  {item.name} ({item.quantity}x)
-                                </span>
-
                                 <span
-                                  title={`Applied rule: ${appliedDiscountName}`}
+                                  className="font-medium cursor-help"
+                                  title={`${appliedDiscountName}`}
                                 >
-                                  <HiOutlineInformationCircle className="w-4 h-4 text-gray-400 hover:text-cyan-500 cursor-help" />
-                                </span>
-
-                                <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded font-bold">
-                                  -{itemDiscount.discountPercentage}%
+                                  {item.name} ({item.quantity}x)
                                 </span>
                               </span>
 
@@ -542,7 +458,6 @@ export default function OrderDetails() {
                   )}
               </div>
             )}
-            {/* Tax, Fee, and Total */}
             {order.tax > 0 && (
               <div className="flex justify-between text-gray-700">
                 <span>Tax</span>
@@ -559,7 +474,6 @@ export default function OrderDetails() {
               </div>
             )}
             <div className="h-px bg-gray-300 my-4"></div>
-            {/* Grand Total */}
             <div className="flex items-center justify-between text-2xl font-extrabold text-gray-900">
               <span>GRAND TOTAL</span>
               <span className="text-green-600">

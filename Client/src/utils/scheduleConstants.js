@@ -9,13 +9,13 @@ export const DAYS_OF_WEEK = [
 ];
 
 export const DAY_LABELS = {
-    monday: 'Thứ Hai',
-    tuesday: 'Thứ Ba',
-    wednesday: 'Thứ Tư',
-    thursday: 'Thứ Năm',
-    friday: 'Thứ Sáu',
-    saturday: 'Thứ Bảy',
-    sunday: 'Chủ Nhật'
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
 };
 
 export const DEFAULT_SCHEDULE_DAYS = {

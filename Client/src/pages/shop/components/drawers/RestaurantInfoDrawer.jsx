@@ -1,28 +1,18 @@
 import { HiX, HiLocationMarker, HiClock, HiPhone, HiMail } from "react-icons/hi";
-
+import {DAYS_OF_WEEK ,DAY_LABELS}from "@/utils/scheduleConstants";
 export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
   if (!restaurant) return null;
 
   const formatBusinessHours = (hours) => {
     if (!hours) return [];
 
-    const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const dayLabels = {
-      monday: 'Monday',
-      tuesday: 'Tuesday',
-      wednesday: 'Wednesday',
-      thursday: 'Thursday',
-      friday: 'Friday',
-      saturday: 'Saturday',
-      sunday: 'Sunday'
-    };
-
-    return daysOfWeek.map(day => {
+ 
+    return DAYS_OF_WEEK.map(day => {
       const dayData = hours[day];
-      if (!dayData) return { day: dayLabels[day], hours: 'Not set', isClosed: false };
+      if (!dayData) return { day: DAY_LABELS[day], hours: 'Not set', isClosed: false };
 
       return {
-        day: dayLabels[day],
+        day: DAY_LABELS[day],
         hours: dayData.isClosed 
           ? 'Closed' 
           : dayData.timeSlots && dayData.timeSlots.length > 0
@@ -36,7 +26,7 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
   const hoursData = formatBusinessHours(restaurant.hours);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-  const todayDateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const todayDateStr = new Date().toISOString().split('T')[0]; 
   const todaySpecialClosure = restaurant.specialClosures?.find(closure => {
     if (typeof closure === 'string') {
       return closure === todayDateStr;
@@ -46,7 +36,6 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 ${
           isOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'
@@ -54,14 +43,12 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
         onClick={onClose}
       />
 
-      {/* Drawer */}
       <div
         className={`fixed left-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 z-50 overflow-y-auto ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
             <button
               onClick={onClose}
@@ -71,12 +58,9 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
               <HiX className="w-6 h-6 text-gray-600" />
             </button>
             <h2 className="text-xl font-bold text-gray-900">{restaurant.name}</h2>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <div className="w-10" /> 
           </div>
-
-          {/* Content */}
           <div className="flex-1 px-6 py-6 space-y-6">
-            {/* Address */}
             {restaurant.address && (
               <div className="space-y-2">
                 <div className="flex items-start gap-3">
@@ -88,8 +72,6 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
                 </div>
               </div>
             )}
-
-            {/* Special Hours Notice - Only show if today is a special closure */}
             {todaySpecialClosure && (
               <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
                 <h3 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
@@ -104,8 +86,6 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
                 </div>
               </div>
             )}
-
-            {/* Open Hours */}
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <HiClock className="w-6 h-6 text-red-600" />
@@ -140,7 +120,6 @@ export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
               </div>
             </div>
 
-            {/* Contact */}
             <div className="space-y-3 border-t border-gray-200 pt-6">
               <h3 className="font-semibold text-gray-900">Contact</h3>
               <div className="space-y-3">

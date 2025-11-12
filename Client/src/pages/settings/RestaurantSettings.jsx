@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRestaurant } from "../../hooks/useRestaurant";
-import { useToast } from "../../hooks/useToast";
-import { upsertRestaurant, deleteRestaurant } from "../../api/restaurants";
+import { useRestaurant } from "@/hooks/useRestaurant";
+import { useToast } from "@/hooks/useToast";
+import { upsertRestaurant, deleteRestaurant } from "@/api/restaurants";
 import {
   HiOutlineExclamationTriangle,
   HiOutlineTrash,
@@ -24,7 +24,7 @@ export default function RestaurantSettings() {
 
   useEffect(() => {
     if (restaurant) {
-      setActive(restaurant.active !== false); // Default to true if not set
+      setActive(restaurant.active !== false);
     }
   }, [restaurant]);
 

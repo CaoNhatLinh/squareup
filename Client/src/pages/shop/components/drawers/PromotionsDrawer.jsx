@@ -1,7 +1,9 @@
 import { MdClose } from "react-icons/md";
 import { useState, useEffect } from "react";
-import DiscountDetailModal from "./DiscountDetailModal";
-import { fetchDiscounts } from "../../../api/discounts";
+import DiscountDetailModal from "@/pages/shop/components/modals/DiscountDetailModal";
+import { fetchDiscounts } from "@/api/discounts";
+import { getDiscountStatus, getAppliedToText, getTimeText } from "@/utils/discountUtils";
+import { formatDateShort } from "@/utils/dateUtils";
 
 export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
   const [selectedDiscount, setSelectedDiscount] = useState(null);
@@ -28,86 +30,12 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
     }
   }, [isOpen, restaurantId]);
 
-  const getDiscountStatus = (discount) => {
-    const now = Date.now();
-    if (discount.setDateRange) {
-      const startTime = discount.dateRangeStart ? new Date(discount.dateRangeStart + 'T00:00:00').getTime() : 0;
-      const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd + 'T23:59:59').getTime() : Infinity;
-      
-      if (now < startTime) {
-        return 'upcoming';
-      }
-      if (now > endTime) {
-        return 'expired';
-      }
-    }
-    
-    if (discount.setSchedule) {
-      const currentDate = new Date();
-      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      const currentTime = currentDate.toTimeString().slice(0, 5);
-      const isDayEnabled = discount.scheduleDays?.[dayName];
-
-      const isTimeInRange = currentTime >= (discount.scheduleTimeStart || '00:00') && 
-                           currentTime <= (discount.scheduleTimeEnd || '23:59');
-      if (!isDayEnabled || !isTimeInRange) {
-        return 'inactive';
-      }
-    }
-    return 'active';
-  };
-
   const sortedDiscounts = [...discountsList].sort((a, b) => {
     const statusOrder = { active: 0, inactive: 1, upcoming: 2, expired: 3 };
     const statusA = getDiscountStatus(a);
     const statusB = getDiscountStatus(b);
     return statusOrder[statusA] - statusOrder[statusB];
   });
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '';
-    return timeString;
-  };
-
-  const getAppliedToText = (discount) => {
-    if (discount.discountApplyTo === 'item_category') {
-      if (discount.addAllItemsToPurchase) {
-        return 'All Items';
-      }
-      const items = discount.purchaseItems || [];
-      const categories = discount.purchaseCategories || [];
-      const count = items.length + categories.length;
-      return `Applied to ${count} item(s)`;
-    } else if (discount.discountApplyTo === 'quantity') {
-      const purchaseQty = discount.purchaseQuantity || 1;
-      const discountText = discount.amountType === 'percentage' 
-        ? `${discount.amount}% off` 
-        : `$${discount.amount} off`;
-      
-      if (discount.quantityRuleType === 'exact') {
-        return `Buy exactly ${purchaseQty}, Get ${discountText}`;
-      } else if (discount.quantityRuleType === 'minimum') {
-        return `Buy ${purchaseQty}+, Get ${discountText}`;
-      } else if (discount.quantityRuleType === 'bogo') {
-        const discountQty = discount.discountQuantity || 1;
-        return `Buy ${purchaseQty}, Get ${discountQty} at ${discountText}`;
-      }
-    }
-    return 'Special Offer';
-  };
-
-  const getTimeText = (discount) => {
-    if (discount.setSchedule && discount.scheduleTimeStart && discount.scheduleTimeEnd) {
-      return `${formatTime(discount.scheduleTimeStart)} - ${formatTime(discount.scheduleTimeEnd)}`;
-    }
-    return 'All Day';
-  };
 
   return (
     <>
@@ -215,30 +143,25 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                             </svg>
                             <span>
-                              {formatDate(discount.dateRangeStart)}
-                              {discount.dateRangeEnd && ` - ${formatDate(discount.dateRangeEnd)}`}
+                              {formatDateShort(discount.dateRangeStart)}
+                              {discount.dateRangeEnd && ` - ${formatDateShort(discount.dateRangeEnd)}`}
                             </span>
                           </div>
                         )}
 
-                        {/* Schedule */}
                         <div className="flex items-center text-sm text-gray-600 mb-2">
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                           </svg>
                           <span>{getTimeText(discount)}</span>
                         </div>
-
-                        {/* Applied to */}
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-sm font-medium text-gray-700 mb-2">
                             {getAppliedToText(discount)}
                           </p>
                           
-                          {/* Show items for all discount types */}
                           {!discount.addAllItemsToPurchase && (
                             <div className="space-y-2">
-                              {/* Purchase Items */}
                               {(discount.purchaseItems?.length > 0 || discount.purchaseCategories?.length > 0) && (
                                 <div>
                                   <p className="text-xs text-gray-500 mb-1">
@@ -259,7 +182,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                                 </div>
                               )}
 
-                              {/* Discount Target Items (for BOGO only) */}
                               {discount.discountApplyTo === 'quantity' && 
                                discount.quantityRuleType === 'bogo' && 
                                !discount.copyEligibleItems &&
@@ -278,7 +200,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                             </div>
                           )}
 
-                          {/* Show message for "All items" or "Copy eligible items" */}
                           {discount.addAllItemsToPurchase && (
                             <p className="text-xs text-gray-500 italic mt-2">Applies to all items in store</p>
                           )}
@@ -288,7 +209,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                             <p className="text-xs text-gray-500 italic mt-2">Discount applies to same items as purchase</p>
                           )}
 
-                          {/* View Details Button */}
                           <button
                             onClick={() => setSelectedDiscount(discount)}
                             className="mt-3 w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
@@ -306,7 +226,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {selectedDiscount && (
         <DiscountDetailModal
           discount={selectedDiscount}

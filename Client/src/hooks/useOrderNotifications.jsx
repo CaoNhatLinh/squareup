@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { ref, onValue } from "firebase/database";
-import { rtdb } from "../firebase";
+import { rtdb } from "@/firebase";
 import { useNavigate } from "react-router-dom";
-import { playNotificationSound } from "../utils/notificationSound";
+import { playNotificationSound } from "@/utils/notificationSound";
 import {
   showDesktopNotification,
   isNotificationSupported,
-} from "../utils/desktopNotification";
+} from "@/utils/desktopNotification";
 import { useToast } from "./useToast";
 
 export const useOrderNotifications = (

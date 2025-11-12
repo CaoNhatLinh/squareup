@@ -1,12 +1,5 @@
 const admin = require('firebase-admin');
 const db = admin.database();
-
-/**
- * Calculate applicable discounts for a cart
- * @param {string} restaurantId - Restaurant ID
- * @param {Array} cartItems - Array of cart items with {itemId, categoryId, quantity, price, totalPrice}
- * @returns {Object} - {appliedDiscounts, totalDiscount, itemDiscounts}
- */
 async function calculateCartDiscounts(restaurantId, cartItems) {
   try {
     const discountsSnapshot = await db.ref(`restaurants/${restaurantId}/discounts`).once('value');
@@ -25,7 +18,7 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
         if (discount.setSchedule) {
           const currentDate = new Date();
           const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-          const currentTime = currentDate.toTimeString().slice(0, 5); // HH:MM format
+          const currentTime = currentDate.toTimeString().slice(0, 5); 
           
           if (!discount.scheduleDays?.[dayName]) return false;
           if (currentTime < discount.scheduleTimeStart || currentTime > discount.scheduleTimeEnd) return false;
@@ -57,7 +50,7 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
     const appliedDiscounts = [];
     const combinedItemDiscounts = {};
     const itemsAlreadyDiscounted = new Set();
-    const discountAmounts = {}; // Track amount per discount
+    const discountAmounts = {}; 
     let totalDiscount = 0;
 
     for (const result of discountResults) {
@@ -97,9 +90,7 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
   }
 }
 
-/**
- * Calculate discount for a single discount rule
- */
+
 function calculateSingleDiscount(discount, cartItems) {
   if (!discount.automaticDiscount) {
     return null;
@@ -162,9 +153,6 @@ function calculateSingleDiscount(discount, cartItems) {
   };
 }
 
-/**
- * Calculate item discount based on discount type
- */
 function calculateItemDiscount(discount, itemPrice, quantity) {
   if (discount.amountType === 'percentage') {
     return (itemPrice * quantity * discount.amount) / 100;
@@ -173,10 +161,6 @@ function calculateItemDiscount(discount, itemPrice, quantity) {
   }
   return 0;
 }
-
-/**
- * Calculate quantity-based discount (BOGO, Exact, Minimum)
- */
 function calculateQuantityDiscount(discount, cartItems) {
   let discountAmount = 0;
   const itemDiscounts = {};

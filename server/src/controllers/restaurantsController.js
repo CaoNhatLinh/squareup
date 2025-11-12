@@ -39,7 +39,6 @@ async function getUserRestaurants(req, res) {
     const restaurants = results.filter((restaurant) => restaurant !== null);
     return res.json(restaurants);
   } catch (err) {
-    console.error("Error fetching user restaurants:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -84,7 +83,6 @@ async function createRestaurant(req, res) {
       createdAt: restaurantData.createdAt,
     });
   } catch (err) {
-    console.error("Error creating restaurant:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -117,7 +115,6 @@ async function getRestaurant(req, res) {
       updatedAt: data.updatedAt || null,
     });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -207,7 +204,8 @@ async function getRestaurantForShop(req, res) {
         discounts
       );
     } catch (discountError) {
-      console.error("Error calculating item discounts:", discountError);
+      console.error("Error calculating discounts:", discountError);
+      
     }
 
     return res.json({
@@ -233,7 +231,6 @@ async function getRestaurantForShop(req, res) {
       active: data.active !== false,
     });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -276,7 +273,6 @@ async function updateRestaurant(req, res) {
       updatedAt: data.updatedAt || null,
     });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -293,7 +289,6 @@ async function deleteRestaurant(req, res) {
 
     return res.json({ message: "Restaurant deleted successfully" });
   } catch (err) {
-    console.error("Error deleting restaurant:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }

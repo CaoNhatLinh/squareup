@@ -6,10 +6,10 @@ import {
   HiChevronRight,
   HiOutlineTag,
 } from "react-icons/hi2";
-import { fetchCategories, deleteCategory } from "../../api/categories";
-import SearchBar from "../../components/common/SearchBar";
-import BulkActionBar from "../../components/common/BulkActionBar";
-import ActionMenu from "../../components/common/ActionMenu";
+import { fetchCategories, deleteCategory } from "@/api/categories.js";
+import SearchBar from "@/components/common/SearchBar";
+import BulkActionBar from "@/components/common/BulkActionBar";
+import ActionMenu from "@/components/common/ActionMenu";
 
 export default function Categories() {
   const { restaurantId } = useParams();
@@ -151,7 +151,7 @@ export default function Categories() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
         <table className="w-full min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
             <tr>

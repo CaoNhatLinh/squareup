@@ -799,7 +799,6 @@ export default function CreateDiscount() {
         </div>
       )}
 
-      {/* Purchase Rule Modal */}
       {showPurchaseRuleModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto">
@@ -867,7 +866,6 @@ export default function CreateDiscount() {
         </div>
       )}
 
-      {/* Item/Category Selector Modal */}
       {showItemCategorySelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-3xl max-h-[80vh] flex flex-col">
@@ -884,7 +882,6 @@ export default function CreateDiscount() {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4">
-              {/* Categories Section */}
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   📁 Categories ({categories.length})
@@ -926,8 +923,6 @@ export default function CreateDiscount() {
                   })}
                 </div>
               </div>
-
-              {/* Items Section */}
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   🍽️ Items ({items.length})

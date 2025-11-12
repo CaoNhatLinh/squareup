@@ -11,7 +11,6 @@ async function verifyToken(req, res, next) {
     req.user = decoded;
     next();
   } catch (err) {
-    console.error('Token verification failed', err);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 }
@@ -25,6 +24,11 @@ async function verifyRestaurantOwnership(req, res, next) {
   }
   
   try {
+    if (req.user.admin) {
+      req.restaurantId = restaurantId;
+      return next();
+    }
+
     const db = admin.database();
     const snapshot = await db.ref(`users/${userId}/restaurants/${restaurantId}`).once('value');
     
@@ -35,7 +39,6 @@ async function verifyRestaurantOwnership(req, res, next) {
     req.restaurantId = restaurantId;
     next();
   } catch (err) {
-    console.error('Restaurant ownership verification failed', err);
     return res.status(500).json({ error: 'Server error' });
   }
 }

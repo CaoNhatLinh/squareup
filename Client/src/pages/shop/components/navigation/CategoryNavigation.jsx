@@ -1,5 +1,5 @@
 import React from "react";
-import TabButton from "./TabButton";
+import TabButton from "@/pages/shop/components/TabButton";
 
 export default function CategoryNavigation({
   categories,

@@ -7,10 +7,10 @@ import {
   HiBuildingStorefront,
 } from "react-icons/hi2";
 import { IoRestaurantSharp } from "react-icons/io5";
-import { useRestaurantSelection } from "../../hooks/useRestaurantSelection";
-import { getUserRestaurants, createRestaurant } from "../../api/restaurants";
-import { useToast } from "../../hooks/useToast";
-import { useAuth } from "../../hooks/useAuth"; 
+import { useRestaurantSelection } from "@/hooks/useRestaurantSelection";
+import { getUserRestaurants, createRestaurant } from "@/api/restaurants";
+import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/hooks/useAuth"; 
 
 export default function RestaurantSelector() {
   const navigate = useNavigate();

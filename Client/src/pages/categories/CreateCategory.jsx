@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createCategory, fetchCategories } from "../../api/categories";
-import { useImageUpload } from "../../hooks/useImageUpload";
-import { useToast } from "../../hooks/useToast";
+import { createCategory, fetchCategories } from "@/api/categories";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { useToast } from "@/hooks/useToast";
 import {
   HiXMark,
   HiPhoto,

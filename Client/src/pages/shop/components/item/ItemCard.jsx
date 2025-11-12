@@ -1,4 +1,4 @@
-export default function ItemCard({ item, onItemClick }) {
+export default function ItemCard({ item, onItemClick, onQuickAdd }) {
   const hasDiscount = item.hasDiscount && item.discountedPrice < item.price;
   const isSoldOut = item.isSoldOut === true;
 
@@ -6,7 +6,7 @@ export default function ItemCard({ item, onItemClick }) {
     <div
       onClick={() => !isSoldOut && onItemClick(item)}
       className={`bg-white rounded-2xl border border-gray-200 overflow-hidden group transition-all duration-200 hover:shadow-lg hover:border-gray-300 relative ${
-        isSoldOut ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+        isSoldOut ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
       }`}
     >
       {item.image && (
@@ -26,35 +26,12 @@ export default function ItemCard({ item, onItemClick }) {
               </div>
             </div>
           )}
-
-          {!isSoldOut && (
-            <button
-              className="absolute top-3 right-3 w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                onItemClick(item);
-              }}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          )}
         </div>
       )}
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
+      <div className='p-4'>
+        <div className='flex items-start justify-between gap-2'>
+          {/* Info Section */}
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
               {item.name}
@@ -65,7 +42,6 @@ export default function ItemCard({ item, onItemClick }) {
               </p>
             )}
 
-            {/* Price with discount display */}
             <div className="flex items-center gap-2 flex-wrap">
               {hasDiscount ? (
                 <>
@@ -87,20 +63,21 @@ export default function ItemCard({ item, onItemClick }) {
             </div>
           </div>
 
-          {/* Show SOLD OUT badge and add button for non-image items */}
+          {/* Actions Section */}
           <div className="flex flex-col items-end gap-2">
             {isSoldOut && (
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                 SOLD OUT
               </span>
             )}
-            {!item.image && !isSoldOut && (
+            {!isSoldOut && (
               <button
                 className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onItemClick(item);
+                  onQuickAdd?.(item);
                 }}
+                title="Quick add to cart"
               >
                 <svg
                   className="w-5 h-5"

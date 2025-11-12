@@ -689,7 +689,6 @@ export default function EditDiscount() {
             )}
           </div>
 
-          {/* Minimum Spend */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -717,8 +716,6 @@ export default function EditDiscount() {
               </div>
             )}
           </div>
-
-          {/* Maximum Discount Value */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -803,8 +800,6 @@ export default function EditDiscount() {
           </div>
         </div>
       )}
-
-      {/* Purchase Rule Modal */}
       {showPurchaseRuleModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto">

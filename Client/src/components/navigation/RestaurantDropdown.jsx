@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { useRestaurantSelection } from "../../hooks/useRestaurantSelection";
+import { useAuth } from "@/hooks/useAuth";
+import { useRestaurantSelection } from "@/hooks/useRestaurantSelection";
 import {
   HiXMark,
   HiUserCircle,
@@ -92,7 +92,6 @@ export default function RestaurantDropdown({ restaurantName }) {
               </div>
               
               <div className="flex-grow p-6 space-y-6">
-                {/* Restaurant Info Card */}
                 <div className="p-5 bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3 mb-4 border-b border-red-100 pb-3">
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -121,7 +120,6 @@ export default function RestaurantDropdown({ restaurantName }) {
                   </div>
                 </div>
 
-                {/* Switch Restaurant Button */}
                 <button
                   onClick={handleSwitchRestaurant}
                   className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium"
@@ -132,8 +130,6 @@ export default function RestaurantDropdown({ restaurantName }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-
-                {/* Navigation Menu */}
                 <nav className="space-y-2 border border-gray-200 rounded-xl p-2 bg-white shadow-sm">
                   <Link
                     to="/settings/profile"
@@ -153,8 +149,6 @@ export default function RestaurantDropdown({ restaurantName }) {
                     Billing & Plans
                   </Link>
                 </nav>
-
-                {/* Sign Out Button */}
                 <Link
                   to="/signout"
                   className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors mt-6 font-semibold"

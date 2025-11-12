@@ -1,6 +1,6 @@
 import  {  useState, useCallback, useEffect } from "react";
 import { ShopContext } from "./ShopContext";
-import { useDiscountCalculation } from "../hooks/useDiscountCalculation";
+import { useDiscountCalculation } from "@/hooks/useDiscountCalculation";
 
 const CART_STORAGE_KEY = "shop_cart";
 

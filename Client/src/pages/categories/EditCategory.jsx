@@ -5,8 +5,8 @@ import {
   updateCategory,
   fetchCategory,
   fetchCategories,
-} from "../../api/categories";
-import { useImageUpload } from "../../hooks/useImageUpload";
+} from "@/api/categories";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import {
   HiXMark,
   HiPhoto,

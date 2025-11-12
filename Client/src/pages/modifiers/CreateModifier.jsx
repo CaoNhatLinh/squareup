@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { createModifier } from "../../api/modifers";
+import { createModifier } from "@/api/modifers";
 import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
 

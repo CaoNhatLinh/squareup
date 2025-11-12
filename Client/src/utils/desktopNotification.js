@@ -27,15 +27,15 @@ export const showDesktopNotification = (order) => {
 
   const options = {
     body: `${order.restaurantName}\nAmount: $${order.amount?.toFixed(2)}\nStatus: ${order.status}`,
-    icon: '/favicon.ico', // Update with your app icon
+    icon: '/favicon.ico', 
     badge: '/favicon.ico',
-    tag: order.id, // Prevent duplicate notifications
-    requireInteraction: false, // Auto-close after timeout
-    silent: false, // Play notification sound
+    tag: order.id, 
+    requireInteraction: false,
+    silent: false, 
     timestamp: Date.now(),
     data: {
       orderId: order.id,
-      url: `/orders/${order.id}`,
+      url: `/${order.restaurantId}/orders/${order.id}`,
     },
   };
 
@@ -47,7 +47,7 @@ export const showDesktopNotification = (order) => {
       window.focus();
       
       if (order.id) {
-        window.location.href = `/orders/${order.id}`;
+        window.location.href = `/${order.restaurantId}/orders/${order.id}`;
       }
       
       notification.close();
@@ -68,5 +68,5 @@ export const getNotificationPermissionStatus = () => {
   if (!('Notification' in window)) {
     return 'unsupported';
   }
-  return Notification.permission; // 'granted', 'denied', or 'default'
+  return Notification.permission; 
 };

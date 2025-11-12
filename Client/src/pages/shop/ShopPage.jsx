@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { fetchRestaurantForShop } from "../../api/restaurants";
-import { fetchActiveDiscounts } from "../../api/discounts";
-import { ShopProvider} from "../../context/ShopProvider";
-import { useShop } from "../../context/ShopContext";
-import ShopHeader from "./components/ShopHeader";
-import RestaurantBanner from "./components/RestaurantBanner";
-import RestaurantInfoDrawer from "./components/RestaurantInfoDrawer";
-import ClosedBanner from "./components/ClosedBanner";
-import CategoryNavigation from "./components/CategoryNavigation";
-import ItemList from "./components/ItemList";
-import ModifierModal from "./components/ModifierModal";
-import CartDrawer from "./components/CartDrawer";
-import PromotionsDrawer from "./components/PromotionsDrawer";
-import Footer from "./components/Footer";
+import { fetchRestaurantForShop } from "@/api/restaurants";
+import { fetchActiveDiscounts } from "@/api/discounts";
+import { ShopProvider} from "@/context/ShopProvider.jsx";
+import { useShop } from "@/context/ShopContext.jsx";
+import {
+  ShopHeader,
+  RestaurantBanner,
+  RestaurantInfoDrawer,
+  ClosedBanner,
+  CategoryNavigation,
+  ItemList,
+  ItemModal,
+  CartDrawer,
+  PromotionsDrawer,
+  Footer,
+} from "./components";
 
 function ShopPageContent() {
   const { restaurantId } = useParams();
@@ -126,15 +128,25 @@ function ShopPageContent() {
 
   const handleItemClick = (item) => {
     if (restaurant.active === false) {
-      return; // Don't allow ordering when restaurant is inactive
+      return;
     }
-    
+
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleQuickAdd = (item) => {
+    if (restaurant.active === false) {
+      return;
+    }
+
     if (item.modifierIds && item.modifierIds.length > 0) {
       setSelectedItem(item);
       setIsModalOpen(true);
-    } else {
-      handleAddToCart(item, [], 1);
+      return;
     }
+
+    handleAddToCart(item, [], 1);
   };
 
   if (loading) {
@@ -170,7 +182,6 @@ function ShopPageContent() {
         isRestaurantActive={restaurant.active}
       />
       
-      {/* Inactive Restaurant Banner */}
       {restaurant.active === false && (
         <div className="bg-red-600 text-white text-center py-4 px-4">
           <div className="max-w-4xl mx-auto">
@@ -182,7 +193,6 @@ function ShopPageContent() {
         </div>
       )}
       
-      {/* Restaurant Banner */}
       <RestaurantBanner 
         restaurant={restaurant}
         onInfoClick={() => setIsInfoDrawerOpen(true)}
@@ -208,13 +218,14 @@ function ShopPageContent() {
           categories={categories}
           items={items}
           onItemClick={handleItemClick}
+          onQuickAdd={handleQuickAdd}
         />
       </div>
       
       <Footer restaurant={restaurant} />
 
       {isModalOpen && selectedItem && (
-        <ModifierModal
+        <ItemModal
           item={selectedItem}
           modifiers={modifiers}
           onClose={() => {

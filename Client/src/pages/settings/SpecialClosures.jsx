@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { fetchSpecialClosures, addSpecialClosure, removeSpecialClosure } from "../../api/specialClosures";
+import { fetchSpecialClosures, addSpecialClosure, removeSpecialClosure } from "@/api/specialClosures";
 import { HiPlus, HiTrash, HiCalendar, HiCheckCircle, HiExclamationCircle } from "react-icons/hi";
 import DatePicker from "react-datepicker"; 
 export default function SpecialClosures() {
@@ -198,7 +198,7 @@ export default function SpecialClosures() {
                     <button
                       onClick={() => {
                         setShowAddForm(false);
-                        setNewClosure({ date: null, reason: "" }); // Reset date to null
+                        setNewClosure({ date: null, reason: "" }); 
                         setMessage("");
                       }}
                       disabled={saving}

@@ -25,7 +25,7 @@ export default function RestaurantBanner({
           const currentValue =
             discount.amountType === "percentage"
               ? parseFloat(discount.amount)
-              : parseFloat(discount.amount) * 2; // Weight fixed amount higher for comparison
+              : parseFloat(discount.amount) * 2; 
           const maxValue =
             max.amountType === "percentage"
               ? parseFloat(max.amount)
