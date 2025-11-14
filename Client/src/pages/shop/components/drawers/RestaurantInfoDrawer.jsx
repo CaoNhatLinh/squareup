@@ -1,5 +1,5 @@
 import { HiX, HiLocationMarker, HiClock, HiPhone, HiMail } from "react-icons/hi";
-import {DAYS_OF_WEEK ,DAY_LABELS}from "@/utils/scheduleConstants";
+import {DAYS_OF_WEEK ,DAY_LABELS}from "@/constants/scheduleConstants";
 export default function RestaurantInfoDrawer({ isOpen, onClose, restaurant }) {
   if (!restaurant) return null;
 

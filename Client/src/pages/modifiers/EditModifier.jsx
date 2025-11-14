@@ -279,7 +279,6 @@ export default function EditModifier() {
               </label>
             </div>
           </div>
-          {/* C. MODIFIER OPTIONS LIST */}
           <div>
             <h3 className="text-lg font-bold mb-3 text-gray-900">
               Options List

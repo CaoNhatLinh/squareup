@@ -1,4 +1,3 @@
-import React from "react";
 import { createBrowserRouter, redirect } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AdminRoute from "@/components/AdminRoute";
@@ -30,14 +29,21 @@ import CreateDiscount from "@/pages/discounts/CreateDiscount";
 import EditDiscount from "@/pages/discounts/EditDiscount";
 import { fetchDiscounts } from "@/api/discounts";
 import ShopPage from "@/pages/shop/ShopPage";
+import ShopLayout from "@/pages/shop/ShopLayout";
 import CheckoutSuccessWrapper from "@/pages/shop/checkout/CheckoutSuccessWrapper";
 import CheckoutCancelled from "@/pages/shop/checkout/CheckoutCancelled";
+import OrderHistory from "@/pages/shop/OrderHistory";
+import OrderReview from "@/pages/shop/OrderReview";
 import Orders from "@/pages/orders/Orders";
 import NotFound from "@/pages/NotFound";
 import OrderDetails from "@/pages/orders/OrderDetails";
 import DeveloperTools from "@/pages/settings/DeveloperTools";
 import TrackOrder from "@/pages/public/TrackOrder";
 import RestaurantSettings from "@/pages/settings/RestaurantSettings";
+// import Profile from "@/pages/Profile";
+import Reviews from "@/pages/reviews/Reviews";
+import Transactions from "@/pages/transactions/Transactions";
+import TransactionDetails from "@/pages/transactions/TransactionDetails";
 
 
 export const dashboardLoader = async ({ params }) => {
@@ -136,15 +142,29 @@ export const ordersLoader = async ({ params }) => {
 export const router = createBrowserRouter([
   {
     path: "/shop/:restaurantId",
-    element: <ShopPage />,
-  },
-  {
-    path: "/shop/:restaurantId/success",
-    element: <CheckoutSuccessWrapper />,
-  },
-  {
-    path: "/shop/:restaurantId/cancelled",
-    element: <CheckoutCancelled />,
+    element: <ShopLayout />,
+    children: [
+      {
+        index: true,
+        element: <ShopPage />,
+      },
+      {
+        path: "order-history",
+        element: <OrderHistory />,
+      },
+      {
+        path: "review/:orderId",
+        element: <OrderReview />,
+      },
+      {
+        path: "success",
+        element: <CheckoutSuccessWrapper />,
+      },
+      {
+        path: "cancelled",
+        element: <CheckoutCancelled />,
+      },
+    ],
   },
   {
     path: "/track-order/:orderId",
@@ -170,7 +190,7 @@ export const router = createBrowserRouter([
   { index: true, element: <Home /> }, 
   { path: "signin", element: <SignIn /> },
   { path: "signup", element: <SignUp /> },
-  { path: "signout", element: <SignOut /> }, 
+  { path: "signout", element: <SignOut /> },
   {
     element: <Layout />,
     children: [
@@ -228,6 +248,9 @@ export const router = createBrowserRouter([
             loader: ordersLoader,
           },
           { path: "orders/:orderId", element: <OrderDetails /> },
+          { path: "reviews", element: <Reviews /> },
+          { path: "transactions", element: <Transactions /> },
+          { path: "transactions/:paymentIntentId", element: <TransactionDetails /> },
           { path: "settings/business/about", element: <BusinessAbout /> },
           { path: "settings/business/hours", element: <BusinessHours /> },
           {

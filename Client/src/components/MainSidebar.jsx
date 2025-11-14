@@ -1,18 +1,19 @@
 
 
-import React from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import { useRestaurant } from '../hooks/useRestaurant'
-import { useAuth } from '../hooks/useAuth'
-import MenuItem from './navigation/MenuItem'
-import RestaurantDropdown from './navigation/RestaurantDropdown'
-import { getMenuItems } from '../config/menuConfig'
+import { useRestaurant } from '@/hooks/useRestaurant'
+import { useAuth } from '@/hooks/useAuth'
+import MenuItem from '@/components/navigation/MenuItem'
+import RestaurantDropdown from '@/components/navigation/RestaurantDropdown'
+import ProfileMenu from '@/components/navigation/ProfileMenu'
+import { getMenuItems } from '@/config/menuConfig'
 import {
   HiSearch,
   HiUserGroup,
   HiArrowLeft,
   HiOutlineShieldCheck
 } from 'react-icons/hi'
+import { useEffect } from 'react'
 
 export default function Sidebar({ isOpen, onClose }) {
   const { restaurantId } = useParams()
@@ -26,7 +27,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const isAdminManagingRestaurant = user?.isAdmin && restaurantId &&
     (isAdminPath || adminManagedRestaurantId === restaurantId)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (adminManagedRestaurantId && adminManagedRestaurantId !== restaurantId) {
       sessionStorage.removeItem('adminManagingRestaurant')
     }
@@ -150,27 +151,8 @@ export default function Sidebar({ isOpen, onClose }) {
             ))}
           </nav>
 
-          <div className="flex-shrink-0 px-4 py-6 border-t border-gray-200 mt-auto">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.displayName || 'User'}
-                </p>
-                <p className="text-xs text-gray-600 truncate">
-                  {user?.email}
-                </p>
-              </div>
-              {user?.isAdmin && (
-                <div className="flex-shrink-0">
-                  <HiOutlineShieldCheck className="w-4 h-4 text-yellow-500" />
-                </div>
-              )}
-            </div>
+          <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200 mt-auto">
+            <ProfileMenu />
           </div>
         </div>
       </aside>

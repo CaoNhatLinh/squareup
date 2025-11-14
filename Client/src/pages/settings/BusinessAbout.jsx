@@ -333,8 +333,6 @@ export default function BusinessAbout() {
                   <HiTag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </div>
-
-              {/* Contact Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
@@ -750,8 +748,6 @@ export default function BusinessAbout() {
                     </div>
                   </div>
                 </div>
-
-                {/* Featured Image Section */}
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-100 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-emerald-500 rounded-lg">
@@ -850,8 +846,6 @@ export default function BusinessAbout() {
               </div>
             </div>
           </div>
-
-          {/* Save Button Card */}
           <div className="lg:col-span-3 mt-6">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
               <div className="p-4">

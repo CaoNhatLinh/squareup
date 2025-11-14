@@ -50,26 +50,57 @@ async function sessionLogin(req, res) {
     const userRef = db.ref(`users/${uid}`);
     const userSnapshot = await userRef.get();
     
+    // Determine role based on custom claims
+    const customClaims = userRecord.customClaims || {};
+    let role = 'user';
+    let isAdmin = false;
+    
+    if (customClaims.admin) {
+      role = 'admin';
+      isAdmin = true;
+    } else if (customClaims.role === 'guest') {
+      role = 'guest';
+    }
+    
+    console.log('sessionLogin - User:', {
+      uid,
+      email: userRecord.email,
+      role,
+      isAdmin,
+      customClaims
+    });
+    
     const userData = {
       uid: uid,
       email: userRecord.email,
       displayName: userRecord.displayName || userRecord.email?.split('@')[0] || 'User',
       photoURL: userRecord.photoURL || null,
       emailVerified: userRecord.emailVerified,
-      role: userRecord.customClaims?.admin ? 'admin' : 'user',
-      isAdmin: userRecord.customClaims?.admin || false,
+      role: role,
+      isAdmin: isAdmin,
       lastLoginAt: Date.now(),
     };
 
-    if (!userSnapshot.exists()) {
-      userData.createdAt = Date.now();
-      await userRef.set(userData);
-      const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
-    } else {
-      await userRef.update(userData);
-      const restaurantsSnapshot = await db.ref(`users/${uid}/restaurants`).once('value');
-      if (!restaurantsSnapshot.exists()) {
+    // Only create/check restaurants for non-guest users
+    if (role !== 'guest') {
+      if (!userSnapshot.exists()) {
+        userData.createdAt = Date.now();
+        await userRef.set(userData);
         const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+      } else {
+        await userRef.update(userData);
+        const restaurantsSnapshot = await db.ref(`users/${uid}/restaurants`).once('value');
+        if (!restaurantsSnapshot.exists()) {
+          const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+        }
+      }
+    } else {
+      // For guest users, only save/update user data without creating restaurants
+      if (!userSnapshot.exists()) {
+        userData.createdAt = Date.now();
+        await userRef.set(userData);
+      } else {
+        await userRef.update(userData);
       }
     }
     
@@ -113,19 +144,32 @@ async function sessionLogout(req, res) {
 async function verifySession(req, res) {
   try {
     const sessionCookie = req.cookies && req.cookies.session;
-    if (!sessionCookie) return res.status(401).json({ error: 'No session' });
+    if (!sessionCookie) {
+      return res.status(401).json({ error: 'No session' });
+    }
     const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
     
     const userRecord = await admin.auth().getUser(decoded.uid);
+    const customClaims = userRecord.customClaims || {};
     
+    // Determine role based on custom claims
+    let role = 'user';
+    let isAdmin = false;
+    
+    if (customClaims.admin) {
+      role = 'admin';
+      isAdmin = true;
+    } else if (customClaims.role === 'guest') {
+      role = 'guest';
+    }
     return res.json({ 
       uid: decoded.uid, 
       email: decoded.email,
-      isAdmin: userRecord.customClaims?.admin || false,
-      role: userRecord.customClaims?.admin ? 'admin' : 'user'
+      isAdmin: isAdmin,
+      role: role
     });
   } catch (err) {
-    console.error(err);
+    console.error('verifySession error:', err.message);
     return res.status(401).json({ error: 'Invalid session' });
   }
 }

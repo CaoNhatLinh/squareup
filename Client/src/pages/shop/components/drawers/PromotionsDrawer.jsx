@@ -1,7 +1,7 @@
 import { MdClose } from "react-icons/md";
 import { useState, useEffect } from "react";
 import DiscountDetailModal from "@/pages/shop/components/modals/DiscountDetailModal";
-import { fetchDiscounts } from "@/api/discounts";
+import { fetchActiveDiscounts } from "@/api/discounts";
 import { getDiscountStatus, getAppliedToText, getTimeText } from "@/utils/discountUtils";
 import { formatDateShort } from "@/utils/dateUtils";
 
@@ -16,7 +16,7 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
     const loadDiscounts = async () => {
       try {
         setLoading(true);
-        const discounts = await fetchDiscounts(restaurantId);
+        const discounts = await fetchActiveDiscounts(restaurantId);
         setAllDiscounts(discounts || {});
       } catch (error) {
         console.error('Error loading discounts:', error);

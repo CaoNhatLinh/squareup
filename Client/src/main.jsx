@@ -1,22 +1,10 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import 'react-datepicker/dist/react-datepicker.css';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-import { RouterProvider } from 'react-router-dom'
-import { AuthProvider } from '@/context/AuthProvider.jsx'
-import RestaurantSelectionProvider from '@/context/RestaurantSelectionProvider.jsx'
-import { ToastProvider } from '@/context/ToastContext.jsx'
-import { router } from '@/routes'
+import App from "./App";
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      <RestaurantSelectionProvider>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
-      </RestaurantSelectionProvider>
-    </AuthProvider>
-  </StrictMode>,
-)
+    <App />
+  </StrictMode>
+);

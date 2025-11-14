@@ -1,7 +1,6 @@
 export default function ItemCard({ item, onItemClick, onQuickAdd }) {
   const hasDiscount = item.hasDiscount && item.discountedPrice < item.price;
   const isSoldOut = item.isSoldOut === true;
-
   return (
     <div
       onClick={() => !isSoldOut && onItemClick(item)}
@@ -31,7 +30,6 @@ export default function ItemCard({ item, onItemClick, onQuickAdd }) {
 
       <div className='p-4'>
         <div className='flex items-start justify-between gap-2'>
-          {/* Info Section */}
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
               {item.name}
@@ -63,7 +61,6 @@ export default function ItemCard({ item, onItemClick, onQuickAdd }) {
             </div>
           </div>
 
-          {/* Actions Section */}
           <div className="flex flex-col items-end gap-2">
             {isSoldOut && (
               <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">

@@ -19,8 +19,13 @@ export const getOrderBySession = async (sessionId, restaurantId) => {
   return response.data;
 };
 
-export const updateOrderStatus = async (restaurantId, orderId, status) => {
-  const response = await apiClient.patch(`/api/orders/restaurant/${restaurantId}/${orderId}/status`, { status });
+export const updateOrderStatus = async (restaurantId, orderId, status, cancelReason = null, cancelNote = null) => {
+  const payload = { status };
+  if (status === 'cancelled') {
+    if (cancelReason) payload.cancelReason = cancelReason;
+    if (cancelNote) payload.cancelNote = cancelNote;
+  }
+  const response = await apiClient.patch(`/api/orders/restaurant/${restaurantId}/${orderId}/status`, payload);
   return response.data;
 };
 

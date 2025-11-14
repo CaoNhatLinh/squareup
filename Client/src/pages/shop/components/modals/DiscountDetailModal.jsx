@@ -1,18 +1,7 @@
-import React from 'react';
+import {formatDateShort} from "@/utils/dateUtils";
 
 export default function DiscountDetailModal({ discount, onClose }) {
   if (!discount) return null;
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
   const getScheduleDaysText = () => {
     if (!discount.setSchedule || !discount.scheduleDays) return 'All days';
     const dayNames = {
@@ -106,23 +95,17 @@ export default function DiscountDetailModal({ discount, onClose }) {
               {discount.amountType === 'percentage' ? `${discount.amount}% OFF` : `$${discount.amount} OFF`}
             </div>
           </div>
-
-          {/* Content */}
           <div className="p-6 space-y-5">
-            {/* Promotion Description */}
             <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
               <p className="text-gray-800 font-medium leading-relaxed">
                 {getDiscountDescription()}
               </p>
             </div>
 
-            {/* Eligible Items */}
             <section className="bg-white border border-gray-200 rounded-xl p-5">
               <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Eligible Items
               </h3>
-              
-              {/* Purchase Items */}
               <div className="mb-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">
                   {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' ? 'Purchase Items:' : 'Applies to:'}
@@ -148,8 +131,6 @@ export default function DiscountDetailModal({ discount, onClose }) {
                   </div>
                 )}
               </div>
-
-              {/* Discount Target Items (for BOGO only) */}
               {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' && (
                 <div className="pt-4 border-t border-gray-200">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -174,26 +155,23 @@ export default function DiscountDetailModal({ discount, onClose }) {
                 </div>
               )}
             </section>
-
-            {/* Validity Period */}
             <section className="bg-white border border-gray-200 rounded-xl p-5">
               <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Validity Period
               </h3>
               
-              {/* Date Range */}
               <div className="mb-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">Date Range:</h4>
                 {discount.setDateRange && (discount.dateRangeStart || discount.dateRangeEnd) ? (
                   <div className="space-y-1">
                     {discount.dateRangeStart && (
                       <p className="text-gray-700">
-                        <span className="font-medium">From:</span> {formatDate(discount.dateRangeStart)}
+                        <span className="font-medium">From:</span> {formatDateShort(discount.dateRangeStart)}
                       </p>
                     )}
                     {discount.dateRangeEnd && (
                       <p className="text-gray-700">
-                        <span className="font-medium">Until:</span> {formatDate(discount.dateRangeEnd)}
+                        <span className="font-medium">Until:</span> {formatDateShort(discount.dateRangeEnd)}
                       </p>
                     )}
                   </div>
@@ -202,7 +180,6 @@ export default function DiscountDetailModal({ discount, onClose }) {
                 )}
               </div>
 
-              {/* Schedule */}
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">Schedule:</h4>
                 {discount.setSchedule ? (
@@ -219,8 +196,6 @@ export default function DiscountDetailModal({ discount, onClose }) {
                 )}
               </div>
             </section>
-
-            {/* Limitations & Restrictions */}
             {(discount.minimumSubtotal > 0 || discount.maximumValue > 0 || discount.setMaximumValue || discount.setMinimumSpend) && (
               <section className="bg-white border border-gray-200 rounded-xl p-5">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
@@ -255,8 +230,6 @@ export default function DiscountDetailModal({ discount, onClose }) {
               </section>
             )}
           </div>
-
-          {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">
             <button
               onClick={onClose}

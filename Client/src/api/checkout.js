@@ -1,9 +1,10 @@
 import * as apiClient from './apiClient'
 
-export const createCheckoutSession = async (restaurantId, items) => {
+export const createCheckoutSession = async (restaurantId, items, guestUuid = null) => {
   const response = await apiClient.post("/api/checkout/create-session", {
     restaurantId,
     items,
+    guestUuid,
   });
   return response.data;
 };

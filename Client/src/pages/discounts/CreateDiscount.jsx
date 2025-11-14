@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useToast } from '../../hooks/useToast';
-import { createDiscount } from '../../api/discounts';
-import { fetchCategories } from '../../api/categories';
-import { fetchItems } from '../../api/items';
+import { useToast } from '@/hooks/useToast';
+import { createDiscount } from '@/api/discounts';
+import { fetchCategories } from '@/api/categories';
+import { fetchItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
-import { DAYS_OF_WEEK } from '../../utils/scheduleConstants';
+import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function CreateDiscount() {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
@@ -56,7 +56,7 @@ export default function CreateDiscount() {
   const [showDiscountTypeModal, setShowDiscountTypeModal] = useState(false);
   const [showPurchaseRuleModal, setShowPurchaseRuleModal] = useState(false);
   const [showItemCategorySelector, setShowItemCategorySelector] = useState(false);
-  const [selectorMode, setSelectorMode] = useState('purchase'); // 'purchase' or 'discount'
+  const [selectorMode, setSelectorMode] = useState('purchase');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -152,7 +152,6 @@ export default function CreateDiscount() {
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 overflow-auto">
       <div className="bg-white w-full max-w-4xl my-8 rounded-2xl shadow-2xl flex flex-col max-h-[95vh]">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Create Discount</h2>
           <div className="flex items-center gap-3">
@@ -172,9 +171,7 @@ export default function CreateDiscount() {
           </div>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
-          {/* Basic Info */}
           <div className="space-y-4">
             <input
               type="text"
@@ -189,8 +186,6 @@ export default function CreateDiscount() {
               {renderAmountInput()}
             </div>
           </div>
-
-          {/* Automatic Discount Section - IMPROVED UI */}
           <div className="border-2 border-blue-200 rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -229,7 +224,6 @@ export default function CreateDiscount() {
 
             {formData.automaticDiscount && (
               <div className="space-y-4 mt-6 pt-6 border-t-2 border-blue-200">
-                {/* Show selected discount type */}
                 {!formData.discountApplyTo ? (
                   <div className="text-center py-8">
                     <HiSparkles className="w-16 h-16 text-blue-400 mx-auto mb-3" />
@@ -242,7 +236,6 @@ export default function CreateDiscount() {
                     </button>
                   </div>
                 ) : formData.discountApplyTo === 'item_category' ? (
-                  /* Item or Category Mode */
                   <div className="bg-white rounded-xl shadow-sm border-2 border-purple-200 hover:border-purple-400 transition-all">
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-4">
@@ -331,7 +324,6 @@ export default function CreateDiscount() {
                     </div>
                   </div>
                 ) : (
-                  /* Quantity Mode */
                   <>
                     <div className="bg-white rounded-xl shadow-sm border-2 border-green-200 hover:border-green-400 transition-all">
                       <div className="p-5">
@@ -383,7 +375,6 @@ export default function CreateDiscount() {
                             </button>
                           </div>
 
-                          {/* Quantity inputs */}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -413,7 +404,6 @@ export default function CreateDiscount() {
                             )}
                           </div>
 
-                          {/* Selected items/categories */}
                           {formData.addAllItemsToPurchase ? (
                             <p className="text-sm text-gray-700 font-medium">
                               <HiCheck className="w-4 h-4 inline text-green-600 mr-1" />
@@ -478,7 +468,6 @@ export default function CreateDiscount() {
                       </div>
                     </div>
 
-                    {/* Discount Target Card (for BOGO) */}
                     {formData.quantityRuleType === 'bogo' && (
                       <div className="bg-white rounded-xl shadow-sm border-2 border-orange-200 hover:border-orange-400 transition-all">
                         <div className="p-5">
@@ -587,8 +576,6 @@ export default function CreateDiscount() {
               </div>
             )}
           </div>
-
-          {/* Schedule */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -641,7 +628,6 @@ export default function CreateDiscount() {
             )}
           </div>
 
-          {/* Date Range */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -683,7 +669,6 @@ export default function CreateDiscount() {
             )}
           </div>
 
-          {/* Minimum Spend */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -711,8 +696,6 @@ export default function CreateDiscount() {
               </div>
             )}
           </div>
-
-          {/* Maximum Discount Value */}
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <input
@@ -743,8 +726,6 @@ export default function CreateDiscount() {
           </div>
         </div>
       </div>
-
-      {/* Discount Type Modal - Choose between Item/Category or Quantity */}
       {showDiscountTypeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl">
@@ -798,7 +779,6 @@ export default function CreateDiscount() {
           </div>
         </div>
       )}
-
       {showPurchaseRuleModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto">

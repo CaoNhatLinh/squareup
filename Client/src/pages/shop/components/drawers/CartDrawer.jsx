@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useShop } from "@/context/ShopContext.jsx";
+import { useGuestUser } from "@/context/GuestUserContext.jsx";
 import { useParams } from "react-router-dom";
 import RemoveItemModal from "@/pages/shop/components/modals/RemoveItemModal";
 import { createCheckoutSession } from "@/api/checkout";
@@ -15,6 +16,7 @@ import {
 
 export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const { restaurantId } = useParams();
+  const { guestUuid } = useGuestUser();
   const { restaurant, cart, removeFromCart, clearCart, getCartTotal, discountCalculation } = useShop();
   const { error: showError } = useToast();
   const totalAmount = getCartTotal();
@@ -22,7 +24,6 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showClearCartConfirm, setShowClearCartConfirm] = useState(false);
-
   const {
     subtotal = totalAmount,
     totalDiscount = 0,
@@ -44,13 +45,11 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
       setItemToRemove(null);
     }
   };
-
   const handleClearCart = () => {
     if (cart.length > 0) {
       setShowClearCartConfirm(true);
     }
   };
-
   const handleConfirmClearCart = () => {
     clearCart();
     setShowClearCartConfirm(false);
@@ -68,13 +67,12 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
       showError("Restaurant ID is invalid. Please reload the page.");
       return;
     }
-    
     setCheckoutLoading(true);
     try {
-
       const response = await createCheckoutSession(
         restaurantId,
-        cart
+        cart,
+        guestUuid
       );
 
       if (response.url) {
@@ -83,7 +81,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
         throw new Error("No checkout URL returned from server");
       }
     } catch (error) {
-      console.error("❌ Checkout error:", error);
+      console.error("Checkout error:", error);
       showError(`Payment error: ${error.response?.data?.error || error.message || "Please try again"}`);
       setCheckoutLoading(false);
     }

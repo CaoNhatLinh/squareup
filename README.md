@@ -258,7 +258,7 @@ npm run dev
 ```
 Client sẽ chạy tại `http://localhost:5173`
 
-### 8. Test Thanh Toán
+### Test Thanh Toán
 Sau khi cấu hình webhook, test thanh toán với các thẻ test của Stripe:
 
 #### Chuẩn Bị Test
@@ -266,6 +266,21 @@ Sau khi cấu hình webhook, test thanh toán với các thẻ test của Stripe
 2. Đảm bảo frontend đang chạy: `cd Client && npm run dev`
 3. Chạy script webhook: `.\start-webhook.ps1` (Windows) hoặc `./start-webhook.sh` (Linux/Mac)
 4. Copy webhook secret vào file `.env`
+
+#### Guest Users (Khách Vãng Lai)
+Hệ thống hỗ trợ guest users để khách hàng có thể đặt hàng mà không cần đăng ký:
+
+**Cách hoạt động:**
+- ✅ Tự động tạo UUID khi truy cập `/shop/:restaurantId`
+- ✅ Lưu UUID trong localStorage (không cần đăng nhập)
+- ✅ Mỗi restaurant có UUID riêng
+- ✅ Có thể xem lịch sử đơn hàng và đánh giá
+- ❌ Không thể truy cập trang quản lý
+
+**LocalStorage Keys:**
+```
+guest_uuid_{restaurantId} = "uuid-here"
+```
 
 #### Thẻ Test Stripe
 - **Thành công**: `4242 4242 4242 4242`

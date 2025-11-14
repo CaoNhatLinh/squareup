@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createItem } from '../../api/items'
-import { useImageUpload } from '../../hooks/useImageUpload'
-import { useToast } from '../../hooks/useToast'
+import { createItem } from '@/api/items'
+import { useImageUpload } from '@/hooks/useImageUpload'
+import { useToast } from '@/hooks/useToast'
 import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' 
 import { useLoaderData } from 'react-router-dom'
 export default function CreateItem() {

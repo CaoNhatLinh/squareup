@@ -1,15 +1,3 @@
-import React from 'react';
-
-/**
- * UI utility components and functions
- */
-
-/**
- * StatusBadge component for displaying order status
- * @param {object} props - Component props
- * @param {string} props.status - Status to display
- * @returns {JSX.Element} StatusBadge component
- */
 export const StatusBadge = ({ status }) => {
   let classes = "";
   if (status === "paid" || status === "pending") {

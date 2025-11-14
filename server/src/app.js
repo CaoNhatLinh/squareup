@@ -31,6 +31,9 @@ const restaurantsRouter = require('./routes/restaurants');
 const uploadRouter = require('./routes/upload');
 const ordersRouter = require('./routes/orders');
 const adminRouter = require('./routes/admin');
+const guestUsersRouter = require('./routes/guestUsers');
+const reviewsRouter = require('./routes/reviews');
+const transactionsRouter = require('./routes/transactions');
 
 app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/auth', authRouter);
@@ -38,6 +41,9 @@ app.use('/api/users', usersRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/guest-users', guestUsersRouter);
+app.use('/api/reviews', reviewsRouter);
+app.use('/api/transactions', transactionsRouter);
 
 // Debug endpoint to check current user's token claims (dev only)
 app.get('/api/debug/token', async (req, res) => {

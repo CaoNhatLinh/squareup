@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { useRestaurant } from '../../hooks/useRestaurant';
-import { updateBusinessLocation } from '../../api/restaurants';
+import { useAuth } from '@/hooks/useAuth';
+import { useRestaurant } from '@/hooks/useRestaurant';
+import { updateBusinessLocation } from '@/api/restaurants';
 
 export default function BusinessLocation() {
   const { user } = useAuth();

@@ -9,7 +9,6 @@ import {
   HiClock,
   HiCurrencyDollar,
   HiCheckCircle,
-  HiOutlineInformationCircle,
 } from "react-icons/hi";
 import { useOrderNotification } from "@/hooks/useOrderNotification";
 import { getNextStatus, getStatusButtonText } from "@/utils/statusUtils";
@@ -23,6 +22,9 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('out_of_stock');
+  const [cancelNote, setCancelNote] = useState('');
   const { markOrderAsViewed } = useOrderNotification();
 
   useEffect(() => {
@@ -51,12 +53,8 @@ export default function OrderDetails() {
       return;
     }
 
-    if (
-      newStatus === "cancelled" &&
-      !window.confirm(
-        "Are you sure you want to CANCEL this order? This action cannot be undone."
-      )
-    ) {
+    if (newStatus === "cancelled") {
+      setShowCancelDialog(true);
       return;
     }
 
@@ -67,6 +65,20 @@ export default function OrderDetails() {
     } catch (err) {
       console.error("Error updating order status:", err);
       alert("Failed to update order status. Please try again.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+  
+  const handleCancelOrder = async () => {
+    try {
+      setUpdating(true);
+      await updateOrderStatus(restaurantId, orderId, 'cancelled', cancelReason, cancelNote);
+      setOrder((prev) => ({ ...prev, status: 'cancelled', cancelReason, cancelNote }));
+      setShowCancelDialog(false);
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      alert("Failed to cancel order. Please try again.");
     } finally {
       setUpdating(false);
     }
@@ -490,6 +502,66 @@ export default function OrderDetails() {
           </div>
         </div>
       </div>
+      {showCancelDialog && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Cancel Order</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              This action cannot be undone. Please provide a reason for cancellation.
+            </p>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Cancellation Reason *
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="out_of_stock">Out of Stock</option>
+                  <option value="restaurant_too_busy">Restaurant Too Busy</option>
+                  <option value="customer_request">Customer Request</option>
+                  <option value="payment_issue">Payment Issue</option>
+                  <option value="duplicate_order">Duplicate Order</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Additional Note (Optional)
+                </label>
+                <textarea
+                  value={cancelNote}
+                  onChange={(e) => setCancelNote(e.target.value)}
+                  placeholder="Add any additional information for the customer..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelDialog(false)}
+                disabled={updating}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors disabled:opacity-50"
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={updating}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updating ? 'Cancelling...' : 'Cancel Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

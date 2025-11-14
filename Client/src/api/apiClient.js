@@ -17,6 +17,8 @@ instance.interceptors.response.use(
 );
 
 let authReadyPromise = null;
+// waitForAuthReady is kept for potential future use with guest orders
+// eslint-disable-next-line no-unused-vars
 function waitForAuthReady() {
   if (authReadyPromise) return authReadyPromise;
   
@@ -41,18 +43,17 @@ function waitForAuthReady() {
 }
 
 async function buildAuthHeaders(contentType, idTokenOverride) {
-  let token = idTokenOverride
-  if (!token) {
-    try {
-      await waitForAuthReady();
-      token = auth.currentUser ? await auth.currentUser.getIdToken() : null
-    } catch {
-      token = null
-    }
-  }
   const headers = {}
   if (contentType) headers['Content-Type'] = contentType
-  if (token) headers['Authorization'] = 'Bearer ' + token
+  
+  // If idTokenOverride is explicitly provided, use it (for guest orders)
+  if (idTokenOverride) {
+    headers['Authorization'] = 'Bearer ' + idTokenOverride
+    return headers
+  }
+  
+  // Otherwise, rely on session cookies (for authenticated admin/restaurant routes)
+  // withCredentials: true will send session cookies automatically
   return headers
 }
 

@@ -1,6 +1,3 @@
-/**
- * @param {string} status - Order status
- */
 export const getStatusClasses = (status) => {
   if (status === "paid" || status === "pending")
     return "bg-yellow-100 text-yellow-800 border border-yellow-300 font-semibold";
@@ -17,11 +14,6 @@ export const getStatusClasses = (status) => {
   return "bg-gray-100 text-gray-800";
 };
 
-/**
- * Get the next status in the order flow
- * @param {string} currentStatus - Current order status
- * @returns {string|null} Next status or null if no next status
- */
 export const getNextStatus = (currentStatus) => {
   const statusFlow = {
     paid: "accepted",
@@ -33,11 +25,6 @@ export const getNextStatus = (currentStatus) => {
   return statusFlow[currentStatus] || null;
 };
 
-/**
- * Get button text for status change action
- * @param {string} currentStatus - Current order status
- * @returns {string} Button text
- */
 export const getStatusButtonText = (currentStatus) => {
   const textMap = {
     paid: "Accept Order",
@@ -49,11 +36,6 @@ export const getStatusButtonText = (currentStatus) => {
   return textMap[currentStatus] || "Update Status";
 };
 
-/**
- * Get status configuration for display
- * @param {string} status - Status to get config for
- * @returns {object} Status configuration with color, text, etc.
- */
 export const getStatusInfo = (status) => {
   const configs = {
     paid: { color: "yellow", text: "Paid", bgClass: "bg-yellow-100", textClass: "text-yellow-800" },

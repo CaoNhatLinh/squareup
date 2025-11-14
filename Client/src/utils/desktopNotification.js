@@ -3,16 +3,13 @@ export const requestNotificationPermission = async () => {
     console.warn('This browser does not support desktop notifications');
     return false;
   }
-
   if (Notification.permission === 'granted') {
     return true;
   }
-
   if (Notification.permission !== 'denied') {
     const permission = await Notification.requestPermission();
     return permission === 'granted';
   }
-
   return false;
 };
 
@@ -38,18 +35,15 @@ export const showDesktopNotification = (order) => {
       url: `/${order.restaurantId}/orders/${order.id}`,
     },
   };
-
   try {
     const notification = new Notification('🔔 New Order Received!', options);
 
     notification.onclick = (event) => {
       event.preventDefault();
       window.focus();
-      
       if (order.id) {
         window.location.href = `/${order.restaurantId}/orders/${order.id}`;
       }
-      
       notification.close();
     };
 
@@ -63,7 +57,6 @@ export const showDesktopNotification = (order) => {
     return null;
   }
 };
-
 export const getNotificationPermissionStatus = () => {
   if (!('Notification' in window)) {
     return 'unsupported';

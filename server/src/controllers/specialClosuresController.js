@@ -17,7 +17,6 @@ async function fetchSpecialClosures(req, res) {
                 }));
             }
         }
-        
         res.json(specialClosures);
     } catch (error) {
         console.error('Error fetching special closures:', error);

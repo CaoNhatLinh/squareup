@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { updateBusinessHours } from "@/api/restaurants";
+import {DAYS_OF_WEEK} from "@/constants/scheduleConstants";
 import {
   HiPlus,
   HiTrash,
@@ -12,15 +13,6 @@ import {
   HiOutlineClock,
 } from "react-icons/hi";
 
-const DAYS_OF_WEEK = [
-  { key: "monday", label: "Monday" },
-  { key: "tuesday", label: "Tuesday" },
-  { key: "wednesday", label: "Wednesday" },
-  { key: "thursday", label: "Thursday" },
-  { key: "friday", label: "Friday" },
-  { key: "saturday", label: "Saturday" },
-  { key: "sunday", label: "Sunday" },
-];
 
 export default function BusinessHours() {
   const { restaurantId } = useParams();

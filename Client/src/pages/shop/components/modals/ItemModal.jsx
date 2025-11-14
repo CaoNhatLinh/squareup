@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { MdClose } from "react-icons/md";
 
 export default function ItemModal({
@@ -101,7 +101,6 @@ export default function ItemModal({
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
       <div className="bg-white w-full h-full grid grid-cols-1 md:grid-cols-12">
-        {/* Sidebar */}
         <div className="md:col-span-4 bg-gray-100 flex flex-col">
           <div className="relativerounded-lg overflow-hidden">
             {item.image ? (
@@ -141,7 +140,6 @@ export default function ItemModal({
         </div>
 
         <div className="md:col-span-8 flex flex-col bg-white relative max-h-screen">
-          {/* Header */}
           <div className="absolute top-4 right-4 z-10">
             <button
               onClick={onClose}
@@ -151,7 +149,6 @@ export default function ItemModal({
             </button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 pb-24">
             <div className="w-full max-w-[560px] mx-auto space-y-6">
               {hasModifiers && (

@@ -5,9 +5,20 @@ const { calculateItemDiscounts } = require("../utils/itemDiscountCalculator");
 async function getUserRestaurants(req, res) {
   const { uid } = req.user;
   try {
+    const userRecord = await admin.auth().getUser(uid);
+    const customClaims = userRecord.customClaims || {};
+    
+    if (customClaims.role === 'guest') {
+      return res.status(403).json({ 
+        error: 'Guest users cannot manage restaurants',
+        isGuest: true 
+      });
+    }
+    
     const userRestaurantMetasSnapshot = await db
       .ref(`users/${uid}/restaurants`)
       .get();
+    
     if (!userRestaurantMetasSnapshot.exists()) {
       return res.json([]);
     }
@@ -39,6 +50,7 @@ async function getUserRestaurants(req, res) {
     const restaurants = results.filter((restaurant) => restaurant !== null);
     return res.json(restaurants);
   } catch (err) {
+    console.error('getUserRestaurants - Error:', err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -52,6 +64,17 @@ async function createRestaurant(req, res) {
   }
 
   try {
+    // Check if user is a guest
+    const userRecord = await admin.auth().getUser(uid);
+    const customClaims = userRecord.customClaims || {};
+    
+    if (customClaims.role === 'guest') {
+      return res.status(403).json({ 
+        error: 'Guest users cannot create restaurants. Please sign up with a regular account.',
+        isGuest: true 
+      });
+    }
+    
     const restaurantId = db.ref("restaurants").push().key;
     const restaurantData = {
       id: restaurantId,

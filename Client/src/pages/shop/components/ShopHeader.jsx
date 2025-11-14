@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useShop } from "@/context/ShopContext.jsx";
 import { useNavigate } from "react-router-dom";
-
-export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDiscounts, isRestaurantActive = true }) {
+export default function ShopHeader({ 
+  onCartClick, 
+  onPromotionsClick, 
+  hasActiveDiscounts, 
+  isRestaurantActive = true,
+  restaurantId,
+}) {
   const { getTotalItemsCount } = useShop();
   const navigate = useNavigate();
   const totalItems = getTotalItemsCount();
   const [showTrackOrder, setShowTrackOrder] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [orderId, setOrderId] = useState("");
 
   const handleTrackOrder = () => {
@@ -16,7 +22,6 @@ export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDi
       setOrderId("");
     }
   };
-
   return (
     <>
       <div className="text-white bg-black border-b border-gray-200 sticky top-0 z-30">
@@ -36,26 +41,70 @@ export default function ShopHeader({ onCartClick, onPromotionsClick, hasActiveDi
                 </svg>
               </div>
               <div className="flex-1 flex justify-end gap-3 pr-4">
-                <button 
-                  onClick={() => setShowTrackOrder(true)}
-                  disabled={!isRestaurantActive}
-                  className={`border-2 rounded-xl px-4 py-2 flex items-center gap-2 transition-colors ${
-                    isRestaurantActive 
-                      ? 'bg-white text-black border-black hover:bg-gray-50' 
-                      : 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <span className="font-semibold text-sm">Track Order</span>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    disabled={!isRestaurantActive}
+                    className={`border-2 rounded-xl px-4 py-2 flex items-center gap-2 transition-colors ${
+                      isRestaurantActive 
+                        ? 'bg-white text-black border-black hover:bg-gray-50' 
+                        : 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="font-semibold text-sm">Profile</span>
+                  </button>
+                  {showProfileMenu && isRestaurantActive && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-30"
+                        onClick={() => setShowProfileMenu(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-40 overflow-hidden">
+                        <div className="py-2">
+                          <button 
+                            onClick={() => {
+                              navigate(`/shop/${restaurantId}/order-history`);
+                              setShowProfileMenu(false);
+                            }}
+                            className="w-full px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors text-left"
+                          >
+                            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <div>
+                              <p className="font-semibold text-gray-900">Order History</p>
+                              <p className="text-xs text-gray-500">View all your orders</p>
+                            </div>
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setShowTrackOrder(true);
+                              setShowProfileMenu(false);
+                            }}
+                            className="w-full px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors text-left"
+                          >
+                            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <div>
+                              <p className="font-semibold text-gray-900">Track Order</p>
+                              <p className="text-xs text-gray-500">Track by order ID</p>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
 
-                {/* Promotions Button */}
                 <button 
                   onClick={onPromotionsClick}
                   disabled={!isRestaurantActive}
-                  className={`rounded-xl px-4 py-2 flex items-center gap-2 shadow-md transition-colors ${
+                  className={`relative rounded-xl px-4 py-2 flex items-center gap-2 shadow-md transition-colors ${
                     isRestaurantActive 
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600' 
                       : 'bg-gray-400 text-gray-600 cursor-not-allowed'

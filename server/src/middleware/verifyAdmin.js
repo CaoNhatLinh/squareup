@@ -30,6 +30,15 @@ async function verifyAdmin(req, res, next) {
       return res.status(401).json({ error: 'No valid session or idToken provided' });
     }
 
+    // Block guest users from admin access
+    if (decodedClaims.role === 'guest') {
+      return res.status(403).json({ 
+        error: 'Guest users cannot access admin routes',
+        isAdmin: false,
+        isGuest: true 
+      });
+    }
+
     if (!decodedClaims.admin) {
       return res.status(403).json({ 
         error: 'Access denied. Admin privileges required.',

@@ -18,14 +18,25 @@ export function AuthProvider({ children }) {
             isAdmin: sessionData.isAdmin || false,
             role: sessionData.role || 'user'
           });
-        } catch {
-          // Silent fail for session verification - user is still authenticated via Firebase
-          // This is normal on first load or after token refresh
-          setUser({
-            ...firebaseUser,
-            isAdmin: false,
-            role: 'user'
-          });
+        } catch (error) {
+          console.error('Session verification failed:', error);
+          try {
+            const idToken = await firebaseUser.getIdToken(true);
+            await authApi.sessionLogin(idToken);
+            const sessionData = await authApi.verifySession();
+            setUser({
+              ...firebaseUser,
+              isAdmin: sessionData.isAdmin || false,
+              role: sessionData.role || 'user'
+            });
+          } catch (retryError) {
+            console.error('Session retry failed:', retryError);
+            setUser({
+              ...firebaseUser,
+              isAdmin: false,
+              role: 'user'
+            });
+          }
         }
       } else {
         setUser(null);

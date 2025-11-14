@@ -62,7 +62,7 @@ export default function SignIn() {
         console.warn('sessionLogin failed', e);
       }
       
-      navigate('/restaurants'); // Changed from /dashboard
+      navigate('/restaurants'); 
     } catch (err) {
       console.error('Google sign in error:', err);
       alert(err.message);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchRestaurantForShop } from "@/api/restaurants";
 import { fetchActiveDiscounts } from "@/api/discounts";
@@ -178,8 +178,9 @@ function ShopPageContent() {
       <ShopHeader 
         onCartClick={() => setIsCartOpen(true)}
         onPromotionsClick={() => setIsPromotionsOpen(true)}
-        hasActiveDiscounts={Object.keys(activeDiscounts).length > 0}
+        hasActiveDiscounts={Object.keys(activeDiscounts).length}
         isRestaurantActive={restaurant.active}
+        restaurantId={restaurantId}
       />
       
       {restaurant.active === false && (

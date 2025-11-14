@@ -3,7 +3,6 @@ import { HiOutlineArrowUturnLeft, HiXCircle } from "react-icons/hi2";
 export default function CheckoutCancelled() {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-200">

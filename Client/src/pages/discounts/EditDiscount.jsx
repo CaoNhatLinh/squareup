@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useToast } from '../../hooks/useToast';
-import { fetchDiscount, updateDiscount } from '../../api/discounts';
-import { fetchCategories } from '../../api/categories';
-import { fetchItems } from '../../api/items';
+import { useToast } from '@/hooks/useToast';
+import { fetchDiscount, updateDiscount } from '@/api/discounts';
+import { fetchCategories } from '@/api/categories';
+import { fetchItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
-import { DAYS_OF_WEEK } from '../../utils/scheduleConstants';
+import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function EditDiscount() {
   const navigate = useNavigate();
   const { discountId, restaurantId } = useParams();

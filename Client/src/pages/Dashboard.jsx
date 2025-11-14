@@ -7,11 +7,9 @@ import {
   HiOutlineClipboard,
   HiOutlineCog
 } from 'react-icons/hi2';
-
 export default function Dashboard() {
   const { restaurant } = useLoaderData();
   const shopUrl = `/shop/${restaurant?.id || 'unknown'}`;
-
   const copyToClipboard = () => {
     const urlToCopy = `${window.location.origin}/shop/${restaurant?.id}`;
     navigator.clipboard.writeText(urlToCopy);
@@ -30,8 +28,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:shadow-lg transition-all duration-300">
@@ -68,7 +64,6 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
-
               {restaurant?.id && (
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <p className="text-sm text-slate-600 mb-2">Your shop URL:</p>
@@ -98,7 +93,6 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-slate-900">Manage Items</p>
               </div>
             </Link>
-
             <Link
               to={`/${restaurant?.id}/orders`}
               className="p-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl border border-green-200 transition-all duration-200 group"
@@ -110,7 +104,6 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-slate-900">View Orders</p>
               </div>
             </Link>
-
             <Link
               to={`/${restaurant?.id}/settings/restaurant`}
               className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl border border-purple-200 transition-all duration-200 group"

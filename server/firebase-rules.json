@@ -35,6 +35,7 @@
       }
     },
     "users": {
+      ".indexOn": ["guestUuid", "role", "email"],
       "$userId": {
         ".read": true,
         ".write": true

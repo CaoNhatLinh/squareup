@@ -9,8 +9,6 @@ import {
   HiOutlineSearch,
   HiOutlineCog,
   HiOutlineShieldCheck,
-  HiOutlineShieldExclamation,
-  HiOutlineUserGroup,
   HiOutlineChartBar,
   HiOutlineCalendar,
   HiOutlineMail,
@@ -131,13 +129,6 @@ export default function AdminDashboard() {
       title: 'Admin Users',
       value: users.filter(u => u.isAdmin).length,
       icon: HiOutlineShieldCheck,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      title: 'Active Users',
-      value: users.filter(u => !u.disabled).length,
-      icon: HiOutlineUserGroup,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50'
     }
@@ -157,7 +148,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl shadow-lg">
@@ -169,8 +159,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className={`${stat.bgColor} p-6 rounded-2xl shadow-sm border border-white/50 hover:shadow-md transition-all duration-300`}>
@@ -186,8 +174,6 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
-
-        {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
             <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
@@ -215,8 +201,6 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
-
-          {/* Search */}
           <div className="relative">
             <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
@@ -232,8 +216,6 @@ export default function AdminDashboard() {
             />
           </div>
         </div>
-
-        {/* Content */}
         {activeTab === 'restaurants' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRestaurants.length === 0 ? (
@@ -358,6 +340,11 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-1">
+                        {user.role === 'guest' && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                            Guest
+                          </span>
+                        )}
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.isAdmin
                             ? 'bg-red-100 text-red-800'

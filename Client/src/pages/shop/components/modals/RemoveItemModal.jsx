@@ -1,18 +1,13 @@
-import React from "react";
-
 export default function RemoveItemModal({ isOpen, onClose, onConfirm }) {
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 z-50 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
-
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
           {/* Close button */}
@@ -25,8 +20,6 @@ export default function RemoveItemModal({ isOpen, onClose, onConfirm }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-
-          {/* Content */}
           <div className="p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Remove Item?
@@ -35,7 +28,6 @@ export default function RemoveItemModal({ isOpen, onClose, onConfirm }) {
               Are you sure you want to remove this item from your cart?
             </p>
 
-            {/* Buttons */}
             <div className="space-y-3">
               <button
                 onClick={onClose}

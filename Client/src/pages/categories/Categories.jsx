@@ -130,7 +130,6 @@ export default function Categories() {
       <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
           <HiOutlineSquares2X2 className="w-10 h-10 text-red-600" />{" "}
-          {/* Icon mới */}
           <h1 className="text-4xl font-extrabold text-gray-900">
             Menu Categories
           </h1>

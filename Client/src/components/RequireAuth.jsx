@@ -1,5 +1,4 @@
-import React from 'react'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '@/context/AuthContext.jsx'
 import { Navigate, useLocation } from 'react-router-dom'
 
 export default function RequireAuth({ children }) {
@@ -8,6 +7,10 @@ export default function RequireAuth({ children }) {
 
   if (loading) return <div className="p-4">Loading...</div>
   if (!user) return <Navigate to="/signin" state={{ from: location }} replace />
+  
+  if (user.role === 'guest') {
+    return <Navigate to="/" replace />
+  }
 
   return children
 }

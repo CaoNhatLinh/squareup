@@ -3,14 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
-  const { user,loading } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
+  
   useEffect(() => {
-    if (user) {
-      navigate('/restaurants')}
+    if (user && user.role !== 'guest') {
+      navigate('/restaurants')
+    }
   }, [user, navigate])
 
-  if (user) {
+  if (user && user.role !== 'guest') {
     return null
   }
   if (loading) {

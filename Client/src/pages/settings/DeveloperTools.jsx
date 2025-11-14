@@ -44,24 +44,35 @@ export default function DeveloperTools() {
         amount: 25.5,
         totalAmount: 25.5,
         currency: "USD",
+        guestUuid: null, // For testing guest orders
         items: [
           {
             itemId: "test-item-001",
+            groupKey: "test-item-001",
             name: "Developer Test Meal",
+            image: "https://via.placeholder.com/150",
             price: 20.0,
             quantity: 1,
             totalPrice: 20.0,
             discount: 0,
-            image: "https://via.placeholder.com/150",
             selectedOptions: [{ name: "Extra Sauce", price: 1.0 }],
             specialInstruction: "Please ignore this order. Development Test.",
           },
         ],
+        discount: {
+          totalDiscount: 0,
+          appliedDiscounts: [],
+          discountBreakdown: [],
+          itemDiscounts: {}
+        },
         subtotal: 21.0,
         tax: 4.5,
         total: 25.5,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        statusHistory: {
+          paid: Date.now()
+        }
       };
 
       const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);

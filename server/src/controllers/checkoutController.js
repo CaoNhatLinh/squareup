@@ -1,12 +1,12 @@
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const { calculateCartDiscounts } = require('../utils/discountCalculator');
+const { calculateCartDiscounts } = require("../utils/discountCalculator");
 
 const db = admin.database();
 
 const createCheckoutSession = async (req, res) => {
   try {
-    const { restaurantId, items, returnUrl } = req.body;
+    const { restaurantId, items, returnUrl, guestUuid } = req.body;
 
     if (!restaurantId || !items || items.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -32,7 +32,9 @@ const createCheckoutSession = async (req, res) => {
         description = item.selectedOptions.map((opt) => opt.name).join(", ");
       }
       if (item.specialInstruction) {
-        description += description ? ` | Note: ${item.specialInstruction}` : `Note: ${item.specialInstruction}`;
+        description += description
+          ? ` | Note: ${item.specialInstruction}`
+          : `Note: ${item.specialInstruction}`;
       }
 
       const itemDiscount = discountResult.itemDiscounts[item.groupKey];
@@ -41,7 +43,9 @@ const createCheckoutSession = async (req, res) => {
       if (itemDiscount && itemDiscount.discountAmount > 0) {
         finalPrice = item.price - itemDiscount.discountAmount;
         const discountInfo = `Discount: ${itemDiscount.discountPercentage}% OFF`;
-        description = description ? `${description} | ${discountInfo}` : discountInfo;
+        description = description
+          ? `${description} | ${discountInfo}`
+          : discountInfo;
       }
 
       return {
@@ -58,7 +62,9 @@ const createCheckoutSession = async (req, res) => {
       };
     });
 
-    const pendingOrderId = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const pendingOrderId = `pending_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
     const pendingOrderData = {
       restaurantId,
       restaurantName: restaurant.name,
@@ -68,16 +74,17 @@ const createCheckoutSession = async (req, res) => {
         totalDiscount,
         appliedDiscounts: discountResult.appliedDiscounts,
         discountBreakdown: discountResult.discountBreakdown,
-        itemDiscounts: discountResult.itemDiscounts
+        itemDiscounts: discountResult.itemDiscounts,
       },
       totalAmount,
       status: "pending",
       createdAt: Date.now(),
+      guestUuid: guestUuid || null,
     };
 
     await db.ref(`pendingOrders/${pendingOrderId}`).set(pendingOrderData);
     const successUrl = returnUrl
-      ? returnUrl.replace('checkout-return', 'success')
+      ? returnUrl.replace("checkout-return", "success")
       : `${req.headers.origin}/shop/${restaurantId}/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${req.headers.origin}/shop/${restaurantId}/cancelled`;
     const session = await stripe.checkout.sessions.create({
@@ -86,9 +93,19 @@ const createCheckoutSession = async (req, res) => {
       mode: "payment",
       success_url: successUrl,
       cancel_url: cancelUrl,
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes from now
       metadata: {
         pendingOrderId,
         restaurantId,
+        restaurantName: restaurant.name,
+        customerEmail: guestUuid ? "guest" : "user",
+      },
+      payment_intent_data: {
+        metadata: {
+          restaurantId,
+          restaurantName: restaurant.name,
+          pendingOrderId: pendingOrderId,
+        },
       },
     });
     res.status(200).json({
@@ -134,7 +151,23 @@ const handleWebhook = async (req, res) => {
             return;
           }
 
-          const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
+          const orderId = db
+            .ref(`restaurants/${restaurantId}/orders`)
+            .push().key;
+          try {
+            await stripe.paymentIntents.update(session.payment_intent, {
+              metadata: {
+                restaurantId,
+                restaurantName: pendingOrder.restaurantName,
+                orderId: orderId,
+              },
+            });
+          } catch (metadataError) {
+            console.error(
+              "Error updating payment intent metadata:",
+              metadataError
+            );
+          }
 
           const now = Date.now();
           const orderData = {
@@ -150,8 +183,9 @@ const handleWebhook = async (req, res) => {
             paymentStatus: session.payment_status,
             customerEmail: session.customer_details?.email || null,
             customerName: session.customer_details?.name || null,
+            guestUuid: pendingOrder.guestUuid || null,
 
-            items: pendingOrder.items.map(item => ({
+            items: pendingOrder.items.map((item) => ({
               itemId: item.itemId || "",
               groupKey: item.groupKey || "",
               name: item.name || "Unknown Item",
@@ -172,14 +206,31 @@ const handleWebhook = async (req, res) => {
             updatedAt: now,
             statusHistory: {
               pending: pendingOrder.createdAt || now,
-              paid: now
-            }
+              paid: now,
+            },
           };
-          await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
+          await db
+            .ref(`restaurants/${restaurantId}/orders/${orderId}`)
+            .set(orderData);
           await db.ref(`pendingOrders/${pendingOrderId}`).remove();
         }
       } catch (error) {
         console.error("❌ Error saving order from webhook:", error);
+      }
+      break;
+
+    case "checkout.session.expired":
+      const expiredSession = event.data.object;
+      try {
+        const pendingOrderId = expiredSession.metadata?.pendingOrderId;
+        if (pendingOrderId) {
+          console.log(
+            `🗑️ Cleaning up expired pending order: ${pendingOrderId}`
+          );
+          await db.ref(`pendingOrders/${pendingOrderId}`).remove();
+        }
+      } catch (error) {
+        console.error("❌ Error cleaning up expired session:", error);
       }
       break;
 
@@ -224,7 +275,7 @@ const getOrderBySession = async (req, res) => {
       return res.status(404).json({
         error: "Order not found",
         processing: true,
-        message: "Payment is being processed. Please wait..."
+        message: "Payment is being processed. Please wait...",
       });
     }
     const orderData = Object.values(orders)[0];
@@ -287,7 +338,9 @@ const getAllOrdersAdmin = async (req, res) => {
     }
 
     const allOrders = [];
-    for (const [restaurantId, restaurantData] of Object.entries(restaurantsData)) {
+    for (const [restaurantId, restaurantData] of Object.entries(
+      restaurantsData
+    )) {
       if (restaurantData.orders) {
         const orders = Object.values(restaurantData.orders);
         allOrders.push(...orders);
@@ -326,7 +379,9 @@ const getOrderById = async (req, res) => {
     }
 
     let order = null;
-    for (const [restaurantId, restaurantData] of Object.entries(restaurantsData)) {
+    for (const [restaurantId, restaurantData] of Object.entries(
+      restaurantsData
+    )) {
       if (restaurantData.orders && restaurantData.orders[orderId]) {
         order = restaurantData.orders[orderId];
         break;
@@ -373,38 +428,116 @@ const getSessionStatus = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 const updateOrderStatus = async (req, res) => {
   try {
     const { restaurantId, orderId } = req.params;
-    const { status } = req.body;
+    const { status, cancelReason, cancelNote } = req.body;
 
     if (!restaurantId || !orderId) {
-      return res.status(400).json({ error: "Restaurant ID and Order ID are required" });
+      return res
+        .status(400)
+        .json({ error: "Restaurant ID and Order ID are required" });
     }
 
     if (!status) {
       return res.status(400).json({ error: "Status is required" });
     }
 
-    const validStatuses = ['pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled'];
+    const validStatuses = [
+      "pending",
+      "accepted",
+      "preparing",
+      "ready",
+      "completed",
+      "cancelled",
+    ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
 
     const orderRef = db.ref(`restaurants/${restaurantId}/orders/${orderId}`);
-    const orderSnapshot = await orderRef.once('value');
+    const orderSnapshot = await orderRef.once("value");
 
     if (!orderSnapshot.exists()) {
       return res.status(404).json({ error: "Order not found" });
     }
-    await orderRef.update({
-      status,
-      updatedAt: Date.now(),
-      [`statusHistory/${status}`]: Date.now()
-    });
 
-    const updatedOrder = await orderRef.once('value');
+    const order = orderSnapshot.val();
+    let refundSuccess = false;
+    let refundId = null;
+    let refundError = null;
+    if (status === "cancelled" && order.sessionId) {
+      console.log(`Processing auto-refund for cancelled order ${orderId}`);
+      try {
+        const sessions = await stripe.checkout.sessions.list({ limit: 100 });
+        const session = sessions.data.find((s) => s.id === order.sessionId);
+        if (session && session.payment_intent) {
+          const paymentIntentId =
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent.id;
+          const paymentIntent = await stripe.paymentIntents.retrieve(
+            paymentIntentId,
+            {
+              expand: ["latest_charge"], 
+            }
+          );
+
+          const latestCharge = paymentIntent.latest_charge;
+          if (
+            paymentIntent.status === "succeeded" &&
+            latestCharge &&
+            latestCharge.id &&
+            !latestCharge.refunded
+          ) {
+            const refund = await stripe.refunds.create({
+              charge: latestCharge.id,
+              reason: "requested_by_customer",
+            });
+
+            
+            refundSuccess = true;
+            refundId = refund.id;
+          } else {
+            
+          }
+        } else {
+          console.log(
+            `Refund skipped: Session or Payment Intent ID not found for order ${orderId}`
+          );
+        }
+      } catch (err) {
+        console.error("Error processing auto-refund:", err.message);
+        refundError = err.message;
+      }
+      const updateData = {
+        status,
+        updatedAt: Date.now(),
+        [`statusHistory/${status}`]: Date.now(),
+        refunded: refundSuccess || order.refunded || false, // Giữ lại trạng thái refunded cũ nếu đã có
+        refundId: refundId || order.refundId || null,
+        refundedAt: refundSuccess ? Date.now() : order.refundedAt || null,
+        refundError: refundError,
+      };
+
+      if (cancelReason) updateData.cancelReason = cancelReason;
+      if (cancelNote) updateData.cancelNote = cancelNote;
+
+      await orderRef.update(updateData);
+    } else {
+      const updateData = {
+        status,
+        updatedAt: Date.now(),
+        [`statusHistory/${status}`]: Date.now(),
+      };
+      if (status === "cancelled") {
+        if (cancelReason) updateData.cancelReason = cancelReason;
+        if (cancelNote) updateData.cancelNote = cancelNote;
+      }
+      await orderRef.update(updateData);
+    }
+
+    const updatedOrder = await orderRef.once("value");
 
     res.status(200).json({
       success: true,
@@ -424,7 +557,7 @@ const getPublicOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    const restaurantsSnapshot = await db.ref('restaurants').once('value');
+    const restaurantsSnapshot = await db.ref("restaurants").once("value");
     const restaurants = restaurantsSnapshot.val();
 
     if (!restaurants) {
@@ -450,7 +583,7 @@ const getPublicOrderStatus = async (req, res) => {
       id: orderId,
       status: foundOrder.status,
       amount: foundOrder.amount,
-      currency: foundOrder.currency || 'USD',
+      currency: foundOrder.currency || "USD",
       items: foundOrder.items || [],
       restaurantId: foundRestaurantId,
       restaurantName: foundOrder.restaurantName,
@@ -469,6 +602,44 @@ const getPublicOrderStatus = async (req, res) => {
   }
 };
 
+// Cleanup old pending orders (older than 24 hours)
+const cleanupOldPendingOrders = async (req, res) => {
+  try {
+    const now = Date.now();
+    const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+
+    const pendingOrdersSnapshot = await db.ref("pendingOrders").once("value");
+    const pendingOrders = pendingOrdersSnapshot.val();
+
+    if (!pendingOrders) {
+      return res.status(200).json({
+        success: true,
+        message: "No pending orders to clean",
+        cleaned: 0,
+      });
+    }
+
+    const toDelete = [];
+    for (const [orderId, order] of Object.entries(pendingOrders)) {
+      if (order.createdAt < twentyFourHoursAgo) {
+        toDelete.push(orderId);
+        await db.ref(`pendingOrders/${orderId}`).remove();
+      }
+    }
+
+    console.log(`🗑️ Cleaned up ${toDelete.length} old pending orders`);
+
+    res.status(200).json({
+      success: true,
+      message: `Cleaned up ${toDelete.length} old pending orders`,
+      cleaned: toDelete.length,
+    });
+  } catch (error) {
+    console.error("Error cleaning up pending orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createCheckoutSession,
   handleWebhook,
@@ -479,4 +650,5 @@ module.exports = {
   getSessionStatus,
   updateOrderStatus,
   getPublicOrderStatus,
+  cleanupOldPendingOrders,
 };

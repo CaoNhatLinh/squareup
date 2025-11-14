@@ -4,7 +4,6 @@ import { getOrderBySession } from "@/api/orders";
 import { useShop } from "@/context/ShopContext.jsx";
 import { useToast } from "@/hooks/useToast";
 import { HiCheckCircle, HiXCircle, HiOutlineDocumentDuplicate, HiOutlineShoppingBag, HiOutlineMagnifyingGlass } from "react-icons/hi2";
-
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -30,12 +29,10 @@ export default function CheckoutSuccess() {
     const fetchOrder = async () => {
       try {
         const response = await getOrderBySession(sessionId, restaurantId);
-        
         if (response.success && response.order) {
           setOrder(response.order);
           clearCart();
           localStorage.setItem('lastOrderId', response.order.id);
-
           try {
             const lastShown = localStorage.getItem('checkoutSuccessToastOrderId');
             if (lastShown !== response.order.id) {
@@ -66,7 +63,6 @@ export default function CheckoutSuccess() {
     fetchOrder();
   }, [searchParams, clearCart, retryCount, restaurantId, success, showError]);
   const trackUrl = `/track-order/${displayOrderId}`;
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -116,10 +112,8 @@ export default function CheckoutSuccess() {
         <p className="text-gray-600 mb-8 text-base">
           Your payment has been processed successfully. Your order is now being prepared.
         </p>
-
         {order && (
           <div className="bg-gray-50 rounded-lg p-5 mb-8 text-left border border-gray-200">
-            {/* Order ID & Copy Button - ĐÃ SỬA */}
             <div className="flex justify-between items-center mb-4 border-b border-gray-300 pb-3">
               <div>
                 <span className="text-gray-600 font-semibold text-xs uppercase block mb-1">Order ID</span>
@@ -140,7 +134,6 @@ export default function CheckoutSuccess() {
               </button>
             </div>
             
-            {/* Order Details */}
             <div className="space-y-2">
                 <div className="flex justify-between items-center">
                     <span className="text-gray-600 font-medium">Total Amount:</span>
