@@ -6,6 +6,7 @@ import {
   HiTag,
   HiOutlinePlusCircle,
 } from "react-icons/hi2";
+import PageHeader from '@/components/common/PageHeader';
 
 import { useToast } from "@/hooks/useToast";
 
@@ -127,28 +128,15 @@ export default function ItemLibrary() {
   
   return (
     <div className="p-8 pb-24 bg-gray-50 min-h-screen">
-      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <HiOutlineTag className="w-10 h-10 text-red-600" />
-          <h1 className="text-4xl font-extrabold text-gray-900">
-            Item Library
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search items..."
-            className="w-72"
-          />
-          <Link
-            to={`/${restaurantId}/items/new`}
-            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <HiPlus className="w-5 h-5" /> Create New Item
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Item Library"
+        Icon={HiOutlineTag}
+        showBack={false}
+        SearchBarComponent={SearchBar}
+        searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search items...', className: 'w-72' }}
+        actionLabel={<><HiPlus className="w-5 h-5" /> Create New Item</>}
+        actionLink={`/${restaurantId}/items/new`}
+      />
 
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 ">
         <table className="w-full min-w-full divide-y divide-gray-200">

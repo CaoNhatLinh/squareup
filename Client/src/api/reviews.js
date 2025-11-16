@@ -6,7 +6,7 @@ import * as apiClient from './apiClient';
  * @param {object} reviewData - { rating, feedback, guestUuid, itemReviews: [{ itemId, rating, feedback }] }
  */
 export const addOrderReview = async (orderId, reviewData) => {
-  const response = await apiClient.post(`/api/reviews/${orderId}/review`, reviewData);
+  const response = await apiClient.post(`/orders/${orderId}/review`, reviewData);
   return response.data;
 };
 
@@ -14,7 +14,7 @@ export const addOrderReview = async (orderId, reviewData) => {
  * Get reviews for a specific order
  */
 export const getOrderReviews = async (orderId) => {
-  const response = await apiClient.get(`/api/reviews/${orderId}/reviews`);
+  const response = await apiClient.get(`/orders/${orderId}/reviews`);
   return response.data;
 };
 
@@ -22,7 +22,7 @@ export const getOrderReviews = async (orderId) => {
  * Get all reviews for a restaurant
  */
 export const getRestaurantReviews = async (restaurantId) => {
-  const response = await apiClient.get(`/api/reviews/restaurant/${restaurantId}/reviews`);
+  const response = await apiClient.get(`/restaurants/${restaurantId}/reviews`);
   return response.data;
 };
 
@@ -30,6 +30,6 @@ export const getRestaurantReviews = async (restaurantId) => {
  * Get all reviews for a specific item
  */
 export const getItemReviews = async (restaurantId, itemId) => {
-  const response = await apiClient.get(`/api/reviews/restaurant/${restaurantId}/items/${itemId}/reviews`);
+  const response = await apiClient.get(`/restaurants/${restaurantId}/items/${itemId}/reviews`);
   return response.data;
 };

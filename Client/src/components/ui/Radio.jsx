@@ -1,0 +1,95 @@
+import React from 'react';
+
+const Radio = ({
+  label,
+  checked = false,
+  onChange,
+  disabled = false,
+  error,
+  size = 'medium',
+  className = '',
+  ...props
+}) => {
+  const sizeStyles = {
+    small: 'w-4 h-4',
+    medium: 'w-5 h-5',
+    large: 'w-6 h-6',
+  };
+
+  const dotSizeStyles = {
+    small: 'w-2 h-2',
+    medium: 'w-2.5 h-2.5',
+    large: 'w-3 h-3',
+  };
+
+  const labelSizeStyles = {
+    small: 'text-sm',
+    medium: 'text-sm',
+    large: 'text-base',
+  };
+
+  return (
+    <label className={`inline-flex items-center cursor-pointer ${className}`}>
+      <div className="relative">
+        <input
+          type="radio"
+          checked={checked}
+          onChange={onChange}
+          disabled={disabled}
+          className="sr-only"
+          {...props}
+        />
+        <div
+          className={[
+            sizeStyles[size],
+            'rounded-full border-2 transition-all duration-200 flex items-center justify-center',
+            checked ? 'bg-white border-indigo-600' : error ? 'border-red-300 bg-white' : 'border-gray-300 bg-white',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+            !checked && !disabled && 'hover:border-indigo-500'
+          ].filter(Boolean).join(' ')}
+        >
+          {checked && (
+            <div className={`${dotSizeStyles[size]} rounded-full bg-indigo-600`} />
+          )}
+        </div>
+      </div>
+      {label && (
+        <span
+          className={`
+            ml-2 ${labelSizeStyles[size]}
+            ${disabled ? 'text-gray-400' : error ? 'text-red-600' : 'text-gray-700'}
+          `}
+        >
+          {label}
+        </span>
+      )}
+    </label>
+  );
+};
+
+const RadioGroup = ({ options = [], value, onChange, name, disabled, error, helperText, orientation = 'vertical', className = '' }) => {
+  return (
+    <div className={className}>
+      <div className={`flex ${orientation === 'vertical' ? 'flex-col gap-3' : 'flex-row gap-6'}`}>
+        {options.map((option) => (
+          <Radio
+            key={option.value}
+            name={name}
+            label={option.label}
+            checked={value === option.value}
+            onChange={() => onChange(option.value)}
+            disabled={disabled || option.disabled}
+            error={error}
+          />
+        ))}
+      </div>
+      {(error || helperText) && (
+        <p className={`mt-2 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
+          {error || helperText}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export { Radio, RadioGroup };

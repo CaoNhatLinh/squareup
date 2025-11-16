@@ -1,12 +1,24 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { fetchSpecialClosures, addSpecialClosure, removeSpecialClosure } from "@/api/specialClosures";
-import { HiPlus, HiTrash, HiCalendar, HiCheckCircle, HiExclamationCircle } from "react-icons/hi";
-import DatePicker from "react-datepicker"; 
+import {
+  fetchSpecialClosures,
+  addSpecialClosure,
+  removeSpecialClosure,
+} from "@/api/specialClosures";
+import {
+  HiPlus,
+  HiTrash,
+  HiCalendar,
+  HiCheckCircle,
+  HiExclamationCircle,
+  HiStar,
+} from "react-icons/hi";
+import DatePicker from "react-datepicker";
+import PageHeader from "@/components/common/PageHeader";
 export default function SpecialClosures() {
   const { restaurantId } = useParams();
-  const [refreshKey, setRefreshKey] = useState(0); 
-  
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const [closures, setClosures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,11 +32,13 @@ export default function SpecialClosures() {
   useEffect(() => {
     const loadClosures = async () => {
       if (!restaurantId) return;
-      
+
       setLoading(true);
       try {
-        const data = await fetchSpecialClosures(restaurantId); 
-        const sortedData = (data || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+        const data = await fetchSpecialClosures(restaurantId);
+        const sortedData = (data || []).sort(
+          (a, b) => new Date(a.date) - new Date(b.date)
+        );
         setClosures(sortedData);
       } catch (err) {
         console.error("Error loading special closures:", err);
@@ -35,8 +49,8 @@ export default function SpecialClosures() {
     };
 
     loadClosures();
-  }, [restaurantId, refreshKey]); 
-  
+  }, [restaurantId, refreshKey]);
+
   const handleAddClosure = async () => {
     if (!newClosure.date) {
       setMessage("Please select a date");
@@ -48,21 +62,24 @@ export default function SpecialClosures() {
       setMessage("This date is already marked as closed");
       return;
     }
-    
+
     if (isPastDate(dateString)) {
-        setMessage('Cannot add a date in the past.');
-        return;
+      setMessage("Cannot add a date in the past.");
+      return;
     }
 
     setSaving(true);
     setMessage("");
 
     try {
-      await addSpecialClosure(restaurantId, { ...newClosure, date: dateString }); 
-      
-      setRefreshKey(prev => prev + 1); 
-      
-      setNewClosure({ date: null, reason: "" }); 
+      await addSpecialClosure(restaurantId, {
+        ...newClosure,
+        date: dateString,
+      });
+
+      setRefreshKey((prev) => prev + 1);
+
+      setNewClosure({ date: null, reason: "" });
       setShowAddForm(false);
       setMessage("Special closure added successfully!");
       setTimeout(() => setMessage(""), 4000);
@@ -75,16 +92,19 @@ export default function SpecialClosures() {
   };
 
   const handleRemoveClosure = async (closureId) => {
-    if (!window.confirm("Are you sure you want to remove this special closure?")) return;
+    if (
+      !window.confirm("Are you sure you want to remove this special closure?")
+    )
+      return;
 
     setSaving(true);
     setMessage("");
 
     try {
       await removeSpecialClosure(restaurantId, closureId);
-      
-      setRefreshKey(prev => prev + 1);
-      
+
+      setRefreshKey((prev) => prev + 1);
+
       setMessage("Special closure removed successfully!");
       setTimeout(() => setMessage(""), 4000);
     } catch (err) {
@@ -111,20 +131,18 @@ export default function SpecialClosures() {
     today.setHours(0, 0, 0, 0);
     return date < today;
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-5xl mx-auto">
-        
-        <div className="mb-8 border-b pb-4">
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Special Closures Management</h1>
-          <p className="text-gray-600">
-            Manage dates when your restaurant will be closed for holidays or special events.
-          </p>
-        </div>
-
+        <PageHeader
+          title="Special Closures Management"
+          subtitle="Manage dates when your restaurant will be closed for holidays or special events."
+          Icon={HiStar}
+        />
         {message && (
-          <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 shadow-md ${
+          <div
+            className={`mb-6 p-4 rounded-xl flex items-start gap-3 shadow-md ${
               message.includes("success")
                 ? "bg-green-50 text-green-800 border-l-4 border-green-500"
                 : "bg-red-50 text-red-800 border-l-4 border-red-500"
@@ -142,11 +160,12 @@ export default function SpecialClosures() {
         {loading ? (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600 font-medium">Loading special closures...</p>
+            <p className="mt-4 text-gray-600 font-medium">
+              Loading special closures...
+            </p>
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            
             {showAddForm ? (
               <div className="p-8 border-b bg-red-50/50 rounded-t-2xl">
                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -161,9 +180,11 @@ export default function SpecialClosures() {
                       </label>
                       <DatePicker
                         selected={newClosure.date}
-                        onChange={(date) => setNewClosure((prev) => ({ ...prev, date }))}
-                        minDate={new Date()} 
-                        dateFormat="MM/dd/yyyy" 
+                        onChange={(date) =>
+                          setNewClosure((prev) => ({ ...prev, date }))
+                        }
+                        minDate={new Date()}
+                        dateFormat="MM/dd/yyyy"
                         placeholderText="Select a date"
                         className="w-full px-4 py-3 appearance-none bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700 font-medium"
                       />
@@ -186,7 +207,7 @@ export default function SpecialClosures() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-3 justify-end pt-2">
                     <button
                       onClick={handleAddClosure}
@@ -198,7 +219,7 @@ export default function SpecialClosures() {
                     <button
                       onClick={() => {
                         setShowAddForm(false);
-                        setNewClosure({ date: null, reason: "" }); 
+                        setNewClosure({ date: null, reason: "" });
                         setMessage("");
                       }}
                       disabled={saving}
@@ -227,7 +248,9 @@ export default function SpecialClosures() {
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">
                     <HiCalendar className="w-10 h-10 text-red-500" />
                   </div>
-                  <p className="text-gray-900 font-semibold text-lg mb-1">No special closures scheduled</p>
+                  <p className="text-gray-900 font-semibold text-lg mb-1">
+                    No special closures scheduled
+                  </p>
                   <p className="text-gray-500 text-sm">
                     Use the "Add Special Closure" button to schedule a date.
                   </p>
@@ -237,22 +260,28 @@ export default function SpecialClosures() {
                   <div
                     key={closure.id || closure.date}
                     className={`p-6 flex items-center justify-between transition-all ${
-                      isPastDate(closure.date) 
-                        ? "bg-gray-50/50 opacity-70" 
+                      isPastDate(closure.date)
+                        ? "bg-gray-50/50 opacity-70"
                         : "hover:bg-red-50/50"
                     }`}
                   >
                     <div className="flex-1 flex items-center gap-4">
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${
-                        isPastDate(closure.date) 
-                          ? "bg-gray-100" 
-                          : "bg-red-100"
-                      }`}>
-                        <HiCalendar className={`w-6 h-6 ${
-                          isPastDate(closure.date) ? "text-gray-400" : "text-red-600"
-                        }`} />
+                      <div
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl ${
+                          isPastDate(closure.date)
+                            ? "bg-gray-100"
+                            : "bg-red-100"
+                        }`}
+                      >
+                        <HiCalendar
+                          className={`w-6 h-6 ${
+                            isPastDate(closure.date)
+                              ? "text-gray-400"
+                              : "text-red-600"
+                          }`}
+                        />
                       </div>
-                      
+
                       <div>
                         <div className="font-bold text-gray-900 text-lg">
                           {formatDate(closure.date)}
@@ -270,16 +299,16 @@ export default function SpecialClosures() {
                         )}
                       </div>
                     </div>
-                    
+
                     {!isPastDate(closure.date) && (
-                        <button
-                          onClick={() => handleRemoveClosure(closure.id)}
-                          disabled={saving}
-                          className="p-3 text-red-600 hover:bg-red-100 rounded-full transition-all disabled:opacity-50 active:scale-95"
-                          title="Remove closure"
-                        >
-                          <HiTrash className="w-6 h-6" />
-                        </button>
+                      <button
+                        onClick={() => handleRemoveClosure(closure.id)}
+                        disabled={saving}
+                        className="p-3 text-red-600 hover:bg-red-100 rounded-full transition-all disabled:opacity-50 active:scale-95"
+                        title="Remove closure"
+                      >
+                        <HiTrash className="w-6 h-6" />
+                      </button>
                     )}
                   </div>
                 ))

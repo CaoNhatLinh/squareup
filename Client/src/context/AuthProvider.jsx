@@ -11,32 +11,34 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Always create fresh session with force-refreshed token to get latest custom claims
         try {
+          // Force refresh to get latest custom claims (role, restaurantId, etc.)
+          const idToken = await firebaseUser.getIdToken(true);
+          await authApi.sessionLogin(idToken);
           const sessionData = await authApi.verifySession();
           setUser({
             ...firebaseUser,
             isAdmin: sessionData.isAdmin || false,
-            role: sessionData.role || 'user'
+            role: sessionData.role || 'user',
+            restaurantId: sessionData.restaurantId || null,
+            permissions: sessionData.permissions || {}
           });
         } catch (error) {
-          console.error('Session verification failed:', error);
+          console.error('Session creation failed:', error);
+          // Clear any stale cookies and set fallback user
           try {
-            const idToken = await firebaseUser.getIdToken(true);
-            await authApi.sessionLogin(idToken);
-            const sessionData = await authApi.verifySession();
-            setUser({
-              ...firebaseUser,
-              isAdmin: sessionData.isAdmin || false,
-              role: sessionData.role || 'user'
-            });
-          } catch (retryError) {
-            console.error('Session retry failed:', retryError);
-            setUser({
-              ...firebaseUser,
-              isAdmin: false,
-              role: 'user'
-            });
+            await authApi.sessionLogout();
+          } catch (logoutErr) {
+            // ignore
           }
+          setUser({
+            ...firebaseUser,
+            isAdmin: false,
+            role: 'user',
+            restaurantId: null,
+            permissions: {}
+          });
         }
       } else {
         setUser(null);

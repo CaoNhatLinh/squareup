@@ -12,6 +12,7 @@ import {
   HiAdjustmentsHorizontal,
   HiMagnifyingGlass,
 } from "react-icons/hi2";
+import { Button, Input, Dropdown, Checkbox, LoadingSpinner } from '@/components/ui';
 
 const renderFilterList = (
   list,
@@ -34,16 +35,9 @@ const renderFilterList = (
           <IconComponent className="w-5 h-5 text-red-600" />
           {title}
         </h3>
-        <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white">
-          <HiMagnifyingGlass className="w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder={`Search or add to ${title.toLowerCase()}`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 text-sm focus:outline-none text-gray-700"
-          />
-        </div>
+          <div className="px-3 py-2">
+            <Input placeholder={`Search or add to ${title.toLowerCase()}`} value={search} onChange={(e) => setSearch(e.target.value)} leftIcon={HiMagnifyingGlass} className="text-sm" />
+          </div>
       </div>
 
       {selected.length > 0 && (
@@ -61,12 +55,7 @@ const renderFilterList = (
                 className="text-red-500 hover:text-red-700 p-0.5"
               >
                 <HiXMark className="w-4 h-4" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      {search && (
+                <Button variant="ghost" size="small" onClick={() => setSelected(selected.filter((s) => s.id !== item.id))} icon={HiXMark} className="p-0.5" />
         <div className="max-h-56 overflow-y-auto">
           {filtered.map((item) => {
             const isSelected = selected.find((s) => s.id === item.id);
@@ -217,16 +206,7 @@ export default function EditItem() {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-900/70 z-50">
-        <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
-          <p className="text-lg text-gray-700 font-medium">
-            Loading item data...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner.Overlay message="Loading item data..." />;
   }
 
   return (
@@ -237,19 +217,8 @@ export default function EditItem() {
             Edit Item: {formData.name || itemId}
           </h2>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleClose}
-              className="p-2 border border-gray-300 text-gray-700 text-sm rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <HiXMark className="w-6 h-6" />
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || uploading}
-              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-            >
-              {saving || uploading ? "Saving..." : "Save Changes"}
-            </button>
+            <Button variant="ghost" size="small" onClick={handleClose} icon={HiXMark} className="p-2" aria-label="Close" />
+            <Button variant="danger" size="medium" onClick={handleSave} loading={saving || uploading} disabled={saving || uploading}>{saving || uploading ? 'Saving...' : 'Save Changes'}</Button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-8">
@@ -262,58 +231,33 @@ export default function EditItem() {
                     <div className="text-xs text-red-800 font-semibold mb-1">
                       Item type
                     </div>
-                    <select
+                    <Dropdown
                       value={formData.itemType}
-                      onChange={(e) =>
-                        setFormData({ ...formData, itemType: e.target.value })
-                      }
-                      className="w-full bg-transparent text-sm font-bold text-red-900 focus:outline-none"
-                    >
-                      <option>Prepared food and beverage</option>
-                      <option>Physical good</option>
-                      <option>Membership</option>
-                      <option>Digital</option>
-                      <option>Other</option>
-                    </select>
+                      onChange={(val) => setFormData({ ...formData, itemType: val })}
+                      options={[
+                        { value: 'Prepared food and beverage', label: 'Prepared food and beverage' },
+                        { value: 'Physical good', label: 'Physical good' },
+                        { value: 'Membership', label: 'Membership' },
+                        { value: 'Digital', label: 'Digital' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                      placeholder="Select item type"
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
-                  <input
-                    type="text"
-                    placeholder="Name (required)"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
-                  />
+                  <Input label="Name" placeholder="Name (required)" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="text-lg font-semibold" />
                 </div>
                 <div className="relative col-span-1">
                   <HiOutlineCurrencyDollar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
-                  />
+                  <Input type="number" placeholder="Price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} leftIcon={HiOutlineCurrencyDollar} className="pl-10" />
                 </div>
               </div>
               <div>
-                <textarea
-                  placeholder="Customer-facing description (Optional)"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none text-gray-700"
-                />
+                  <Input as="textarea" rows={4} placeholder="Customer-facing description (Optional)" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-gray-50">
                 {imagePreview ? (
@@ -323,15 +267,7 @@ export default function EditItem() {
                       alt="Preview"
                       className="max-h-64 mx-auto rounded-lg shadow-lg object-cover w-full"
                     />
-                    <button
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview(null);
-                      }}
-                      className="absolute top-2 right-2 bg-red-600/90 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-md"
-                    >
-                      <HiXMark className="w-4 h-4" />
-                    </button>
+                    <Button variant="ghost" size="small" onClick={() => { setImageFile(null); setImagePreview(null); }} icon={HiXMark} className="absolute top-2 right-2 p-2" aria-label="Remove image preview" />
                   </div>
                 ) : (
                   <>

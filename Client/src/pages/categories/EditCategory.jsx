@@ -15,6 +15,7 @@ import {
   HiMagnifyingGlass,
   HiCamera,
 } from "react-icons/hi2";
+import { Input, Button, Checkbox, LoadingSpinner } from '@/components/ui';
 
 
 
@@ -187,12 +188,12 @@ export default function EditCategory() {
             Edit Category: {formData.name}
           </h2>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="primary"
               onClick={handleClose}
-              className="p-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
             >
               <HiXMark className="w-6 h-6" />
-            </button>
+            </Button>
             <button
               onClick={handleSave}
               disabled={saving || uploading}
@@ -204,15 +205,14 @@ export default function EditCategory() {
         </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div>
-            <input
-              type="text"
-              placeholder="Category name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            />
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Category name"
+                className="text-xl font-semibold"
+              />
           </div>
           <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-gray-50">
             {imagePreview ? (
@@ -372,12 +372,12 @@ export default function EditCategory() {
                   <div className="relative mb-3">
                     <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 
-                    <input
-                      type="text"
+                    <Input
+                      leftIcon={HiMagnifyingGlass}
                       placeholder="Search and select items..."
                       value={itemSearch}
                       onChange={(e) => setItemSearch(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="text-sm"
                     />
                   </div>
 

@@ -34,6 +34,9 @@ const adminRouter = require('./routes/admin');
 const guestUsersRouter = require('./routes/guestUsers');
 const reviewsRouter = require('./routes/reviews');
 const transactionsRouter = require('./routes/transactions');
+const staffRouter = require('./routes/staff');
+const rolesRouter = require('./routes/roles');
+const invitationsRouter = require('./routes/invitations');
 
 app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/auth', authRouter);
@@ -42,8 +45,17 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/guest-users', guestUsersRouter);
-app.use('/api/reviews', reviewsRouter);
+// Mount reviews, staff and roles routers at /api so their internal
 app.use('/api/transactions', transactionsRouter);
+// routes can declare full paths (e.g. /restaurants/:restaurantId/roles)
+app.use('/api', reviewsRouter);
+app.use('/api/invitations', invitationsRouter);
+// Staff and roles are mounted via `restaurantsRouter` at
+// `/api/restaurants/:restaurantId/staff` and `/api/restaurants/:restaurantId/roles`.
+// Expose permissions structure (admin-only) at a dedicated path:
+const rolesController = require('./controllers/rolesController');
+const verifyAdmin = require('./middleware/verifyAdmin');
+app.get('/api/roles/permissions-structure', verifyAdmin, rolesController.getPermissionsStructure);
 
 // Debug endpoint to check current user's token claims (dev only)
 app.get('/api/debug/token', async (req, res) => {

@@ -1,12 +1,12 @@
 import * as apiClient from './apiClient';
 
 export const getRestaurantOrders = async (restaurantId) => {
-  const response = await apiClient.get(`/api/orders/restaurant/${restaurantId}`);
+  const response = await apiClient.get(`/orders/restaurant/${restaurantId}`);
   return response.data;
 };
 
 export const getOrderById = async (orderId) => {
-  const response = await apiClient.get(`/api/orders/${orderId}`);
+  const response = await apiClient.get(`/orders/${orderId}`);
   return response.data;
 };
 
@@ -15,7 +15,7 @@ export const getOrderDetails = async (orderId) => {
 }
 
 export const getOrderBySession = async (sessionId, restaurantId) => {
-  const response = await apiClient.get(`/api/orders/session/${sessionId}?restaurantId=${restaurantId}`);
+  const response = await apiClient.get(`/orders/session/${sessionId}?restaurantId=${restaurantId}`);
   return response.data;
 };
 
@@ -25,11 +25,11 @@ export const updateOrderStatus = async (restaurantId, orderId, status, cancelRea
     if (cancelReason) payload.cancelReason = cancelReason;
     if (cancelNote) payload.cancelNote = cancelNote;
   }
-  const response = await apiClient.patch(`/api/orders/restaurant/${restaurantId}/${orderId}/status`, payload);
+  const response = await apiClient.patch(`/orders/restaurant/${restaurantId}/${orderId}/status`, payload);
   return response.data;
 };
 
 export const trackOrderStatus = async (orderId) => {
-  const response = await apiClient.get(`/api/orders/track/${orderId}`);
+  const response = await apiClient.get(`/orders/track/${orderId}`);
   return response.data;
 };

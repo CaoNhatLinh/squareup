@@ -1,12 +1,9 @@
 import * as apiClient from './apiClient';
-
-
-
 /**
  * Get guest user's order history
  */
 export const getGuestOrderHistory = async (guestUuid) => {
-  const response = await apiClient.get(`/api/guest-users/${guestUuid}/orders`);
+  const response = await apiClient.get(`/guest-users/${guestUuid}/orders`);
   return response.data;
 };
 
@@ -14,7 +11,7 @@ export const getGuestOrderHistory = async (guestUuid) => {
  * Add review to an order
  */
 export const addOrderReview = async (orderId, reviewData) => {
-  const response = await apiClient.post(`/api/orders/${orderId}/review`, reviewData);
+  const response = await apiClient.post(`/orders/${orderId}/review`, reviewData);
   return response.data;
 };
 
@@ -22,6 +19,6 @@ export const addOrderReview = async (orderId, reviewData) => {
  * Get order reviews
  */
 export const getOrderReviews = async (orderId) => {
-  const response = await apiClient.get(`/api/orders/${orderId}/reviews`);
+  const response = await apiClient.get(`/orders/${orderId}/reviews`);
   return response.data;
 };

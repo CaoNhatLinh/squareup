@@ -1,7 +1,5 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const admin = require("firebase-admin");
-const db = admin.database();
-
 function classifyPaymentIntent(pi, statusFilter) {
   const charge = pi.latest_charge || (pi.charges?.data && pi.charges.data[0]);
   const isSucceeded = pi.status === "succeeded";
@@ -100,7 +98,6 @@ async function getTransactions(req, res) {
         metadata: pi.metadata,
       };
     });
-
     return res.status(200).json({
       transactions: formattedTransactions,
       has_more: paymentIntents.has_more,
@@ -211,7 +208,7 @@ async function getTransactionDetails(req, res) {
       try {
         const orderSnapshot = await admin.database()
           .ref(`restaurants/${restaurantId}/orders/${orderId}`)
-          .once('value');
+          .get();
         orderDetails = orderSnapshot.val();
       } catch (err) {
         console.error('Error fetching order details:', err);

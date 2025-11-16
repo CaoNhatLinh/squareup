@@ -12,9 +12,7 @@ const createCheckoutSession = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const restaurantSnapshot = await db
-      .ref(`restaurants/${restaurantId}`)
-      .once("value");
+    const restaurantSnapshot = await db.ref(`restaurants/${restaurantId}`).get();
     const restaurant = restaurantSnapshot.val();
 
     if (!restaurant) {
@@ -144,7 +142,7 @@ const handleWebhook = async (req, res) => {
 
           const pendingOrderSnapshot = await db
             .ref(`pendingOrders/${pendingOrderId}`)
-            .once("value");
+            .get();
           const pendingOrder = pendingOrderSnapshot.val();
 
           if (!pendingOrder) {
@@ -267,7 +265,7 @@ const getOrderBySession = async (req, res) => {
       .ref(`restaurants/${restaurantId}/orders`)
       .orderByChild("sessionId")
       .equalTo(sessionId)
-      .once("value");
+      .get();
 
     const orders = ordersSnapshot.val();
 
@@ -298,10 +296,7 @@ const getAllOrders = async (req, res) => {
       return res.status(400).json({ error: "Restaurant ID is required" });
     }
 
-    const ordersSnapshot = await db
-      .ref(`restaurants/${restaurantId}/orders`)
-      .once("value");
-
+    const ordersSnapshot = await db.ref(`restaurants/${restaurantId}/orders`).get();
     const ordersData = ordersSnapshot.val();
 
     if (!ordersData) {
@@ -327,7 +322,7 @@ const getAllOrders = async (req, res) => {
 
 const getAllOrdersAdmin = async (req, res) => {
   try {
-    const restaurantsSnapshot = await db.ref("restaurants").once("value");
+    const restaurantsSnapshot = await db.ref("restaurants").get();
     const restaurantsData = restaurantsSnapshot.val();
 
     if (!restaurantsData) {
@@ -368,7 +363,7 @@ const getOrderById = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    const restaurantsSnapshot = await db.ref("restaurants").once("value");
+    const restaurantsSnapshot = await db.ref("restaurants").get();
     const restaurantsData = restaurantsSnapshot.val();
 
     if (!restaurantsData) {
@@ -456,7 +451,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const orderRef = db.ref(`restaurants/${restaurantId}/orders/${orderId}`);
-    const orderSnapshot = await orderRef.once("value");
+    const orderSnapshot = await orderRef.get();
 
     if (!orderSnapshot.exists()) {
       return res.status(404).json({ error: "Order not found" });
@@ -537,7 +532,7 @@ const updateOrderStatus = async (req, res) => {
       await orderRef.update(updateData);
     }
 
-    const updatedOrder = await orderRef.once("value");
+    const updatedOrder = await orderRef.get();
 
     res.status(200).json({
       success: true,
@@ -557,7 +552,7 @@ const getPublicOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    const restaurantsSnapshot = await db.ref("restaurants").once("value");
+    const restaurantsSnapshot = await db.ref("restaurants").get();
     const restaurants = restaurantsSnapshot.val();
 
     if (!restaurants) {
@@ -608,7 +603,7 @@ const cleanupOldPendingOrders = async (req, res) => {
     const now = Date.now();
     const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
 
-    const pendingOrdersSnapshot = await db.ref("pendingOrders").once("value");
+    const pendingOrdersSnapshot = await db.ref("pendingOrders").get();
     const pendingOrders = pendingOrdersSnapshot.val();
 
     if (!pendingOrders) {

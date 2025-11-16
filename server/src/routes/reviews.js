@@ -2,10 +2,13 @@ const express = require("express");
 const router = express.Router();
 const reviewsController = require("../controllers/reviewsController");
 const { verifyToken } = require("../middleware/verifyToken");
+const { verifyPermission } = require('../middleware/verifyPermission');
 
-router.post("/:orderId/review", reviewsController.addOrderReview);
-router.get("/:orderId/reviews", reviewsController.getOrderReviews);
-router.get("/restaurant/:restaurantId/reviews", verifyToken, reviewsController.getRestaurantReviews);
-router.get("/restaurant/:restaurantId/items/:itemId/reviews", reviewsController.getItemReviews);
+router.use(verifyToken);
+
+router.post("/orders/:orderId/review", verifyPermission('orders', 'create'), reviewsController.addOrderReview);
+router.get("/orders/:orderId/reviews", verifyPermission('orders', 'read'), reviewsController.getOrderReviews);
+router.get("/restaurants/:restaurantId/reviews", verifyPermission('reviews', 'read'), reviewsController.getRestaurantReviews);
+router.get("/restaurants/:restaurantId/items/:itemId/reviews", verifyPermission('reviews', 'read'), reviewsController.getItemReviews);
 
 module.exports = router;

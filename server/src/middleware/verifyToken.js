@@ -2,7 +2,6 @@ const admin = require('firebase-admin');
 
 async function verifyToken(req, res, next) {
   try {
-    // Try session cookie first (for admin/restaurant routes)
     const sessionCookie = req.cookies?.session;
     if (sessionCookie) {
       try {

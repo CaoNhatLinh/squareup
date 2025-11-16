@@ -1,0 +1,156 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { HiChevronDown, HiCheck, HiSearch } from 'react-icons/hi';
+
+const Dropdown = ({
+  options = [],
+  value,
+  onChange,
+  label,
+  placeholder = 'Select an option',
+  searchable = false,
+  disabled = false,
+  required = false,
+  error,
+  helperText,
+  size = 'medium',
+  fullWidth = true,
+  className = '',
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  const filteredOptions = searchable && searchQuery
+    ? options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : options;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, searchable]);
+
+  const handleSelect = (newValue) => {
+    onChange(newValue);
+    setIsOpen(false);
+    setSearchQuery('');
+  };
+
+  const sizeStyles = {
+    small: 'px-3 py-1.5 text-sm',
+    medium: 'px-4 py-2.5 text-sm',
+    large: 'px-4 py-3 text-base',
+  };
+
+  return (
+    <div className={`${fullWidth ? 'w-full' : ''} relative`} ref={dropdownRef}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={[
+          fullWidth ? 'w-full' : '',
+          sizeStyles[size],
+          'text-left border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0',
+          error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500',
+          disabled ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white hover:border-gray-400',
+          'flex justify-between items-center transition-all duration-150',
+          className
+        ].filter(Boolean).join(' ')}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
+          {selectedOption?.label || placeholder}
+        </span>
+        <HiChevronDown
+          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : 'rotate-0'
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden">
+          {searchable && (
+            <div className="p-2 border-b border-gray-200">
+              <div className="relative">
+                <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+          )}
+          <ul
+            className="overflow-auto max-h-52 py-1"
+            role="listbox"
+          >
+            {filteredOptions.length === 0 ? (
+              <li className="px-4 py-3 text-sm text-gray-500 text-center">
+                No options found
+              </li>
+            ) : (
+              filteredOptions.map((option) => (
+                <li
+                  key={option.value}
+                  onClick={() => handleSelect(option.value)}
+                  className={`
+                    px-4 py-2.5 cursor-pointer transition-colors duration-100 flex items-center justify-between
+                    ${value === option.value
+                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                      : 'hover:bg-gray-50 text-gray-900'
+                    }
+                  `}
+                  role="option"
+                  aria-selected={value === option.value}
+                >
+                  <span className="text-sm">{option.label}</span>
+                  {value === option.value && (
+                    <HiCheck className="w-5 h-5 text-indigo-600" />
+                  )}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+
+      {(error || helperText) && (
+        <p className={`mt-1 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
+          {error || helperText}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default Dropdown;

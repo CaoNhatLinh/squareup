@@ -1,0 +1,55 @@
+import React from 'react';
+import { HiPencil, HiTrash } from 'react-icons/hi';
+import Avatar from '@/components/ui/Avatar';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+
+export default function StaffList({ staff, onEdit, onRemove }) {
+  return (
+    <Card padding="none" className="divide-y divide-gray-200">
+      {staff.map((member) => (
+        <div key={member.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <Avatar
+                name={member.displayName || member.email}
+                size="large"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {member.displayName || member.email}
+                </h3>
+                <p className="mt-0.5 text-sm text-gray-600 truncate">{member.email}</p>
+                <div className="mt-2">
+                  <Badge variant="primary" size="small">
+                    {member.roleName || member.roleId}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="small"
+                icon={HiPencil}
+                onClick={() => onEdit(member)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="danger"
+                size="small"
+                icon={HiTrash}
+                onClick={() => onRemove(member)}
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </Card>
+  );
+}

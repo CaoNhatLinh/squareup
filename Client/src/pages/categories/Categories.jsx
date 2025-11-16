@@ -6,10 +6,12 @@ import {
   HiChevronRight,
   HiOutlineTag,
 } from "react-icons/hi2";
+import PageHeader from '@/components/common/PageHeader';
 import { fetchCategories, deleteCategory } from "@/api/categories.js";
 import SearchBar from "@/components/common/SearchBar";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import ActionMenu from "@/components/common/ActionMenu";
+import { LoadingSpinner, Checkbox, Button } from '@/components/ui';
 
 export default function Categories() {
   const { restaurantId } = useParams();
@@ -127,28 +129,14 @@ export default function Categories() {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <HiOutlineSquares2X2 className="w-10 h-10 text-red-600" />{" "}
-          <h1 className="text-4xl font-extrabold text-gray-900">
-            Menu Categories
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search categories..."
-            className="w-72"
-          />
-          <Link
-            to={`/${restaurantId}/categories/new`}
-            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <HiPlus className="w-5 h-5" /> Create Category
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Menu Categories"
+        Icon={HiOutlineSquares2X2}
+        SearchBarComponent={SearchBar}
+        searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search categories...', className: 'w-72' }}
+        actionLabel={<><HiPlus className="w-5 h-5" /> Create Category</>}
+        actionLink={`/${restaurantId}/categories/new`}
+      />
 
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
         <table className="w-full min-w-full divide-y divide-gray-200">
@@ -188,8 +176,7 @@ export default function Categories() {
                   colSpan="5"
                   className="px-6 py-8 text-center text-sm text-gray-500"
                 >
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-4 border-red-600"></div>
-
+                  <LoadingSpinner size="large" color="red" />
                   <p className="mt-2">Loading categories...</p>
                 </td>
               </tr>

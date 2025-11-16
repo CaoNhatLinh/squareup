@@ -4,6 +4,7 @@ import { createItem } from '@/api/items'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { useToast } from '@/hooks/useToast'
 import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' 
+import { Input, Button, Dropdown, Checkbox } from '@/components/ui';
 import { useLoaderData } from 'react-router-dom'
 export default function CreateItem() {
   const navigate = useNavigate()
@@ -90,13 +91,7 @@ export default function CreateItem() {
           </h3>
           <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white">
             <HiMagnifyingGlass className="w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={`Search or add to ${title.toLowerCase()}`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm focus:outline-none text-gray-700"
-            />
+              <Input leftIcon={HiMagnifyingGlass} placeholder={`Search or add to ${title.toLowerCase()}`} value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 text-sm" />
           </div>
         </div>
         
@@ -149,20 +144,9 @@ export default function CreateItem() {
       <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Create New Menu Item</h2>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleClose} 
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || uploading}
-              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-            >
-              {saving || uploading ? 'Saving...' : 'Save Item'}
-            </button>
+            <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save Item</Button>
           </div>
         </div>
 
@@ -190,23 +174,27 @@ export default function CreateItem() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                   <div className="col-span-2">
-                      <input
+                        <Input
+                          id="name"
+                          name="name"
                           type="text"
                           placeholder="Name (required)"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
-                      />
+                          className="text-lg font-semibold"
+                        />
                   </div>
                   <div className="relative col-span-1">
                       <HiOutlineCurrencyDollar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                      <input
+                        <Input
+                          id="price"
+                          name="price"
                           type="number"
                           placeholder="Price"
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                          className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold"
-                      />
+                          className="text-lg font-semibold"
+                        />
                   </div>
               </div>
               <div>

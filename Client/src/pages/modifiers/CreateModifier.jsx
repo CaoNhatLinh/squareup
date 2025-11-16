@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createModifier } from "@/api/modifers";
 import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
+import { Input, Button, Checkbox, RadioGroup } from '@/components/ui';
 
 export default function CreateModifier() {
   const navigate = useNavigate();
@@ -86,27 +87,21 @@ export default function CreateModifier() {
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <button
-            onClick={handleClose}
-            className="p-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <HiXMark className="w-6 h-6" />
-          </button>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+          <Button variant="ghost" size="small" onClick={handleClose} className="p-2" icon={HiXMark} aria-label="Close" />
 
           <h2 className="text-2xl font-bold text-gray-900">
             Create New Modifier Set
           </h2>
 
-          <button
+          <Button
+            variant="primary"
             onClick={handleSave}
-            disabled={disabled}
-            className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            loading={saving}
             aria-label="Save modifier"
           >
-            {saving ? "Saving..." : "Save Set"}
-          </button>
+            Save Set
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
@@ -116,21 +111,13 @@ export default function CreateModifier() {
             </h3>
 
             <div>
-              <input
-                type="text"
+              <Input
+                id="name"
+                name="name"
                 placeholder="System Name (e.g., pizza_crust_size)"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className={`
-         w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-sm font-medium
-         ${
-           isNameInvalid
-             ? "border-red-500 focus:ring-red-100"
-             : "border-gray-300 focus:ring-red-100 focus:border-red-500"
-         }
-        `}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="text-sm font-medium"
               />
               <p className="text-xs text-gray-500 mt-1 ml-1">
                 Internal, system use only. (No spaces or special characters)
@@ -138,21 +125,13 @@ export default function CreateModifier() {
             </div>
 
             <div>
-              <input
-                type="text"
+              <Input
+                id="displayName"
+                name="displayName"
                 placeholder="Customer Display Name (e.g., Choose your size)"
                 value={formData.displayName}
-                onChange={(e) =>
-                  setFormData({ ...formData, displayName: e.target.value })
-                }
-                className={`
-         w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 text-lg font-semibold
-         ${
-           isDisplayNameInvalid
-             ? "border-red-500 focus:ring-red-100"
-             : "border-gray-300 focus:ring-red-100 focus:border-red-500"
-         }
-        `}
+                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                className="text-lg font-semibold"
               />
               <p className="text-xs text-gray-500 mt-1 ml-1">
                 Visible to customers.
@@ -169,62 +148,22 @@ export default function CreateModifier() {
                 Customer must select:
               </label>
 
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="single"
-                    checked={formData.selectionType === "single"}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectionType: e.target.value,
-                      })
-                    }
-                    className="w-5 h-5 text-red-600 border-gray-400 focus:ring-red-500"
-                  />
-
-                  <span className="text-sm font-medium text-gray-700">
-                    One option only
-                  </span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="multiple"
-                    checked={formData.selectionType === "multiple"}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectionType: e.target.value,
-                      })
-                    }
-                    className="w-5 h-5 text-red-600 border-gray-400 focus:ring-red-500"
-                  />
-
-                  <span className="text-sm font-medium text-gray-700">
-                    Multiple options
-                  </span>
-                </label>
-              </div>
+              <RadioGroup
+                name="selectionType"
+                value={formData.selectionType}
+                onChange={(val) => setFormData({ ...formData, selectionType: val })}
+                options={[{ value: 'single', label: 'One option only' }, { value: 'multiple', label: 'Multiple options' }]}
+                orientation="horizontal"
+              />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.required}
-                  onChange={(e) =>
-                    setFormData({ ...formData, required: e.target.checked })
-                  }
-                  className="w-5 h-5 text-red-600 rounded border-gray-400 focus:ring-red-500"
-                />
-
-                <span className="text-sm font-medium text-gray-700">
-                  Is Required (Customer must make a selection)
-                </span>
-              </label>
+              <Checkbox
+                checked={formData.required}
+                onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
+                label="Is Required (Customer must make a selection)"
+                size="small"
+              />
             </div>
           </div>
           <div>
@@ -259,7 +198,7 @@ export default function CreateModifier() {
                         <MdDragIndicator className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
-                        <input
+                        <Input
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium
                           ${
                             isOptionNameInvalid
@@ -280,7 +219,7 @@ export default function CreateModifier() {
                         <span className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                           $
                         </span>
-                        <input
+                        <Input
                           className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"
                           placeholder="0.00"
                           type="number"
@@ -297,7 +236,9 @@ export default function CreateModifier() {
                         />
                       </div>
                       <div className="w-10 flex justify-end">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="small"
                           className="text-red-600 hover:bg-red-100 p-2 rounded-full"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -306,34 +247,34 @@ export default function CreateModifier() {
                           aria-label="Remove option"
                         >
                           <MdOutlineDelete className="w-6 h-6" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="p-4 border-t border-gray-200">
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-red-700 shadow-md"
-                  onClick={() =>
-                    setOptions([
-                      ...options,
-                      {
-                        id: `tmp_${Date.now()}`,
-                        name: "",
-                        price: 0,
-                        index: options.length,
-                        available: true,
-                      },
-                    ])
-                  }
-                  aria-label="Add option"
-                >
-                  <MdAdd className="w-5 h-5" />
-                  <span>Add Option</span>
-                </button>
-              </div>
+                <div className="p-4 border-t border-gray-200">
+                  <Button
+                    variant="primary"
+                    onClick={() =>
+                      setOptions([
+                        ...options,
+                        {
+                          id: `tmp_${Date.now()}`,
+                          name: "",
+                          price: 0,
+                          index: options.length,
+                          available: true,
+                        },
+                      ])
+                    }
+                    aria-label="Add option"
+                  >
+                    <MdAdd className="w-5 h-5" />
+                    <span>Add Option</span>
+                  </Button>
+                </div>
             </div>
           </div>
         </div>

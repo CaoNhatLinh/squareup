@@ -10,6 +10,7 @@ import {
   MdOutlineCheckBox,
 } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
+import { Input, Button, Checkbox, RadioGroup, LoadingSpinner } from '@/components/ui';
 
 export default function EditModifier() {
   const { modifierId, restaurantId } = useParams();
@@ -108,7 +109,7 @@ export default function EditModifier() {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-900/70 z-50">
         <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
+          <LoadingSpinner size="large" />
           <p className="text-lg text-gray-700 font-medium">
             Loading modifier set...
           </p>
@@ -132,26 +133,23 @@ export default function EditModifier() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <button
-            onClick={() => navigate("/modifiers")}
-            className="p-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors"
-            aria-label="Close"
-          >
-            <HiXMark className="w-6 h-6" />
-          </button>
+          <Button variant="ghost" onClick={() => navigate('/modifiers')}>
+            <HiXMark className="w-6 h-6 text-gray-700" />
+          </Button>
 
           <h2 className="text-2xl font-bold text-gray-900">
             Edit Modifier Set: {formData.displayName || formData.name}
           </h2>
 
-          <button
+          <Button
+            variant="primary"
+            size="medium"
             onClick={handleSave}
+            loading={saving}
             disabled={isSaveDisabled}
-            className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            aria-label="Save modifier"
           >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
@@ -160,7 +158,7 @@ export default function EditModifier() {
             </h3>
 
             <div>
-              <input
+              <Input
                 type="text"
                 placeholder="System Name (e.g., pizza_crust_size)"
                 value={formData.name}
@@ -179,7 +177,7 @@ export default function EditModifier() {
               </p>
             </div>
             <div>
-              <input
+              <Input
                 type="text"
                 placeholder="Customer Display Name (e.g., Choose your size)"
                 value={formData.displayName}
@@ -208,75 +206,22 @@ export default function EditModifier() {
               <label className="block text-sm font-medium text-gray-700">
                 Selection Type
               </label>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer bg-white p-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition-colors">
-                  <MdOutlineRadio
-                    className={`w-5 h-5 ${
-                      formData.selectionType === "single"
-                        ? "text-red-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <input
-                    type="radio"
-                    value="single"
-                    checked={formData.selectionType === "single"}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectionType: e.target.value,
-                      })
-                    }
-                    className="hidden"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Choose one option (Radio)
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer bg-white p-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition-colors">
-                  <MdOutlineCheckBox
-                    className={`w-5 h-5 ${
-                      formData.selectionType === "multiple"
-                        ? "text-red-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-
-                  <input
-                    type="radio"
-                    value="multiple"
-                    checked={formData.selectionType === "multiple"}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectionType: e.target.value,
-                      })
-                    }
-                    className="hidden"
-                  />
-
-                  <span className="text-sm font-medium text-gray-700">
-                    Choose multiple options (Checkbox)
-                  </span>
-                </label>
-              </div>
+              <RadioGroup
+                name="selectionType"
+                value={formData.selectionType}
+                onChange={(val) => setFormData({ ...formData, selectionType: val })}
+                options={[{ value: 'single', label: 'Choose one option (Radio)' }, { value: 'multiple', label: 'Choose multiple options (Checkbox)' }]}
+                orientation='horizontal'
+              />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.required}
-                  onChange={(e) =>
-                    setFormData({ ...formData, required: e.target.checked })
-                  }
-                  className="w-5 h-5 text-red-600 rounded border-gray-400 focus:ring-red-500"
-                />
-
-                <span className="text-sm font-medium text-gray-700">
-                  Required (customer must select at least one option)
-                </span>
-              </label>
+              <Checkbox
+                checked={formData.required}
+                onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
+                label='Required (customer must select at least one option)'
+                size='small'
+              />
             </div>
           </div>
           <div>
@@ -313,7 +258,7 @@ export default function EditModifier() {
                       </div>
 
                       <div className="flex-1">
-                        <input
+                        <Input
                           className={`
 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium
 ${
@@ -337,7 +282,7 @@ ${
                           $
                         </span>
 
-                        <input
+                        <Input
                           className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"
                           placeholder="0.00"
                           type="number"
@@ -355,7 +300,9 @@ ${
                       </div>
 
                       <div className="w-10 flex justify-end">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="small"
                           className="text-red-600 hover:bg-red-100 p-2 rounded-full"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -364,7 +311,7 @@ ${
                           aria-label="Remove option"
                         >
                           <MdOutlineDelete className="w-6 h-6" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -372,8 +319,9 @@ ${
               </div>
 
               <div className="p-4 border-t border-gray-200">
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-red-700 shadow-md"
+                <Button
+                  variant="primary"
+                  size="small"
                   onClick={() =>
                     setOptions([
                       ...options,
@@ -390,7 +338,7 @@ ${
                 >
                   <MdAdd className="w-5 h-5" />
                   <span>Add Option</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>

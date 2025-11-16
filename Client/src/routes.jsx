@@ -1,6 +1,7 @@
 import { createBrowserRouter, redirect } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AdminRoute from "@/components/AdminRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import SignIn from "@/pages/auth/SignIn";
 import SignUp from "@/pages/auth/SignUp";
 import SignOut from "@/pages/auth/SignOut";
@@ -44,21 +45,21 @@ import RestaurantSettings from "@/pages/settings/RestaurantSettings";
 import Reviews from "@/pages/reviews/Reviews";
 import Transactions from "@/pages/transactions/Transactions";
 import TransactionDetails from "@/pages/transactions/TransactionDetails";
+import RolesManagement from "@/pages/settings/RolesManagement";
+import RoleForm from "@/pages/settings/RoleForm";
+import StaffManagement from "@/pages/settings/StaffManagement";
+import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 
 
 export const dashboardLoader = async ({ params }) => {
   try {
     const { restaurantId } = params;
-    const [restaurant, categories, items, modifiers] = await Promise.all([
-      fetchRestaurant(restaurantId).catch(() => null),
-      fetchCategories(restaurantId).catch(() => ({})),
-      fetchItems(restaurantId).catch(() => ({})),
-      fetchModifiers(restaurantId).catch(() => ({})),
-    ]);
+    // Only load restaurant data - individual pages will load their own data when needed
+    const restaurant = await fetchRestaurant(restaurantId).catch(() => null);
 
-    return { restaurant, categories, items, modifiers };
+    return { restaurant };
   } catch (error) {
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
       throw redirect("/signin");
     }
     throw redirect("/signin");
@@ -80,7 +81,7 @@ export const itemsLoader = async ({ params }) => {
 
     return { items, categories, modifiers };
   } catch (error) {
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
       throw redirect("/signin");
     }
     throw redirect("/signin");
@@ -94,7 +95,7 @@ export const categoriesLoader = async ({ params }) => {
     const categories = Object.values(data || {});
     return { categories };
   } catch (error) {
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
       throw redirect("/signin");
     }
     throw redirect("/signin");
@@ -108,7 +109,7 @@ export const modifiersLoader = async ({ params }) => {
     const modifiers = Object.values(data || {});
     return { modifiers };
   } catch (error) {
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
       throw redirect("/signin");
     }
     throw redirect("/signin");
@@ -191,6 +192,7 @@ export const router = createBrowserRouter([
   { path: "signin", element: <SignIn /> },
   { path: "signup", element: <SignUp /> },
   { path: "signout", element: <SignOut /> },
+  { path: "accept-invitation", element: <AcceptInvitation /> },
   {
     element: <Layout />,
     children: [
@@ -216,39 +218,43 @@ export const router = createBrowserRouter([
           },
           {
             path: "items",
-            element: <ItemLibrary />,
+            element: (
+              <ProtectedRoute resource="items" action="read">
+                <ItemLibrary />
+              </ProtectedRoute>
+            ),
             loader: itemsLoader,
           },
           { path: "items/new", element: <CreateItem />, loader: itemsLoader },
-          { path: "items/:itemId/edit", element: <EditItem /> ,loader: itemsLoader },
+          { path: "items/:itemId/edit", element: <ProtectedRoute resource="items" action="update"><EditItem /></ProtectedRoute> ,loader: itemsLoader },
           {
             path: "categories",
-            element: <Categories />,
+            element: <ProtectedRoute resource="categories" action="read"><Categories /></ProtectedRoute>,
             loader: categoriesLoader,
           },
-          { path: "categories/new", element: <CreateCategory /> },
-          { path: "categories/:categoryId/edit", element: <EditCategory /> },
+          { path: "categories/new", element: <ProtectedRoute resource="categories" action="create"><CreateCategory /></ProtectedRoute> },
+          { path: "categories/:categoryId/edit", element: <ProtectedRoute resource="categories" action="update"><EditCategory /></ProtectedRoute> },
           {
             path: "modifiers",
-            element: <Modifiers />,
+            element: <ProtectedRoute resource="modifiers" action="read"><Modifiers /></ProtectedRoute>,
             loader: modifiersLoader,
           },
-          { path: "modifiers/new", element: <CreateModifier /> },
-          { path: "modifiers/:modifierId/edit", element: <EditModifier /> },
+          { path: "modifiers/new", element: <ProtectedRoute resource="modifiers" action="create"><CreateModifier /></ProtectedRoute> },
+          { path: "modifiers/:modifierId/edit", element: <ProtectedRoute resource="modifiers" action="update"><EditModifier /></ProtectedRoute> },
           {
             path: "discounts",
-            element: <Discounts />,
+            element: <ProtectedRoute resource="discounts" action="read"><Discounts /></ProtectedRoute>,
             loader: discountsLoader,
           },
-          { path: "discounts/new", element: <CreateDiscount /> },
-          { path: "discounts/:discountId/edit", element: <EditDiscount /> },
+          { path: "discounts/new", element: <ProtectedRoute resource="discounts" action="create"><CreateDiscount /></ProtectedRoute> },
+          { path: "discounts/:discountId/edit", element: <ProtectedRoute resource="discounts" action="update"><EditDiscount /></ProtectedRoute> },
           {
             path: "orders",
             element: <Orders />,
             loader: ordersLoader,
           },
           { path: "orders/:orderId", element: <OrderDetails /> },
-          { path: "reviews", element: <Reviews /> },
+          { path: "reviews", element: <ProtectedRoute resource="reviews" action="read"><Reviews /></ProtectedRoute> },
           { path: "transactions", element: <Transactions /> },
           { path: "transactions/:paymentIntentId", element: <TransactionDetails /> },
           { path: "settings/business/about", element: <BusinessAbout /> },
@@ -259,6 +265,10 @@ export const router = createBrowserRouter([
           },
           { path: "settings/restaurant", element: <RestaurantSettings /> },
           { path: "settings/developer-tools", element: <DeveloperTools /> },
+          { path: "settings/roles", element: <ProtectedRoute resource="staff" action="read"><RolesManagement /></ProtectedRoute> },
+          { path: "settings/roles/create", element: <ProtectedRoute resource="staff" action="create"><RoleForm /></ProtectedRoute> },
+          { path: "settings/roles/:roleId/edit", element: <ProtectedRoute resource="staff" action="update"><RoleForm /></ProtectedRoute> },
+          { path: "settings/staff", element: <ProtectedRoute resource="staff" action="read"><StaffManagement /></ProtectedRoute> },
         ],
       },
       { path: "*", element: <NotFound /> }, 

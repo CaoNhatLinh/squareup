@@ -32,6 +32,7 @@ export async function sessionLogout() {
     return res.data
   } catch (error) {
     console.error('sessionLogout failed:', error)
-    throw error
+    // Don't throw - allow logout to proceed even if server call fails
+    return { ok: false }
   }
 }

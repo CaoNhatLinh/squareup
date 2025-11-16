@@ -1,0 +1,113 @@
+import React from 'react';
+
+const Progress = ({
+  value = 0,
+  max = 100,
+  variant = 'primary',
+  size = 'medium',
+  showLabel = false,
+  label,
+  className = '',
+  ...props
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+
+  const variantStyles = {
+    primary: 'bg-indigo-600',
+    success: 'bg-green-600',
+    warning: 'bg-amber-500',
+    danger: 'bg-red-600',
+    info: 'bg-blue-600',
+  };
+
+  const sizeStyles = {
+    small: 'h-1',
+    medium: 'h-2',
+    large: 'h-3',
+  };
+
+  return (
+    <div className={className}>
+      {(showLabel || label) && (
+        <div className="flex justify-between items-center mb-2">
+          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+          {showLabel && (
+            <span className="text-sm font-medium text-gray-700">{Math.round(percentage)}%</span>
+          )}
+        </div>
+      )}
+      <div className={`w-full bg-gray-200 rounded-full overflow-hidden ${sizeStyles[size]}`} {...props}>
+        <div
+          className={`${variantStyles[variant]} ${sizeStyles[size]} rounded-full transition-all duration-300 ease-in-out`}
+          style={{ width: `${percentage}%` }}
+          role="progressbar"
+          aria-valuenow={value}
+          aria-valuemin={0}
+          aria-valuemax={max}
+        />
+      </div>
+    </div>
+  );
+};
+
+const CircularProgress = ({
+  value = 0,
+  max = 100,
+  size = 80,
+  strokeWidth = 8,
+  variant = 'primary',
+  showLabel = true,
+  className = '',
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const variantColors = {
+    primary: '#4F46E5',
+    success: '#059669',
+    warning: '#F59E0B',
+    danger: '#DC2626',
+    info: '#2563EB',
+  };
+
+  return (
+    <div className={`inline-flex items-center justify-center ${className}`}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#E5E7EB"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={variantColors[variant]}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-300 ease-in-out"
+        />
+      </svg>
+      {showLabel && (
+        <span
+          className="absolute text-sm font-semibold text-gray-700"
+          style={{ fontSize: size / 5 }}
+        >
+          {Math.round(percentage)}%
+        </span>
+      )}
+    </div>
+  );
+};
+
+Progress.Circular = CircularProgress;
+
+export default Progress;

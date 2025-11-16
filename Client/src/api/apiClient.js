@@ -1,8 +1,6 @@
 import axios from 'axios'
-import { auth } from '../firebase'
-
 const instance = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: 'http://localhost:5000/api',
   withCredentials: true, 
 })
 
@@ -10,50 +8,26 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/signin';
+      // Only redirect if not already on signin/signup/accept-invitation pages
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/signin') && 
+          !currentPath.includes('/signup') && 
+          !currentPath.includes('/accept-invitation')) {
+        window.location.href = '/signin';
+      }
     }
     return Promise.reject(error);
   }
 );
 
-let authReadyPromise = null;
-// waitForAuthReady is kept for potential future use with guest orders
-// eslint-disable-next-line no-unused-vars
-function waitForAuthReady() {
-  if (authReadyPromise) return authReadyPromise;
-  
-  authReadyPromise = new Promise((resolve) => {
-    if (auth.currentUser) {
-      resolve(auth.currentUser);
-      return;
-    }
-    
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      unsubscribe();
-      resolve(user);
-    });
-    
-    setTimeout(() => {
-      unsubscribe();
-      resolve(null);
-    }, 5000);
-  });
-  
-  return authReadyPromise;
-}
 
 async function buildAuthHeaders(contentType, idTokenOverride) {
   const headers = {}
   if (contentType) headers['Content-Type'] = contentType
-  
-  // If idTokenOverride is explicitly provided, use it (for guest orders)
   if (idTokenOverride) {
     headers['Authorization'] = 'Bearer ' + idTokenOverride
     return headers
   }
-  
-  // Otherwise, rely on session cookies (for authenticated admin/restaurant routes)
-  // withCredentials: true will send session cookies automatically
   return headers
 }
 
@@ -64,8 +38,6 @@ export async function get(url, opts = {}) {
 export async function post(url, body, opts = {}) {
   const contentType = opts.headers?.['Content-Type'] || 'application/json'
   const headers = await buildAuthHeaders(contentType === 'multipart/form-data' ? null : contentType, opts.idToken)
-  
-  // Merge with custom headers if provided
   if (opts.headers) {
     Object.assign(headers, opts.headers)
   }

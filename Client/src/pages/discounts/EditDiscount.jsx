@@ -6,6 +6,7 @@ import { fetchCategories } from '@/api/categories';
 import { fetchItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
+import { Button, Input, Dropdown, Checkbox, LoadingSpinner } from '@/components/ui';
 import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function EditDiscount() {
   const navigate = useNavigate();
@@ -105,20 +106,20 @@ export default function EditDiscount() {
     }
   };
 
+  const amountTypeOptions = [
+    { value: 'percentage', label: 'Percentage (%)' },
+    { value: 'fixed', label: 'Amount (₫)' },
+    { value: 'variable_amount', label: 'Variable amount (₫)' },
+    { value: 'variable_percentage', label: 'Variable percentage (%)' },
+  ];
+
   const renderAmountTypeDropdown = () => (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700">Amount type</label>
-      <select
-        value={formData.amountType}
-        onChange={(e) => setFormData({ ...formData, amountType: e.target.value })}
-        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-      >
-        <option value="percentage">Percentage (%)</option>
-        <option value="fixed">Amount (₫)</option>
-        <option value="variable_amount">Variable amount (₫)</option>
-        <option value="variable_percentage">Variable percentage (%)</option>
-      </select>
-    </div>
+    <Dropdown
+      label="Amount type"
+      options={amountTypeOptions}
+      value={formData.amountType}
+      onChange={(val) => setFormData({ ...formData, amountType: val })}
+    />
   );
 
   const renderAmountInput = () => {
@@ -143,12 +144,13 @@ export default function EditDiscount() {
           {formData.amountType === 'fixed' && (
             <HiCurrencyDollar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
           )}
-          <input
+          <Input
             type="number"
             placeholder="Enter amount"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            leftIcon={formData.amountType === 'percentage' ? MdPercent : (formData.amountType === 'fixed' ? HiCurrencyDollar : null)}
+            className="pl-10"
           />
         </div>
       </div>
@@ -156,14 +158,7 @@ export default function EditDiscount() {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-900/70 z-50">
-        <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mb-4"></div>
-          <p className="text-lg text-gray-700 font-medium">Loading discount data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner.Overlay message="Loading discount data..." />;
   }
 
   return (
@@ -172,31 +167,14 @@ export default function EditDiscount() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Edit Discount</h2>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            <Button variant="secondary" size="medium" onClick={handleClose}>Cancel</Button>
+            <Button variant="danger" size="medium" onClick={handleSave} loading={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Name (required)"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-lg font-semibold"
-            />
+            <Input label="Name" placeholder="Name (required)" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="text-lg font-semibold" />
             
             <div className="grid grid-cols-2 gap-4">
               {renderAmountTypeDropdown()}
@@ -247,12 +225,7 @@ export default function EditDiscount() {
                   <div className="text-center py-8">
                     <HiSparkles className="w-16 h-16 text-blue-400 mx-auto mb-3" />
                     <p className="text-gray-600 mb-4">Choose how to apply automatic discount</p>
-                    <button
-                      onClick={() => setShowDiscountTypeModal(true)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
-                    >
-                      Select Discount Type
-                    </button>
+                    <Button variant="primary" size="medium" onClick={() => setShowDiscountTypeModal(true)}>Select Discount Type</Button>
                   </div>
                 ) : formData.discountApplyTo === 'item_category' ? (
                   <div className="bg-white rounded-xl shadow-sm border-2 border-purple-200 hover:border-purple-400 transition-all">
@@ -267,12 +240,7 @@ export default function EditDiscount() {
                             <p className="text-xs text-gray-600">Apply to specific items or categories</p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setFormData({ ...formData, discountApplyTo: '', purchaseCategories: [], purchaseItems: [], addAllItemsToPurchase: false })}
-                          className="text-sm text-red-600 hover:text-red-700 font-medium"
-                        >
-                          Change Type
-                        </button>
+                        <Button variant="link" size="small" onClick={() => setFormData({ ...formData, discountApplyTo: '', purchaseCategories: [], purchaseItems: [], addAllItemsToPurchase: false })} className="text-red-600">Change Type</Button>
                       </div>
 
                       <div className="bg-gray-50 rounded-lg p-4 mb-3">
@@ -288,29 +256,13 @@ export default function EditDiscount() {
                               {formData.purchaseCategories?.map((cat) => (
                                 <span key={cat.id} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
                                   📁 {cat.name}
-                                  <button
-                                    onClick={() => setFormData({
-                                      ...formData,
-                                      purchaseCategories: formData.purchaseCategories.filter(c => c.id !== cat.id)
-                                    })}
-                                    className="hover:text-purple-900"
-                                  >
-                                    <HiXMark className="w-3 h-3" />
-                                  </button>
+                                  <Button variant="ghost" size="small" onClick={() => setFormData({ ...formData, purchaseCategories: formData.purchaseCategories.filter(c => c.id !== cat.id) })} icon={HiXMark} className="p-1" />
                                 </span>
                               ))}
                               {formData.purchaseItems?.map((item) => (
                                 <span key={item.id} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                                   🍽️ {item.name}
-                                  <button
-                                    onClick={() => setFormData({
-                                      ...formData,
-                                      purchaseItems: formData.purchaseItems.filter(i => i.id !== item.id)
-                                    })}
-                                    className="hover:text-blue-900"
-                                  >
-                                    <HiXMark className="w-3 h-3" />
-                                  </button>
+                                  <Button variant="ghost" size="small" onClick={() => setFormData({ ...formData, purchaseItems: formData.purchaseItems.filter(i => i.id !== item.id) })} icon={HiXMark} className="p-1" />
                                 </span>
                               ))}
                             </div>
@@ -321,24 +273,8 @@ export default function EditDiscount() {
                       </div>
 
                       <div className="flex items-center justify-between gap-3">
-                        <button
-                          onClick={() => {
-                            setShowItemCategorySelector(true);
-                            setSelectorMode('purchase');
-                          }}
-                          className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
-                        >
-                          Select Items/Categories
-                        </button>
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={formData.addAllItemsToPurchase || false}
-                            onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })}
-                            className="w-4 h-4 text-purple-600 rounded"
-                          />
-                          <span className="font-medium text-gray-700">Add all items</span>
-                        </label>
+                        <Button variant="primary" size="medium" onClick={() => { setShowItemCategorySelector(true); setSelectorMode('purchase'); }} className="flex-1">Select Items/Categories</Button>
+                        <Checkbox checked={formData.addAllItemsToPurchase || false} onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })} label="Add all items" />
                       </div>
                     </div>
                   </div>
@@ -356,25 +292,7 @@ export default function EditDiscount() {
                               <p className="text-xs text-gray-600">Apply when a number of items are purchased</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => setFormData({ 
-                              ...formData, 
-                              discountApplyTo: '', 
-                              quantityRuleType: 'exact',
-                              purchaseQuantity: 2,
-                              discountQuantity: 1,
-                              purchaseCategories: [], 
-                              purchaseItems: [],
-                              addAllItemsToPurchase: false,
-                              discountTargetCategories: [],
-                              discountTargetItems: [],
-                              addAllItemsToDiscount: false,
-                              copyEligibleItems: false
-                            })}
-                            className="text-sm text-red-600 hover:text-red-700 font-medium"
-                          >
-                            Change Type
-                          </button>
+                          <Button variant="link" size="small" onClick={() => setFormData({ ...formData, discountApplyTo: '', quantityRuleType: 'exact', purchaseQuantity: 2, discountQuantity: 1, purchaseCategories: [], purchaseItems: [], addAllItemsToPurchase: false, discountTargetCategories: [], discountTargetItems: [], addAllItemsToDiscount: false, copyEligibleItems: false })} className="text-red-600">Change Type</Button>
                         </div>
 
                         <div className="bg-gray-50 rounded-lg p-4 mb-3 space-y-3">
@@ -386,12 +304,7 @@ export default function EditDiscount() {
                                 '🎁 Buy One Get One (BOGO)'
                               }
                             </p>
-                            <button
-                              onClick={() => setShowPurchaseRuleModal(true)}
-                              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                              Change rule type
-                            </button>
+                            <Button variant="link" size="small" onClick={() => setShowPurchaseRuleModal(true)} className="text-blue-600">Change rule type</Button>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
@@ -401,24 +314,12 @@ export default function EditDiscount() {
                                  formData.quantityRuleType === 'exact' ? 'Exact Quantity' : 
                                  'Minimum Quantity'}
                               </label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={formData.purchaseQuantity}
-                                onChange={(e) => setFormData({ ...formData, purchaseQuantity: parseInt(e.target.value) || 1 })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                              />
+                              <Input type="number" min={1} value={formData.purchaseQuantity} onChange={(e) => setFormData({ ...formData, purchaseQuantity: parseInt(e.target.value) || 1 })} className="w-full" />
                             </div>
                             {formData.quantityRuleType === 'bogo' && (
                               <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1">Get Quantity</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={formData.discountQuantity}
-                                  onChange={(e) => setFormData({ ...formData, discountQuantity: parseInt(e.target.value) || 1 })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                />
+                                <Input type="number" min={1} value={formData.discountQuantity} onChange={(e) => setFormData({ ...formData, discountQuantity: parseInt(e.target.value) || 1 })} className="w-full" />
                               </div>
                             )}
                           </div>
@@ -465,24 +366,8 @@ export default function EditDiscount() {
                         </div>
 
                         <div className="flex items-center justify-between gap-3">
-                          <button
-                            onClick={() => {
-                              setShowItemCategorySelector(true);
-                              setSelectorMode('purchase');
-                            }}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
-                          >
-                            Select Items/Categories
-                          </button>
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={formData.addAllItemsToPurchase || false}
-                              onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })}
-                              className="w-4 h-4 text-green-600 rounded"
-                            />
-                            <span className="font-medium text-gray-700">Add all items</span>
-                          </label>
+                          <Button variant="success" size="medium" onClick={() => { setShowItemCategorySelector(true); setSelectorMode('purchase'); }} className="flex-1">Select Items/Categories</Button>
+                            <Checkbox checked={formData.addAllItemsToPurchase || false} onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })} label="Add all items" />
                         </div>
                       </div>
                     </div>
@@ -521,29 +406,13 @@ export default function EditDiscount() {
                                   {formData.discountTargetCategories?.map((cat) => (
                                     <span key={cat.id} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
                                       📁 {cat.name}
-                                      <button
-                                        onClick={() => setFormData({
-                                          ...formData,
-                                          discountTargetCategories: formData.discountTargetCategories.filter(c => c.id !== cat.id)
-                                        })}
-                                        className="hover:text-purple-900"
-                                      >
-                                        <HiXMark className="w-3 h-3" />
-                                      </button>
+                                      <Button variant="ghost" size="small" onClick={() => setFormData({ ...formData, discountTargetCategories: formData.discountTargetCategories.filter(c => c.id !== cat.id) })} icon={HiXMark} className="p-1" />
                                     </span>
                                   ))}
                                   {formData.discountTargetItems?.map((item) => (
                                     <span key={item.id} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                                       🍽️ {item.name}
-                                      <button
-                                        onClick={() => setFormData({
-                                          ...formData,
-                                          discountTargetItems: formData.discountTargetItems.filter(i => i.id !== item.id)
-                                        })}
-                                        className="hover:text-blue-900"
-                                      >
-                                        <HiXMark className="w-3 h-3" />
-                                      </button>
+                                      <Button variant="ghost" size="small" onClick={() => setFormData({ ...formData, discountTargetItems: formData.discountTargetItems.filter(i => i.id !== item.id) })} icon={HiXMark} className="p-1" />
                                     </span>
                                   ))}
                                 </div>
@@ -554,16 +423,7 @@ export default function EditDiscount() {
                           </div>
 
                           <div className="space-y-2">
-                            <button
-                              onClick={() => setFormData({ ...formData, copyEligibleItems: !formData.copyEligibleItems })}
-                              className={`w-full px-4 py-2 rounded-lg transition-colors font-medium text-sm ${
-                                formData.copyEligibleItems
-                                  ? 'bg-green-600 text-white hover:bg-green-700'
-                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                              }`}
-                            >
-                              {formData.copyEligibleItems ? '✓ Copy eligible items' : 'Copy eligible items'}
-                            </button>
+                            <Button variant={formData.copyEligibleItems ? 'success' : 'secondary'} size="medium" onClick={() => setFormData({ ...formData, copyEligibleItems: !formData.copyEligibleItems })} className="w-full">{formData.copyEligibleItems ? '✓ Copy eligible items' : 'Copy eligible items'}</Button>
                             <div className="flex items-center justify-between gap-3">
                               <button
                                 onClick={() => {
@@ -575,16 +435,7 @@ export default function EditDiscount() {
                               >
                                 Select Different Items
                               </button>
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={formData.addAllItemsToDiscount || false}
-                                  onChange={(e) => setFormData({ ...formData, addAllItemsToDiscount: e.target.checked })}
-                                  disabled={formData.copyEligibleItems}
-                                  className="w-4 h-4 text-orange-600 rounded disabled:opacity-50"
-                                />
-                                <span className="font-medium text-gray-700">Add all items</span>
-                              </label>
+                              <Checkbox checked={formData.addAllItemsToDiscount || false} onChange={(e) => setFormData({ ...formData, addAllItemsToDiscount: e.target.checked })} label="Add all items" disabled={formData.copyEligibleItems} />
                             </div>
                           </div>
                         </div>
@@ -598,12 +449,7 @@ export default function EditDiscount() {
 
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <input
-                type="checkbox"
-                checked={formData.setSchedule}
-                onChange={(e) => setFormData({ ...formData, setSchedule: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
+              <Checkbox checked={formData.setSchedule} onChange={(e) => setFormData({ ...formData, setSchedule: e.target.checked })} label="" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <HiClock className="w-5 h-5 text-red-600" />
@@ -617,31 +463,11 @@ export default function EditDiscount() {
               <div className="space-y-3 mt-4 border-t border-gray-200 pt-4">
                 {DAYS_OF_WEEK.map((day) => (
                   <div key={day} className="flex items-center gap-4 bg-white p-3 rounded-lg border border-gray-200">
-                    <input
-                      type="checkbox"
-                      checked={formData.scheduleDays[day]}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        scheduleDays: { ...formData.scheduleDays, [day]: e.target.checked }
-                      })}
-                      className="w-4 h-4 text-red-600 rounded"
-                    />
+                    <Checkbox checked={formData.scheduleDays[day]} onChange={(e) => setFormData({ ...formData, scheduleDays: { ...formData.scheduleDays, [day]: e.target.checked } })} label="" />
                     <span className="w-24 capitalize font-medium text-gray-700">{day}</span>
-                    <input
-                      type="time"
-                      value={formData.scheduleTimeStart}
-                      onChange={(e) => setFormData({ ...formData, scheduleTimeStart: e.target.value })}
-                      disabled={!formData.scheduleDays[day]}
-                      className="px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
-                    />
+                    <Input type="time" value={formData.scheduleTimeStart} onChange={(e) => setFormData({ ...formData, scheduleTimeStart: e.target.value })} disabled={!formData.scheduleDays[day]} className="px-3 py-2" />
                     <span className="text-gray-500">to</span>
-                    <input
-                      type="time"
-                      value={formData.scheduleTimeEnd}
-                      onChange={(e) => setFormData({ ...formData, scheduleTimeEnd: e.target.value })}
-                      disabled={!formData.scheduleDays[day]}
-                      className="px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
-                    />
+                    <Input type="time" value={formData.scheduleTimeEnd} onChange={(e) => setFormData({ ...formData, scheduleTimeEnd: e.target.value })} disabled={!formData.scheduleDays[day]} className="px-3 py-2" />
                   </div>
                 ))}
               </div>
@@ -650,12 +476,7 @@ export default function EditDiscount() {
 
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <input
-                type="checkbox"
-                checked={formData.setDateRange}
-                onChange={(e) => setFormData({ ...formData, setDateRange: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
+              <Checkbox checked={formData.setDateRange} onChange={(e) => setFormData({ ...formData, setDateRange: e.target.checked })} label="" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <HiCalendar className="w-5 h-5 text-red-600" />
@@ -669,21 +490,11 @@ export default function EditDiscount() {
               <div className="grid grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">Start Date</label>
-                  <input
-                    type="date"
-                    value={formData.dateRangeStart}
-                    onChange={(e) => setFormData({ ...formData, dateRangeStart: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
+                  <Input type="date" value={formData.dateRangeStart} onChange={(e) => setFormData({ ...formData, dateRangeStart: e.target.value })} className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">End Date</label>
-                  <input
-                    type="date"
-                    value={formData.dateRangeEnd}
-                    onChange={(e) => setFormData({ ...formData, dateRangeEnd: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
+                  <Input type="date" value={formData.dateRangeEnd} onChange={(e) => setFormData({ ...formData, dateRangeEnd: e.target.value })} className="w-full" />
                 </div>
               </div>
             )}
@@ -691,12 +502,7 @@ export default function EditDiscount() {
 
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <input
-                type="checkbox"
-                checked={formData.setMinimumSpend}
-                onChange={(e) => setFormData({ ...formData, setMinimumSpend: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
+              <Checkbox checked={formData.setMinimumSpend} onChange={(e) => setFormData({ ...formData, setMinimumSpend: e.target.checked })} label="" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Set minimum spend</h3>
                 <p className="text-sm text-gray-600">Require a minimum subtotal to qualify for discount (Example: Buy at least $50 and get $10 off)</p>
@@ -706,24 +512,13 @@ export default function EditDiscount() {
             {formData.setMinimumSpend && (
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum subtotal</label>
-                <input
-                  type="number"
-                  placeholder="40"
-                  value={formData.minimumSubtotal}
-                  onChange={(e) => setFormData({ ...formData, minimumSubtotal: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
+                <Input type="number" placeholder="40" value={formData.minimumSubtotal} onChange={(e) => setFormData({ ...formData, minimumSubtotal: parseFloat(e.target.value) || 0 })} />
               </div>
             )}
           </div>
           <div className="border border-gray-300 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <input
-                type="checkbox"
-                checked={formData.setMaximumValue}
-                onChange={(e) => setFormData({ ...formData, setMaximumValue: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
+              <div className="flex items-center gap-3 mb-4">
+              <Checkbox checked={formData.setMaximumValue} onChange={(e) => setFormData({ ...formData, setMaximumValue: e.target.checked })} label="" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Set maximum discount value</h3>
                 <p className="text-sm text-gray-600">Set the maximum discount value per purchase</p>
@@ -733,13 +528,7 @@ export default function EditDiscount() {
             {formData.setMaximumValue && (
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Maximum value</label>
-                <input
-                  type="number"
-                  placeholder="40"
-                  value={formData.maximumValue}
-                  onChange={(e) => setFormData({ ...formData, maximumValue: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
+                <Input type="number" placeholder="40" value={formData.maximumValue} onChange={(e) => setFormData({ ...formData, maximumValue: parseFloat(e.target.value) || 0 })} />
                 <p className="text-xs text-gray-500 mt-2">Maximum discount value can only apply to percentage-based discounts.</p>
               </div>
             )}
@@ -752,12 +541,7 @@ export default function EditDiscount() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold">Choose how to apply discount</h3>
-              <button
-                onClick={() => setShowDiscountTypeModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <HiXMark className="w-6 h-6" />
-              </button>
+              <Button variant="ghost" size="small" onClick={() => setShowDiscountTypeModal(false)} icon={HiXMark} className="p-2" />
             </div>
 
             <div className="space-y-3">
@@ -805,12 +589,7 @@ export default function EditDiscount() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold">Choose a discount type</h3>
-              <button
-                onClick={() => setShowPurchaseRuleModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <HiXMark className="w-6 h-6" />
-              </button>
+              <Button variant="ghost" size="small" onClick={() => setShowPurchaseRuleModal(false)} icon={HiXMark} className="p-2" />
             </div>
 
             <div className="space-y-3">
@@ -857,12 +636,7 @@ export default function EditDiscount() {
               </button>
             </div>
 
-            <button
-              onClick={() => setShowPurchaseRuleModal(false)}
-              className="mt-6 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
-            >
-              Done
-            </button>
+            <Button variant="secondary" size="medium" onClick={() => setShowPurchaseRuleModal(false)} className="mt-6 w-full">Done</Button>
           </div>
         </div>
       )}
@@ -874,12 +648,7 @@ export default function EditDiscount() {
               <h3 className="text-xl font-bold">
                 Select Items & Categories {selectorMode === 'purchase' ? '(Purchase Requirements)' : '(Discount Target)'}
               </h3>
-              <button
-                onClick={() => setShowItemCategorySelector(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <HiXMark className="w-6 h-6" />
-              </button>
+              <Button variant="ghost" size="small" onClick={() => setShowItemCategorySelector(false)} icon={HiXMark} className="p-2" />
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4">
@@ -981,12 +750,7 @@ export default function EditDiscount() {
                   ? (formData.purchaseCategories?.length || 0) + (formData.purchaseItems?.length || 0)
                   : (formData.discountTargetCategories?.length || 0) + (formData.discountTargetItems?.length || 0)} items
               </div>
-              <button
-                onClick={() => setShowItemCategorySelector(false)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-              >
-                Done
-              </button>
+              <Button variant="primary" size="medium" onClick={() => setShowItemCategorySelector(false)}>Done</Button>
             </div>
           </div>
         </div>

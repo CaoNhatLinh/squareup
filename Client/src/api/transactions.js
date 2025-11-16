@@ -15,7 +15,7 @@ export async function fetchTransactions(restaurantId, params = {}) {
   if (params.transactionId) queryParams.append('transaction_id', params.transactionId);
   
   const queryString = queryParams.toString();
-  const url = `/api/transactions/${restaurantId}${queryString ? `?${queryString}` : ''}`;
+  const url = `/transactions/${restaurantId}${queryString ? `?${queryString}` : ''}`;
   
   const res = await client.get(url);
   return res.data;
@@ -25,7 +25,7 @@ export async function fetchTransactions(restaurantId, params = {}) {
  * Fetch single transaction details
  */
 export async function fetchTransactionDetails(restaurantId, paymentIntentId) {
-  const res = await client.get(`/api/transactions/${restaurantId}/${paymentIntentId}`);
+  const res = await client.get(`/transactions/${restaurantId}/${paymentIntentId}`);
   return res.data;
 }
 
@@ -33,7 +33,7 @@ export async function fetchTransactionDetails(restaurantId, paymentIntentId) {
  * Fetch transaction statistics
  */
 export async function fetchTransactionStats(restaurantId) {
-  const res = await client.get(`/api/transactions/${restaurantId}/stats`);
+  const res = await client.get(`/transactions/${restaurantId}/stats`);
   return res.data;
 }
 
@@ -41,6 +41,6 @@ export async function fetchTransactionStats(restaurantId) {
  * Refund a transaction
  */
 export async function refundTransaction(restaurantId, paymentIntentId, data = {}) {
-  const res = await client.post(`/api/transactions/${restaurantId}/${paymentIntentId}/refund`, data);
+  const res = await client.post(`/transactions/${restaurantId}/${paymentIntentId}/refund`, data);
   return res.data;
 }

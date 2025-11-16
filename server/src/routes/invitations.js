@@ -1,0 +1,7 @@
+const express = require('express');
+const router = express.Router();
+const staffController = require('../controllers/staffController');
+router.get('/:token', staffController.getInvitation);
+router.post('/accept', staffController.acceptInvitation);
+
+module.exports = router;

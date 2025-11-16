@@ -16,13 +16,11 @@ export default function SignIn() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      try {
-        const idToken = await auth.currentUser.getIdToken();
-        await sessionLogin(idToken);
-      } catch (e) {
-        console.warn('sessionLogin (email) failed', e);
-      }
-      navigate('/restaurants'); 
+      // AuthProvider will handle session creation via onAuthStateChanged
+      // Wait for it to complete (session setup + user state)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Force full page reload to clear any cached state
+      window.location.href = '/restaurants';
     } catch (err) {
       console.error(err);
       alert(err.message);
@@ -55,14 +53,12 @@ export default function SignIn() {
       }
       console.log('Restaurant created/updated');
       
-      try {
-        await sessionLogin(idToken);
-        console.log('Session cookie created');
-      } catch (e) {
-        console.warn('sessionLogin failed', e);
-      }
+      // AuthProvider will handle session creation via onAuthStateChanged
+      // Wait for it to complete (session setup + user state)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      navigate('/restaurants'); 
+      // Force full page reload to clear any cached state
+      window.location.href = '/restaurants'; 
     } catch (err) {
       console.error('Google sign in error:', err);
       alert(err.message);

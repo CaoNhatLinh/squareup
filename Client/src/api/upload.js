@@ -2,7 +2,7 @@ import * as apiClient from './apiClient'
 import imageCompression from 'browser-image-compression';
 
 export const uploadImage = async (base64Image) => {
-  const response = await apiClient.post("/api/upload/image", {
+  const response = await apiClient.post("/upload/image", {
     image: base64Image,
   });
   return response.data;
@@ -12,7 +12,7 @@ export const uploadImageFile = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await apiClient.post("/api/upload/image-file", formData, {
+  const response = await apiClient.post("/upload/image-file", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -32,7 +32,7 @@ export const uploadCompressedImageFile = async (file) => {
     const formData = new FormData();
     formData.append("image", compressedFile);
 
-    const response = await apiClient.post("/api/upload/image-file", formData, {
+    const response = await apiClient.post("/upload/image-file", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

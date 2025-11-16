@@ -16,6 +16,7 @@ import {
   HiOutlineChevronRight,
   HiOutlineSearch,
 } from 'react-icons/hi';
+import PageHeader from '@/components/common/PageHeader';
 
 export default function Transactions() {
   const { restaurantId } = useParams();
@@ -153,17 +154,12 @@ export default function Transactions() {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="p-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg">
-            <HiOutlineCreditCard className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900">Transactions</h1>
-            <p className="text-slate-600 mt-1">View and manage your Stripe payment transactions</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1 inline-flex gap-1">
+      <PageHeader
+        title="Transactions"
+        subtitle="View and manage your payment transactions"
+        Icon={HiOutlineCreditCard}
+      />
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1 inline-flex gap-1">
           {filterButtons.map((filter) => (
             <button
               key={filter.id}
@@ -229,7 +225,6 @@ export default function Transactions() {
             </div>
           </div>
         </div>
-      </div>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center">

@@ -5,6 +5,9 @@
       "$restaurantId": {
         ".read": true,
         ".write": true,
+        "staff": {
+          ".indexOn": ["email", "roleId"]
+        },
         "orders": {
           ".indexOn": ["createdAt", "status", "sessionId"],
           "$orderId": {
@@ -40,6 +43,10 @@
         ".read": true,
         ".write": true
       }
+    }
+    ,
+    "invitations": {
+      ".indexOn": ["email", "token"]
     }
   }
 }

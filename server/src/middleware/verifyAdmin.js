@@ -1,11 +1,8 @@
 const admin = require('firebase-admin');
-
 async function verifyAdmin(req, res, next) {
   try {
     const sessionCookie = req.cookies && req.cookies.session;
-
     let decodedClaims = null;
-
     if (sessionCookie) {
       try {
         decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
@@ -13,7 +10,6 @@ async function verifyAdmin(req, res, next) {
         decodedClaims = null;
       }
     }
-
     if (!decodedClaims) {
       const authHeader = req.headers && req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -25,12 +21,9 @@ async function verifyAdmin(req, res, next) {
         }
       }
     }
-
     if (!decodedClaims) {
       return res.status(401).json({ error: 'No valid session or idToken provided' });
     }
-
-    // Block guest users from admin access
     if (decodedClaims.role === 'guest') {
       return res.status(403).json({ 
         error: 'Guest users cannot access admin routes',
@@ -38,7 +31,6 @@ async function verifyAdmin(req, res, next) {
         isGuest: true 
       });
     }
-
     if (!decodedClaims.admin) {
       return res.status(403).json({ 
         error: 'Access denied. Admin privileges required.',
@@ -51,7 +43,6 @@ async function verifyAdmin(req, res, next) {
       email: decodedClaims.email,
       admin: decodedClaims.admin,
     };
-
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired session' });

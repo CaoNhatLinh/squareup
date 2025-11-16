@@ -3,10 +3,12 @@ import  { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { getRestaurantReviews } from "@/api/reviews";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import PageHeader from '@/components/common/PageHeader';
 import ReviewsStats from "@/components/reviews/ReviewsStats";
 import ReviewsFilters from "@/components/reviews/ReviewsFilters";
 import ReviewsList from "@/components/reviews/ReviewsList";
 import ItemsAnalysis from "@/components/reviews/ItemsAnalysis";
+import { LoadingSpinner } from '@/components/ui';
 export default function Reviews() {
   const { restaurantId } = useParams();
   const [reviews, setReviews] = useState([]);
@@ -120,7 +122,7 @@ export default function Reviews() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <LoadingSpinner size="large" color="red" />
       </div>
     );
   }
@@ -140,14 +142,11 @@ export default function Reviews() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Customer Feedback Center
-        </h1>
-        <p className="text-gray-600">
-          Analyze order and item ratings from your patrons.
-        </p>
-      </div>
+      <PageHeader
+        title="Customer Feedback Center"
+        subtitle="Analyze order and item ratings from your patrons."
+        Icon={HiOutlineChatBubbleLeftRight}
+      />
 
       <ReviewsStats stats={stats} />
       <div className="bg-white rounded-xl shadow-lg border border-gray-100">

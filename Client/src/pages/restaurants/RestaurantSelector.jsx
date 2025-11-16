@@ -31,6 +31,14 @@ export default function RestaurantSelector() {
   const fetchUserRestaurants = async () => {
     try {
       setLoading(true);
+      
+      // If user is staff, redirect directly to their restaurant
+      if (user?.role === 'staff' && user?.restaurantId) {
+        setSelectedRestaurantId(user.restaurantId);
+        navigate(`/${user.restaurantId}/dashboard`, { replace: true });
+        return;
+      }
+      
       const restaurants = await getUserRestaurants();
       setUserRestaurants(restaurants); 
     } catch (error) {
@@ -43,8 +51,15 @@ export default function RestaurantSelector() {
 
   useEffect(() => {
     if (!authLoading && user) {
+      // If user is staff, redirect directly to their restaurant
+      if (user.role === 'staff' && user.restaurantId) {
+        setSelectedRestaurantId(user.restaurantId);
+        navigate(`/${user.restaurantId}/dashboard`, { replace: true });
+        return;
+      }
       fetchUserRestaurants();
     } else if (!authLoading && !user) {
+      // Only redirect to signin if auth is done loading and still no user
       navigate("/signin", { replace: true });
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);

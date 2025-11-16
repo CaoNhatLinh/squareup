@@ -5,6 +5,7 @@ import { createDiscount } from '@/api/discounts';
 import { fetchCategories } from '@/api/categories';
 import { fetchItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
+import { Input, Button, Checkbox } from '@/components/ui';
 import { MdPercent } from "react-icons/md";
 import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function CreateDiscount() {
@@ -130,19 +131,14 @@ export default function CreateDiscount() {
         <label className="block text-sm font-semibold text-gray-700">
           {formData.amountType === 'percentage' ? 'Percentage' : 'Amount'}
         </label>
-        <div className="relative">
-          {formData.amountType === 'percentage' && (
-            <MdPercent className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          )}
-          {formData.amountType === 'fixed' && (
-            <HiCurrencyDollar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          )}
-          <input
+          <div className="relative">
+          <Input
             type="number"
             placeholder="Enter amount"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            leftIcon={formData.amountType === 'percentage' ? MdPercent : formData.amountType === 'fixed' ? HiCurrencyDollar : null}
+            className="w-full"
           />
         </div>
       </div>
@@ -155,30 +151,21 @@ export default function CreateDiscount() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Create Discount</h2>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-            >
-              {saving ? 'Saving...' : 'Save Discount'}
-            </button>
+            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving}>Save Discount</Button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div className="space-y-4">
-            <input
+            <Input
+              id="name"
+              name="name"
               type="text"
               placeholder="Name (required)"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-lg font-semibold"
+              className="text-lg font-semibold"
             />
             
             <div className="grid grid-cols-2 gap-4">

@@ -5,11 +5,13 @@ import {
   HiOutlineSquares2X2,
   HiOutlineAdjustmentsHorizontal,
 } from "react-icons/hi2";
+import PageHeader from '@/components/common/PageHeader';
 
 import { fetchModifiers, deleteModifier } from "@/api/modifers.js";
 import SearchBar from "@/components/common/SearchBar";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import ActionMenu from "@/components/common/ActionMenu";
+import { LoadingSpinner, Button, Modal } from '@/components/ui';
 
 export default function Modifiers() {
   const { restaurantId } = useParams();
@@ -90,31 +92,14 @@ export default function Modifiers() {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <HiOutlineAdjustmentsHorizontal className="w-10 h-10 text-red-600" />
-
-          <h1 className="text-4xl font-extrabold text-gray-900">
-            Modifier Sets
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search modifier sets..."
-            className="w-72" 
-          />
-
-          <Link
-            to={`/${restaurantId}/modifiers/new`}
-            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <HiPlus className="w-5 h-5" /> New Modifier Set
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Modifier Sets"
+        Icon={HiOutlineAdjustmentsHorizontal}
+        SearchBarComponent={SearchBar}
+        searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search modifier sets...', className: 'w-72' }}
+        actionLabel={<><HiPlus className="w-5 h-5" /> New Modifier Set</>}
+        actionLink={`/${restaurantId}/modifiers/new`}
+      />
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
         <table className="w-full min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

@@ -3,6 +3,7 @@
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useRestaurant } from '@/hooks/useRestaurant'
 import { useAuth } from '@/hooks/useAuth'
+import { usePermissions } from '@/hooks/usePermission'
 import MenuItem from '@/components/navigation/MenuItem'
 import RestaurantDropdown from '@/components/navigation/RestaurantDropdown'
 import ProfileMenu from '@/components/navigation/ProfileMenu'
@@ -21,6 +22,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate()
   const { restaurant, loading: restaurantLoading } = useRestaurant()
   const { user, loading: authLoading } = useAuth()
+  const permissions = usePermissions()
 
   const isAdminPath = location.pathname.startsWith('/admin')
   const adminManagedRestaurantId = sessionStorage.getItem('adminManagingRestaurant')
@@ -33,7 +35,7 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   }, [restaurantId, adminManagedRestaurantId])
 
-  const menuItems = restaurantId ? getMenuItems(restaurantId) : []
+  const menuItems = restaurantId ? getMenuItems(restaurantId, permissions, user?.role) : []
   const isLoading = authLoading || (restaurantId && !['signin', 'signup', 'signout', 'admin', 'dashboard', 'restaurants', 'shop', 'track-order'].includes(restaurantId) && restaurantLoading)
 
   if (!authLoading && !user) {

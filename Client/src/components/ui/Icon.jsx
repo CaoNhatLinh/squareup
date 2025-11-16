@@ -1,0 +1,30 @@
+import React from 'react';
+
+const Icon = ({
+  icon: IconComponent,
+  size = 'medium',
+  color,
+  className = '',
+  ...props
+}) => {
+  if (!IconComponent) return null;
+  const sizeStyles = {
+    small: 'w-4 h-4',
+    medium: 'w-5 h-5',
+    large: 'w-6 h-6',
+    xl: 'w-8 h-8',
+    '2xl': 'w-10 h-10',
+  };
+
+  const colorStyles = color ? { color } : {};
+
+  return (
+    <IconComponent
+      className={`${sizeStyles[size]} ${className}`}
+      style={colorStyles}
+      {...props}
+    />
+  );
+};
+
+export default Icon;

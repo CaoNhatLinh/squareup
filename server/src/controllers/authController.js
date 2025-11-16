@@ -28,15 +28,12 @@ async function createDefaultRestaurant(uid, userName) {
   };
 
   await db.ref(`restaurants/${restaurantId}`).set(restaurantData);
-
-  await db.ref(`users/${uid}/restaurants/${restaurantId}`).set(true);
-
-  await db.ref(`userRestaurants/${uid}/${restaurantId}`).set({
+  await db.ref(`users/${uid}/restaurants/${restaurantId}`).set({
     name: restaurantData.name,
     role: 'owner',
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    active: true,
   });
-
   return restaurantId;
 }
 
@@ -49,17 +46,19 @@ async function sessionLogin(req, res) {
     const userRecord = await admin.auth().getUser(uid);
     const userRef = db.ref(`users/${uid}`);
     const userSnapshot = await userRef.get();
-    
-    // Determine role based on custom claims
     const customClaims = userRecord.customClaims || {};
     let role = 'user';
     let isAdmin = false;
-    
+    let staffRestaurantId = null;
+
     if (customClaims.admin) {
       role = 'admin';
       isAdmin = true;
     } else if (customClaims.role === 'guest') {
       role = 'guest';
+    } else if (customClaims.role === 'staff') {
+      role = 'staff';
+      staffRestaurantId = customClaims.restaurantId || null;
     }
     
     console.log('sessionLogin - User:', {
@@ -86,12 +85,34 @@ async function sessionLogin(req, res) {
       if (!userSnapshot.exists()) {
         userData.createdAt = Date.now();
         await userRef.set(userData);
-        const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+        if (role === 'staff' && staffRestaurantId) {
+          const restSnap = await db.ref(`restaurants/${staffRestaurantId}`).get();
+          const restName = restSnap.exists() ? restSnap.val().name : 'Restaurant';
+          await db.ref(`users/${uid}/restaurants/${staffRestaurantId}`).set({
+            name: restName,
+            role: 'staff',
+            createdAt: Date.now(),
+            active: true,
+          });
+        } else if (role !== 'staff') {
+          const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+        }
       } else {
         await userRef.update(userData);
-        const restaurantsSnapshot = await db.ref(`users/${uid}/restaurants`).once('value');
+        const restaurantsSnapshot = await db.ref(`users/${uid}/restaurants`).get();
         if (!restaurantsSnapshot.exists()) {
-          const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+          if (role === 'staff' && staffRestaurantId) {
+            const restSnap = await db.ref(`restaurants/${staffRestaurantId}`).get();
+            const restName = restSnap.exists() ? restSnap.val().name : 'Restaurant';
+            await db.ref(`users/${uid}/restaurants/${staffRestaurantId}`).set({
+              name: restName,
+              role: 'staff',
+              createdAt: Date.now(),
+              active: true,
+            });
+          } else if (role !== 'staff') {
+            const restaurantId = await createDefaultRestaurant(uid, userData.displayName);
+          }
         }
       }
     } else {
@@ -151,22 +172,38 @@ async function verifySession(req, res) {
     
     const userRecord = await admin.auth().getUser(decoded.uid);
     const customClaims = userRecord.customClaims || {};
-    
-    // Determine role based on custom claims
     let role = 'user';
     let isAdmin = false;
+    let restaurantId = null;
+    let permissions = {};
     
     if (customClaims.admin) {
       role = 'admin';
       isAdmin = true;
     } else if (customClaims.role === 'guest') {
       role = 'guest';
+    } else if (customClaims.role === 'staff') {
+      role = 'staff';
+      restaurantId = customClaims.restaurantId;
+      if (restaurantId) {
+        const staffSnapshot = await db.ref(`restaurants/${restaurantId}/staff/${decoded.uid}`).get();
+        if (staffSnapshot.exists()) {
+          const staffData = staffSnapshot.val();
+          const roleSnapshot = await db.ref(`restaurants/${restaurantId}/roles/${staffData.roleId}`).get();
+          if (roleSnapshot.exists()) {
+            permissions = roleSnapshot.val().permissions || {};
+          }
+        }
+      }
     }
+    
     return res.json({ 
       uid: decoded.uid, 
       email: decoded.email,
       isAdmin: isAdmin,
-      role: role
+      role: role,
+      restaurantId: restaurantId,
+      permissions: permissions
     });
   } catch (err) {
     console.error('verifySession error:', err.message);

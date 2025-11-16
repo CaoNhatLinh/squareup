@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLoaderData, useParams } from "react-router-dom";
 import { HiPlus, HiTag } from "react-icons/hi2";
+import PageHeader from '@/components/common/PageHeader';
 import { useToast } from "@/hooks/useToast";
 import { fetchDiscounts, deleteDiscount } from "@/api/discounts.js";
 import SearchBar from "@/components/common/SearchBar";
 import ActionMenu from "@/components/common/ActionMenu";
+import { Button } from '@/components/ui';
 
 export default function Discounts() {
   const { restaurantId } = useParams();
@@ -66,26 +68,14 @@ export default function Discounts() {
 
   return (
     <div className="p-8 pb-24 bg-gray-50 min-h-screen">
-      <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <HiTag className="w-10 h-10 text-red-600" />
-          <h1 className="text-4xl font-extrabold text-gray-900">Discounts</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search discounts..."
-            className="w-72"
-          />
-          <Link
-            to={`/${restaurantId}/discounts/new`}
-            className="px-6 py-3 text-base font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <HiPlus className="w-5 h-5" /> Create Discount
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Discounts"
+        Icon={HiTag}
+        SearchBarComponent={SearchBar}
+        searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search discounts...', className: 'w-72' }}
+        actionLabel={<><HiPlus className="w-5 h-5" /> Create Discount</>}
+        actionLink={`/${restaurantId}/discounts/new`}
+      />
 
       {filteredDiscounts.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">

@@ -1,0 +1,44 @@
+import React from 'react';
+
+const LoadingSpinner = ({ size = 'medium', color = 'indigo', className = '' }) => {
+  const sizeStyles = {
+    small: 'w-4 h-4 border-2',
+    medium: 'w-8 h-8 border-3',
+    large: 'w-12 h-12 border-4',
+    xl: 'w-16 h-16 border-4',
+  };
+
+  const colorStyles = {
+    indigo: 'border-indigo-200 border-t-indigo-600',
+    blue: 'border-blue-200 border-t-blue-600',
+    red: 'border-red-200 border-t-red-600',
+    green: 'border-green-200 border-t-green-600',
+    gray: 'border-gray-200 border-t-gray-600',
+    white: 'border-white/30 border-t-white',
+  };
+
+  return (
+    <div
+      className={`inline-block animate-spin rounded-full ${sizeStyles[size]} ${colorStyles[color]} ${className}`}
+      role="status"
+      aria-label="Loading"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+};
+
+const LoadingOverlay = ({ message = 'Loading...', transparent = false }) => (
+  <div className={`fixed inset-0 z-50 flex items-center justify-center ${transparent ? 'bg-white/80' : 'bg-gray-900/50'} backdrop-blur-sm`}>
+    <div className="text-center">
+      <LoadingSpinner size="xl" color={transparent ? 'indigo' : 'white'} />
+      <p className={`mt-4 text-sm font-medium ${transparent ? 'text-gray-900' : 'text-white'}`}>
+        {message}
+      </p>
+    </div>
+  </div>
+);
+
+LoadingSpinner.Overlay = LoadingOverlay;
+
+export default LoadingSpinner;
