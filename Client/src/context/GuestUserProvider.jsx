@@ -22,8 +22,11 @@ export function GuestUserProvider({ children }) {
 
       try {
         const storageKey = `${GUEST_UUID_PREFIX}${restaurantId}`;
-        const existingUuid = localStorage.getItem(storageKey);
-
+        let existingUuid = localStorage.getItem(storageKey);
+        // If the stored value is the string 'undefined' or falsy, treat as missing
+        if (existingUuid === 'undefined' || existingUuid === 'null' || !existingUuid) {
+          existingUuid = null;
+        }
         if (existingUuid) {
           setGuestUuid(existingUuid);
         } else {

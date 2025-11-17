@@ -16,8 +16,8 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
     const loadDiscounts = async () => {
       try {
         setLoading(true);
-        const discounts = await fetchActiveDiscounts(restaurantId);
-        setAllDiscounts(discounts || {});
+        const data = await fetchActiveDiscounts(restaurantId);
+        setAllDiscounts(data.discounts || {});
       } catch (error) {
         console.error('Error loading discounts:', error);
       } finally {

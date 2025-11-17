@@ -41,11 +41,13 @@ export default function CreateCategory() {
         ),
       ])
         .then(([categoriesData, itemsData]) => {
-          const topLevelCategories = Object.values(categoriesData || {}).filter(
+          const cats = categoriesData?.categories || categoriesData || [];
+          const itemsArr = itemsData?.items || itemsData || [];
+          const topLevelCategories = (cats || []).filter(
             (cat) => !cat.parentCategoryId
           );
           setCategories(topLevelCategories);
-          setItems(Object.values(itemsData || {}));
+          setItems(itemsArr);
         })
         .catch((err) => console.error("Error loading data:", err));
     }
@@ -121,25 +123,13 @@ export default function CreateCategory() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <button
-            onClick={handleClose}
-            className="p-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <HiXMark className="w-6 h-6" /> 
-          </button>
+            <h2 className="text-2xl font-bold text-gray-900">Create New Category</h2>
 
-          <h2 className="text-2xl font-bold text-gray-900">
-            Create New Category
-          </h2>
-
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            loading={saving || uploading}
-          >
-            Save Category
-          </Button>
-        </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
+              <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save</Button>
+            </div>
+          </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div>
             <Input

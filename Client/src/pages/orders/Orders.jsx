@@ -32,7 +32,7 @@ export default function Orders() {
       setLoading(true);
       setError(null);
       const response = await getRestaurantOrders(restaurantId);
-      setOrders(response.orders || []);
+      setOrders((response && response.orders) || []);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError("Failed to load orders");

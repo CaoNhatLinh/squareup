@@ -22,12 +22,8 @@ export default function OrderHistory() {
       setError(null);
       try {
         console.log('Fetching orders for guest:', guestUuid);
-        const response = await getGuestOrderHistory(guestUuid);
-        console.log('Orders response:', response);
-        const restaurantOrders = response.orders.filter(
-          order => order.restaurantId === restaurantId
-        );
-        setOrders(restaurantOrders);
+        const data = await getGuestOrderHistory(restaurantId, guestUuid);
+        setOrders(data || []);
       } catch (err) {
         console.error("Failed to fetch order history:", err);
         setError("Unable to load order history");

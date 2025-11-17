@@ -4,6 +4,7 @@ import {
   HiCreditCard,
   HiCog,
   HiUserGroup,
+  HiShoppingCart,
 } from "react-icons/hi";
 
 export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') => {
@@ -20,6 +21,15 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
 
   // Home - Always visible
   menuItems.push({ to: `/${restaurantId}/dashboard`, label: "Home", icon: HiHome });
+
+  // POS - Point of Sale for in-store orders
+  if (hasAnyPermission('pos')) {
+    menuItems.push({ 
+      to: `/${restaurantId}/pos`, 
+      label: "Point of Sale", 
+      icon: HiShoppingCart 
+    });
+  }
 
   // Items & services section
   const itemsChildren = [];
@@ -71,6 +81,15 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       label: "Payments & invoices",
       icon: HiCreditCard,
       children: paymentsChildren,
+    });
+  }
+
+  // Customers list - visible if user has access to orders or customers feature
+  if (hasAnyPermission('orders') || hasAnyPermission('customers') || isOwner) {
+    menuItems.push({
+      label: "Customers",
+      icon: HiUserGroup,
+      to: `/${restaurantId}/customers`,
     });
   }
 

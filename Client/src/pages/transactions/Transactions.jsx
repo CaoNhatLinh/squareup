@@ -17,6 +17,7 @@ import {
   HiOutlineSearch,
 } from 'react-icons/hi';
 import PageHeader from '@/components/common/PageHeader';
+import Table from '@/components/ui/Table';
 
 export default function Transactions() {
   const { restaurantId } = useParams();
@@ -27,6 +28,8 @@ export default function Transactions() {
   const [activeFilter, setActiveFilter] = useState('all');
   const navigate = useNavigate();
   const [pagination, setPagination] = useState({ hasMore: false, startingAfter: null, endingBefore: null });
+  const [pageNumber, setPageNumber] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
@@ -36,7 +39,7 @@ export default function Transactions() {
   const loadTransactions = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { status: activeFilter !== 'all' ? activeFilter : undefined, limit: 10 };
+      const params = { status: activeFilter !== 'all' ? activeFilter : undefined, limit };
       if (pagination.startingAfter) params.starting_after = pagination.startingAfter;
       if (pagination.endingBefore) params.ending_before = pagination.endingBefore;
       if (filters.dateFrom) params.dateFrom = filters.dateFrom;
@@ -52,7 +55,7 @@ export default function Transactions() {
     } finally {
       setLoading(false);
     }
-  }, [restaurantId, activeFilter, pagination.startingAfter, pagination.endingBefore, filters.dateFrom, filters.dateTo, filters.customerEmail, filters.transactionId, showError]);
+  }, [restaurantId, activeFilter, pagination.startingAfter, pagination.endingBefore, filters.dateFrom, filters.dateTo, filters.customerEmail, filters.transactionId, showError, limit]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -74,12 +77,14 @@ export default function Transactions() {
   const handleNextPage = () => {
     if (transactions.length > 0) {
       setPagination(prev => ({ ...prev, startingAfter: transactions[transactions.length - 1].id, endingBefore: null }));
+      setPageNumber((p) => p + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (transactions.length > 0) {
       setPagination(prev => ({ ...prev, endingBefore: transactions[0].id, startingAfter: null }));
+      setPageNumber((p) => Math.max(1, p - 1));
     }
   };
   useEffect(() => {
@@ -239,101 +244,46 @@ export default function Transactions() {
           </div>
         ) : (
           <React.Fragment>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Payment Method
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {transactions.map((transaction) => (
-                  <React.Fragment key={transaction.id}>
-                    <tr
-                      className="hover:bg-slate-50 transition-colors cursor-pointer"
-                      onClick={() => navigateToTransactionDetails(transaction.id)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900">
-                          {formatAmount(transaction.amount, transaction.currency)}
+                <Table
+                  columns={[
+                    {
+                      key: 'amount',
+                      title: 'Amount',
+                      render: (r) => (
+                        <div>
+                          <div className="font-semibold text-slate-900">{formatAmount(r.amount, r.currency)}</div>
+                          <div className="text-xs text-slate-500">{r.currency}</div>
                         </div>
-                        <div className="text-xs text-slate-500">{transaction.currency}</div>
-                      </td>
-                      <td className="px-6 py-4">
+                      ),
+                    },
+                    {
+                      key: 'brand',
+                      title: 'Payment Method',
+                      render: (r) => (
                         <div className="flex items-center gap-2">
-                          {getPaymentMethodIcon(transaction.brand)}
+                          {getPaymentMethodIcon(r.brand)}
                           <div>
-                            <div className="text-sm font-medium text-slate-900">
-                              •••• {transaction.last4 || '****'}
-                            </div>
-                            <div className="text-xs text-slate-500 capitalize">
-                              {transaction.brand || 'Card'}
-                            </div>
+                            <div className="text-sm font-medium text-slate-900">•••• {r.last4 || '****'}</div>
+                            <div className="text-xs text-slate-500 capitalize">{r.brand || 'Card'}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900 max-w-xs truncate">
-                          {transaction.description || transaction.id}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900">
-                          {transaction.customer_email || '—'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900">{formatDate(transaction.created)}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(transaction)}
-                      </td>
-                    </tr>
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-            <div className="text-sm text-slate-700">
-              Showing {transactions.length} transactions
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handlePrevPage}
-                disabled={!pagination.endingBefore}
-                className="px-3 py-1 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                <HiOutlineChevronLeft className="w-4 h-4" />
-                Previous
-              </button>
-              <button
-                onClick={handleNextPage}
-                disabled={!pagination.hasMore}
-                className="px-3 py-1 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                Next
-                <HiOutlineChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+                      ),
+                    },
+                    { key: 'description', title: 'Description', render: (r) => <div className="text-sm text-slate-900 max-w-xs truncate">{r.description || r.id}</div> },
+                    { key: 'customer_email', title: 'Customer', render: (r) => <div className="text-sm text-slate-900">{r.customer_email || '—'}</div> },
+                    { key: 'created', title: 'Date', render: (r) => <div className="text-sm text-slate-900">{formatDate(r.created)}</div>, sortable: true },
+                    { key: 'status', title: 'Status', render: (r) => getStatusBadge(r) },
+                  ]}
+                  data={transactions}
+                  rowKey={'id'}
+                  onRowClick={(r) => navigateToTransactionDetails(r.id)}
+                  pagination={{ page: pageNumber, limit, total: transactions.length }}
+                  onPageChange={(p) => {
+                    if (p > pageNumber) handleNextPage();
+                    else if (p < pageNumber) handlePrevPage();
+                  }}
+                  onLimitChange={(l) => { setLimit(l); setPageNumber(1); setPagination({ hasMore: false, startingAfter: null, endingBefore: null }); }}
+                />
           </React.Fragment>
         )}
       </div>

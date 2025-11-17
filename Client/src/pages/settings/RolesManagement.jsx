@@ -4,6 +4,7 @@ import { getRoles, deleteRole } from '@/api/roles';
 import { useToast } from '@/hooks/useToast';
 import PageHeader from "@/components/common/PageHeader";
 import RoleList from '@/components/settings/RoleList';
+import Table from '@/components/ui/Table';
 import ListEmpty from '@/components/common/ListEmpty';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -16,21 +17,25 @@ export default function RolesManagement() {
   const { showToast } = useToast();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
   const [_error, setError] = useState(null);
 
-  const fetchRoles = useCallback(async () => {
+  const fetchRoles = useCallback(async (opts = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getRoles(restaurantId);
+      const data = await getRoles(restaurantId, { page: opts.page || page, limit: opts.limit || limit });
       setRoles(data?.roles || []);
+      setTotal((data.meta && data.meta.total) || 0);
     } catch (err) {
       console.error('Error fetching roles:', err);
       setError(err);
     } finally {
       setLoading(false);
     }
-  }, [restaurantId]);
+  }, [restaurantId, page, limit]);
 
   useEffect(() => {
     fetchRoles();
@@ -88,7 +93,22 @@ export default function RolesManagement() {
           onAction={() => navigate(`/${restaurantId}/settings/roles/create`)}
         />
       ) : (
-        <RoleList roles={roles} onEdit={handleEdit} onDelete={handleDelete} />
+        <Table
+          columns={[
+            { key: 'name', title: 'Role', render: (r) => <div className="font-semibold">{r.name}</div> },
+            { key: 'description', title: 'Description', render: (r) => <div className="text-sm text-gray-600">{r.description}</div> },
+            { key: 'permissions', title: 'Permissions', render: (r) => (
+                <div className="flex flex-wrap gap-2">{Object.entries(r.permissions || {}).map(([resource, perms]) => { const activePerms = Object.entries(perms).filter(([, value]) => value).map(([key]) => key); if (activePerms.length === 0) return null; return (<span key={resource} className="px-2 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold">{resource.replace(/_/g, ' ')} ({activePerms.join(',')})</span>); })}</div>
+            )},
+            { key: 'actions', title: '', render: (r) => (<div className="flex justify-end gap-2"><Button variant="secondary" size="small" onClick={() => handleEdit(r)}>Edit</Button><Button variant="danger" size="small" onClick={() => handleDelete(r)}>Delete</Button></div>) }
+          ]}
+          data={roles}
+          loading={loading}
+          rowKey={'id'}
+          pagination={{ page, limit, total }}
+          onPageChange={(p) => { setPage(p); fetchRoles({ page: p, limit }); }}
+          onLimitChange={(l) => { setLimit(l); setPage(1); fetchRoles({ page: 1, limit: l }); }}
+        />
       )}
       <ConfirmDialog
         open={confirmOpen}

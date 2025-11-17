@@ -2,6 +2,7 @@
 import  { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { getRestaurantReviews } from "@/api/reviews";
+import Pagination from '@/components/ui/Pagination';
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
 import ReviewsStats from "@/components/reviews/ReviewsStats";
@@ -13,6 +14,9 @@ export default function Reviews() {
   const { restaurantId } = useParams();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
   const [selectedRating, setSelectedRating] = useState("all");
   const [selectedItem, setSelectedItem] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -21,14 +25,15 @@ export default function Reviews() {
   const fetchReviews = useCallback(async () => {
     try {
       setLoading(true); 
-      const data = await getRestaurantReviews(restaurantId);
-      setReviews(data.reviews || data || []);
+      const data = await getRestaurantReviews(restaurantId, { page, limit });
+      setReviews(data.reviews || []);
+      setTotal((data.meta && data.meta.total) || (data.totalReviews || 0));
     } catch (error) {
       console.error("Failed to fetch reviews:", error);
     } finally {
       setLoading(false);
     }
-  }, [restaurantId]);
+  }, [restaurantId, page, limit]);
 
   useEffect(() => {
     fetchReviews();
@@ -189,6 +194,16 @@ export default function Reviews() {
             />
 
             <ReviewsList reviews={filteredReviews} />
+            <div className="mt-6">
+              <Pagination
+                currentPage={page}
+                totalPages={Math.max(1, Math.ceil(total / limit))}
+                totalItems={total}
+                itemsPerPage={limit}
+                onPageChange={(p) => { setPage(p); fetchReviews(); }}
+                onLimitChange={(l) => { setLimit(l); setPage(1); fetchReviews(); }}
+              />
+            </div>
           </div>
         )}
         {view === "items" && (

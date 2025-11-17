@@ -24,12 +24,7 @@ const uploadImage = async (req, res) => {
     );
 
     if (response.data.success) {
-      res.status(200).json({
-        success: true,
-        url: response.data.data.url,
-        displayUrl: response.data.data.display_url,
-        deleteUrl: response.data.data.delete_url,
-      });
+      res.status(200).json({ success: true, data: { url: response.data.data.url, displayUrl: response.data.data.display_url, deleteUrl: response.data.data.delete_url } });
     } else {
       res.status(500).json({ error: "Failed to upload image" });
     }
@@ -61,12 +56,7 @@ const uploadImageFile = async (req, res) => {
     );
 
     if (response.data.success) {
-      res.status(200).json({
-        success: true,
-        url: response.data.data.url,
-        displayUrl: response.data.data.display_url,
-        deleteUrl: response.data.data.delete_url,
-      });
+      res.status(200).json({ success: true, data: { url: response.data.data.url, displayUrl: response.data.data.display_url, deleteUrl: response.data.data.delete_url } });
     } else {
       res.status(500).json({ error: "Failed to upload image" });
     }

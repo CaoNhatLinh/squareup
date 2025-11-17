@@ -60,12 +60,22 @@ function calculateItemDiscounts(items, categories, discounts) {
       if (discount.addAllItemsToPurchase) {
         isEligible = true;
       } else {
+        // Check if item is directly in purchaseItems
         if (discount.purchaseItems && Array.isArray(discount.purchaseItems)) {
           isEligible = discount.purchaseItems.some(purchaseItem => purchaseItem.id === itemId);
         }
 
+        // Check if item's category is in purchaseCategories
         if (!isEligible && discount.purchaseCategories && Array.isArray(discount.purchaseCategories) && item.categoryId) {
-          isEligible = discount.purchaseCategories.some(cat => cat.id === item.categoryId);
+          isEligible = discount.purchaseCategories.some(cat => {
+            // Compare both string and direct id
+            return cat.id === item.categoryId || cat === item.categoryId;
+          });
+          
+          // Debug logging
+          if (isEligible) {
+            console.log(`✅ Item ${itemId} (${item.name}) eligible for discount ${discount.name} via category ${item.categoryId}`);
+          }
         }
       }
       

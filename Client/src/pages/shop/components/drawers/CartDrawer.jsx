@@ -232,8 +232,6 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900 text-lg mb-1">{item.name}</h3>
-                      
-                      {/* Show discount badge and pricing if discount applied */}
                       {itemDiscounts[item.groupKey] && itemDiscounts[item.groupKey].discountAmount > 0 ? (
                         <div className="space-y-1 mb-2">
                           <div className="flex items-center gap-2">

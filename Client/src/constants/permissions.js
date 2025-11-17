@@ -8,6 +8,11 @@ export const RESOURCES = [
   'orders',
   'reviews',
   'business_settings',
+  'customers',
+  'pos',
 ];
 
 export const ACTIONS = ['create', 'read', 'update', 'delete'];
+
+// POS specific permissions
+export const POS_ACTIONS = ['access', 'process_sale', 'apply_discount', 'void_transaction'];

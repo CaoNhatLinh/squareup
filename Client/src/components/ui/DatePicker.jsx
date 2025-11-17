@@ -4,6 +4,7 @@ import Input from './Input';
 
 const DatePicker = ({
   value,
+  selected,
   onChange,
   label,
   placeholder = 'Select date',
@@ -14,12 +15,14 @@ const DatePicker = ({
   minDate,
   maxDate,
   className = '',
+  isClearable = false,
+  placeholderText,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
   const pickerRef = useRef(null);
 
-  const selectedDate = value ? new Date(value) : null;
+  const selectedDate = (value || selected) ? new Date(value || selected) : null;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,7 +49,12 @@ const DatePicker = ({
 
   const handleDateSelect = (day) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    onChange(newDate.toISOString().split('T')[0]);
+    onChange && onChange(newDate);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange && onChange(null);
     setIsOpen(false);
   };
 
@@ -99,10 +107,10 @@ const DatePicker = ({
 
   return (
     <div className={`relative ${className}`} ref={pickerRef}>
-      <Input
+        <Input
         label={label}
         value={formatDate(selectedDate)}
-        placeholder={placeholder}
+        placeholder={placeholderText || placeholder}
         readOnly
         disabled={disabled}
         required={required}
@@ -116,6 +124,15 @@ const DatePicker = ({
       {isOpen && (
         <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-80">
           <div className="flex items-center justify-between mb-4">
+            {isClearable && selectedDate && (
+              <button
+                type="button"
+                onClick={() => handleClear()}
+                className="px-2 py-1 ml-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                Clear
+              </button>
+            )}
             <button
               type="button"
               onClick={() => changeMonth(-1)}

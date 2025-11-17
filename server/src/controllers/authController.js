@@ -137,7 +137,7 @@ async function sessionLogin(req, res) {
     };
 
     res.cookie('session', sessionCookie, options);
-    return res.json({ ok: true, user: userData });
+    return res.json({ success: true, data: { user: userData } });
   } catch (err) {
     console.error(err);
     return res.status(401).json({ error: 'Failed to create session' });
@@ -155,7 +155,7 @@ async function sessionLogout(req, res) {
       }
     }
     res.clearCookie('session', { path: '/' });
-    return res.json({ ok: true });
+    return res.json({ success: true, data: { ok: true } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Failed to logout' });
@@ -197,14 +197,7 @@ async function verifySession(req, res) {
       }
     }
     
-    return res.json({ 
-      uid: decoded.uid, 
-      email: decoded.email,
-      isAdmin: isAdmin,
-      role: role,
-      restaurantId: restaurantId,
-      permissions: permissions
-    });
+    return res.json({ success: true, data: { uid: decoded.uid, email: decoded.email, isAdmin: isAdmin, role: role, restaurantId: restaurantId, permissions: permissions } });
   } catch (err) {
     console.error('verifySession error:', err.message);
     return res.status(401).json({ error: 'Invalid session' });

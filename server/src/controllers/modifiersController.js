@@ -3,10 +3,33 @@ const db = admin.database();
 
 async function listModifiers(req, res) {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
+  const sortBy = req.query.sortBy || 'name';
+  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/modifiers`).get();
-
-    return res.json(snap.exists() ? snap.val() : {});
+    const allObj = snap.exists() ? snap.val() : {};
+    let list = Object.values(allObj || {});
+    if (q) {
+      list = list.filter(m => (m.name || '').toLowerCase().includes(q) || (m.displayName || '').toLowerCase().includes(q));
+    }
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      list = list.sort((a, b) => {
+        const va = (a[sortBy] || '').toString().toLowerCase();
+        const vb = (b[sortBy] || '').toString().toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = list.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = list.slice(startIndex, endIndex);
+    return res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -17,7 +40,7 @@ async function getModifier(req, res) {
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/modifiers/${modifierId}`).get();
     if (!snap.exists()) return res.status(404).json({ error: 'Modifier not found' });
-    return res.json(snap.val());
+    return res.json({ success: true, data: snap.val() });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -57,14 +80,14 @@ async function createModifier(req, res) {
       createdAt: Date.now() 
     });
     
-    return res.status(201).json({ 
+    return res.status(201).json({ success: true, data: {
       id, 
       name,
       displayName: displayName || name, 
       options: optionsObject,
       selectionType,
       required
-    });
+    } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -111,7 +134,7 @@ async function updateModifier(req, res) {
     await modRef.update(updates);
     
     const updated = (await modRef.get()).val();
-    return res.json(updated);
+    return res.json({ success: true, data: updated });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });

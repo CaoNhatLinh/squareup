@@ -45,7 +45,7 @@ export default function EditModifier() {
       } catch (err) {
         console.error("Failed to load modifier", err);
         alert("Failed to load modifier details.");
-        navigate(`/${restaurantId}/modifiers`);
+        navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
       } finally {
         setLoading(false);
       }
@@ -81,7 +81,7 @@ export default function EditModifier() {
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate(`/${restaurantId}/modifiers`);
+      navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
     } catch (err) {
       console.error("Failed to update modifier", err);
       alert("Failed to update modifier: " + (err.message || err));
@@ -133,23 +133,20 @@ export default function EditModifier() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <Button variant="ghost" onClick={() => navigate('/modifiers')}>
-            <HiXMark className="w-6 h-6 text-gray-700" />
-          </Button>
+          <h2 className="text-2xl font-bold text-gray-900">Edit Modifier Set: {formData.displayName || formData.name}</h2>
 
-          <h2 className="text-2xl font-bold text-gray-900">
-            Edit Modifier Set: {formData.displayName || formData.name}
-          </h2>
-
-          <Button
-            variant="primary"
-            size="medium"
-            onClick={handleSave}
-            loading={saving}
-            disabled={isSaveDisabled}
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" size="small" onClick={() => navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers')}>Cancel</Button>
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={handleSave}
+              loading={saving}
+              disabled={isSaveDisabled}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">

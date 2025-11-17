@@ -7,7 +7,6 @@ async function verifyToken(req, res, next) {
       try {
         const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
         
-        // Block guest users from accessing admin/restaurant routes
         if (decoded.role === 'guest') {
           return res.status(403).json({ 
             error: 'Guest users cannot access management routes',
@@ -29,8 +28,6 @@ async function verifyToken(req, res, next) {
     
     const idToken = authHeader.split(' ')[1];
     const decoded = await admin.auth().verifyIdToken(idToken);
-    
-    // Block guest users from accessing admin/restaurant routes
     if (decoded.role === 'guest') {
       return res.status(403).json({ 
         error: 'Guest users cannot access management routes',
@@ -55,22 +52,15 @@ async function verifyRestaurantOwnership(req, res, next) {
   }
   
   try {
-    // Get user record to check custom claims
     const userRecord = await admin.auth().getUser(userId);
     const customClaims = userRecord.customClaims || {};
-    
-    // Allow admin users
     if (req.user.admin || customClaims.admin) {
       req.restaurantId = restaurantId;
       return next();
     }
-
-    // Block guest users from restaurant management
     if (customClaims.role === 'guest') {
       return res.status(403).json({ error: 'Guest users cannot manage restaurants' });
     }
-
-    // Check restaurant ownership for regular users
     const db = admin.database();
     const snapshot = await db.ref(`users/${userId}/restaurants/${restaurantId}`).once('value');
     

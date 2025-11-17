@@ -97,15 +97,10 @@ export default function CreateItem() {
         
         {selected.length > 0 && (
           <div className="p-4 border-b border-gray-200 flex flex-wrap gap-2">
-            {selected.map((item) => (
+                {selected.map((item) => (
               <span key={item.id} className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm text-red-800 font-medium">
                 {item.name}
-                <button 
-                  onClick={() => setSelected(selected.filter(s => s.id !== item.id))} 
-                  className="text-red-500 hover:text-red-700 p-0.5"
-                >
-                  <HiMiniXMark className="w-4 h-4" />
-                </button>
+                <Button variant="ghost" size="small" onClick={() => setSelected(selected.filter(s => s.id !== item.id))} icon={HiMiniXMark} className="p-0.5" />
               </span>
             ))}
           </div>
@@ -144,9 +139,9 @@ export default function CreateItem() {
       <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900">Create New Menu Item</h2>
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-            <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save Item</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save</Button>
           </div>
         </div>
 
@@ -158,17 +153,18 @@ export default function CreateItem() {
                   <HiTag className="w-5 h-5 text-red-600" />
                   <div className="flex-1">
                     <div className="text-xs text-red-800 font-semibold mb-1">Item type</div>
-                    <select
+                    <Dropdown
                       value={formData.itemType}
-                      onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
-                      className="w-full bg-transparent text-sm font-bold text-red-900 focus:outline-none"
-                    >
-                      <option>Prepared food and beverage</option>
-                      <option>Physical good</option>
-                      <option>Membership</option>
-                      <option>Digital</option>
-                      <option>Other</option>
-                    </select>
+                      onChange={(val) => setFormData({ ...formData, itemType: val })}
+                      options={[
+                        { value: 'Prepared food and beverage', label: 'Prepared food and beverage' },
+                        { value: 'Physical good', label: 'Physical good' },
+                        { value: 'Membership', label: 'Membership' },
+                        { value: 'Digital', label: 'Digital' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                      placeholder="Select item type"
+                    />
                   </div>
                 </div>
               </div>
@@ -198,27 +194,13 @@ export default function CreateItem() {
                   </div>
               </div>
               <div>
-                <textarea
-                  placeholder="Customer-facing description (Optional)"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none text-gray-700"
-                />
+                <Input as="textarea" rows={4} placeholder="Customer-facing description (Optional)" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-gray-50">
                 {imagePreview ? (
                   <div className="relative group">
                     <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg shadow-lg object-cover w-full" />
-                    <button
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview(null);
-                      }}
-                      className="absolute top-2 right-2 bg-red-600/90 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-md"
-                    >
-                      <HiMiniXMark className="w-4 h-4" />
-                    </button>
+                    <Button variant="ghost" size="small" onClick={() => { setImageFile(null); setImagePreview(null); }} icon={HiMiniXMark} className="absolute top-2 right-2 p-2" aria-label="Remove image preview" />
                   </div>
                 ) : (
                   <>

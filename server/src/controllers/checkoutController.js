@@ -106,10 +106,7 @@ const createCheckoutSession = async (req, res) => {
         },
       },
     });
-    res.status(200).json({
-      sessionId: session.id,
-      url: session.url,
-    });
+    res.status(200).json({ success: true, data: { sessionId: session.id, url: session.url } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -245,7 +242,7 @@ const handleWebhook = async (req, res) => {
     default:
   }
 
-  res.json({ received: true });
+  res.json({ success: true, data: { received: true } });
 };
 
 const getOrderBySession = async (req, res) => {
@@ -278,10 +275,7 @@ const getOrderBySession = async (req, res) => {
     }
     const orderData = Object.values(orders)[0];
 
-    res.status(200).json({
-      success: true,
-      order: orderData,
-    });
+    res.status(200).json({ success: true, data: { order: orderData } });
   } catch (error) {
     console.error("Error getting order:", error);
     res.status(500).json({ error: error.message });
@@ -291,6 +285,11 @@ const getOrderBySession = async (req, res) => {
 const getAllOrders = async (req, res) => {
   try {
     const { restaurantId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
+    const q = (req.query.q || '').toLowerCase().trim();
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortDir = (req.query.sortDir || 'desc').toLowerCase();
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID is required" });
@@ -300,20 +299,32 @@ const getAllOrders = async (req, res) => {
     const ordersData = ordersSnapshot.val();
 
     if (!ordersData) {
-      return res.status(200).json({
-        success: true,
-        orders: [],
-      });
+      return res.status(200).json({ success: true, data: [] });
     }
 
-    const orders = Object.values(ordersData).sort(
-      (a, b) => b.createdAt - a.createdAt
-    );
-
-    res.status(200).json({
-      success: true,
-      orders,
-    });
+    let orders = Object.values(ordersData).sort((a,b) => b.createdAt - a.createdAt);
+    // search q (by id or email)
+    if (q) {
+      orders = orders.filter(o => (o.id || '').toLowerCase().includes(q) || (o.customerEmail || '').toLowerCase().includes(q));
+    }
+    // sort
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      orders = orders.sort((a, b) => {
+        let va = a[sortBy] === undefined || a[sortBy] === null ? '' : a[sortBy];
+        let vb = b[sortBy] === undefined || b[sortBy] === null ? '' : b[sortBy];
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = orders.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const pagedOrders = orders.slice(startIndex, endIndex);
+    res.status(200).json({ success: true, data: pagedOrders, meta: { total, limit, page } });
   } catch (error) {
     console.error("Error getting orders:", error);
     res.status(500).json({ error: error.message });
@@ -326,10 +337,7 @@ const getAllOrdersAdmin = async (req, res) => {
     const restaurantsData = restaurantsSnapshot.val();
 
     if (!restaurantsData) {
-      return res.status(200).json({
-        success: true,
-        orders: [],
-      });
+      return res.status(200).json({ success: true, data: [] });
     }
 
     const allOrders = [];
@@ -343,12 +351,13 @@ const getAllOrdersAdmin = async (req, res) => {
     }
 
     const orders = allOrders.sort((a, b) => b.createdAt - a.createdAt);
-
-    res.status(200).json({
-      success: true,
-      orders,
-      total: orders.length,
-    });
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
+    const total = orders.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = orders.slice(startIndex, endIndex);
+    res.status(200).json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (error) {
     console.error("Error getting all orders:", error);
     res.status(500).json({ error: error.message });
@@ -390,10 +399,7 @@ const getOrderById = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      order,
-    });
+    res.status(200).json({ success: true, data: { order } });
   } catch (error) {
     console.error("Error getting order by ID:", error);
     res.status(500).json({ error: error.message });
@@ -410,14 +416,7 @@ const getSessionStatus = async (req, res) => {
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    res.status(200).json({
-      success: true,
-      sessionId: session.id,
-      paymentStatus: session.payment_status,
-      status: session.status,
-      customerEmail: session.customer_details?.email,
-      amountTotal: session.amount_total,
-    });
+    res.status(200).json({ success: true, data: { sessionId: session.id, paymentStatus: session.payment_status, status: session.status, customerEmail: session.customer_details?.email, amountTotal: session.amount_total } });
   } catch (error) {
     console.error("Error getting session status:", error);
     res.status(500).json({ error: error.message });
@@ -587,10 +586,7 @@ const getPublicOrderStatus = async (req, res) => {
       statusHistory: foundOrder.statusHistory || {},
     };
 
-    res.status(200).json({
-      success: true,
-      order: publicOrderData,
-    });
+    res.status(200).json({ success: true, data: { order: publicOrderData } });
   } catch (error) {
     console.error("Error fetching public order status:", error);
     res.status(500).json({ error: "Failed to fetch order status" });

@@ -3,20 +3,18 @@ import { useAuth } from './useAuth';
 /**
  * Hook to check if user has specific permission
  */
-export const usePermission = (resource, action) => {
-  const { user } = useAuth();
-
-  // Admin has all permissions
-  if (user?.isAdmin) {
-    return true;
-  }
-
-  // Check staff permissions
+export const hasPermissionForUser = (user, resource, action) => {
+  if (!user) return false;
+  if (user?.isAdmin) return true;
   if (user?.role === 'staff' && user?.permissions) {
     return user.permissions[resource]?.[action] === true;
   }
-
   return false;
+};
+
+export const usePermission = (resource, action) => {
+  const { user } = useAuth();
+  return hasPermissionForUser(user, resource, action);
 };
 
 /**

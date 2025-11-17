@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useLoaderData, useParams } from "react-router-dom";
+import { Link, useLoaderData, useParams, useNavigate } from "react-router-dom";
 import { HiPlus, HiTag } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
+import Table from '@/components/ui/Table';
+import BulkActionBar from "@/components/common/BulkActionBar";
+import { Checkbox } from '@/components/ui';
 import { useToast } from "@/hooks/useToast";
 import { fetchDiscounts, deleteDiscount } from "@/api/discounts.js";
 import SearchBar from "@/components/common/SearchBar";
@@ -10,10 +13,15 @@ import { Button } from '@/components/ui';
 
 export default function Discounts() {
   const { restaurantId } = useParams();
+  const navigate = useNavigate();
   const loaderData = useLoaderData();
   const { success, error } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [discounts, setDiscounts] = useState(loaderData?.discounts || []);
+  const [discounts, setDiscounts] = useState([]);
+  const [selectedDiscounts, setSelectedDiscounts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
   const [discountMenus, setDiscountMenus] = useState({});
 
   useEffect(() => {
@@ -22,10 +30,11 @@ export default function Discounts() {
     }
   }, [loaderData]);
 
-  const loadDiscounts = async () => {
+  const loadDiscounts = async (opts = {}) => {
     try {
-      const data = await fetchDiscounts(restaurantId);
-      setDiscounts(Object.values(data || {}));
+      const data = await fetchDiscounts(restaurantId, { page: opts.page || page, limit: opts.limit || limit, q: opts.q || searchQuery });
+      setDiscounts(data.discounts || []);
+      setTotal((data.meta && data.meta.total) || 0);
     } catch (err) {
       console.error("Failed to load discounts:", err);
       error("Failed to load discounts");
@@ -49,9 +58,25 @@ export default function Discounts() {
     }
   };
 
-  const filteredDiscounts = discounts.filter((discount) =>
-    discount.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSelectDiscount = (discountId) => {
+    if (selectedDiscounts.includes(discountId)) setSelectedDiscounts(selectedDiscounts.filter(id => id !== discountId));
+    else setSelectedDiscounts([...selectedDiscounts, discountId]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDiscounts.length === 0) return;
+    if (!window.confirm(`Delete ${selectedDiscounts.length} discount(s)?`)) return;
+    try {
+      await Promise.all(selectedDiscounts.map(id => deleteDiscount(restaurantId, id)));
+      setSelectedDiscounts([]);
+      loadDiscounts();
+    } catch (err) {
+      console.error('Failed to bulk delete discounts', err);
+      error('Failed to delete discounts');
+    }
+  };
+
+  const filteredDiscounts = discounts; 
 
   const getAmountDisplay = (discount) => {
     if (discount.amountType === "percentage") {
@@ -95,84 +120,41 @@ export default function Discounts() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
-          <table className="w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Discount Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Automatic
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 w-24"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredDiscounts.map((discount) => (
-                <tr
-                  key={discount.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-900">
-                      {discount.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-700 capitalize">
-                    {discount.amountType.replace("_", " ")}
-                  </td>
-                  <td className="px-6 py-4 text-gray-700 font-medium">
-                    {getAmountDisplay(discount)}
-                  </td>
-                  <td className="px-6 py-4">
-                    {discount.automaticDiscount ? (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Yes
-                      </span>
-                    ) : (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                        No
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      Active
-                    </span>
-                  </td>
-                  <td
-                    className="px-6 py-4 w-16"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-end">
-                      <ActionMenu
-                        isOpen={discountMenus[discount.id]}
-                        onToggle={(open) =>
-                          setDiscountMenus({ ...discountMenus, [discount.id]: open })
-                        }
-                        editPath={`/${restaurantId}/discounts/${discount.id}/edit`}
-                        onDelete={() => handleDelete(discount.id, discount.name)}
-                        itemName={discount.name}
-                      />
-                    </div>
-                  </td>
-                 
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="p-4">
+          <Table
+            columns={[
+              { key: 'select', title: (
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-400 text-red-600 w-4 h-4"
+                    checked={(discounts || []).length > 0 && selectedDiscounts.length === (discounts || []).length}
+                    onChange={(e) => { if (e.target.checked) setSelectedDiscounts((discounts || []).map(c => c.id)); else setSelectedDiscounts([]); }}
+                  />
+                ), render: (r) => (<Checkbox checked={selectedDiscounts.includes(r.id)} onChange={(e) => { e.stopPropagation(); handleSelectDiscount(r.id); }} />) },
+              { key: 'name', title: 'Discount Name', render: (r) => <div className="font-semibold text-gray-900">{r.name}</div> },
+              { key: 'type', title: 'Type', render: (r) => <span className="capitalize">{r.amountType.replace('_', ' ')}</span> },
+              { key: 'amount', title: 'Amount', render: (r) => getAmountDisplay(r), align: 'right' },
+              { key: 'auto', title: 'Automatic', render: (r) => (r.automaticDiscount ? <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Yes</span> : <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">No</span>) },
+              { key: 'status', title: 'Status', render: () => <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Active</span> },
+              { key: 'actions', title: '', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={discountMenus[r.id]} onToggle={(open) => setDiscountMenus({ ...discountMenus, [r.id]: open })} editPath={`/${restaurantId}/discounts/${r.id}/edit`} onDelete={() => handleDelete(r.id, r.name)} itemName={r.name} /></div>) },
+            ]}
+            data={discounts}
+            loading={false}
+            rowKey={'id'}
+              onRowClick={(r) => navigate(`/${restaurantId}/discounts/${r.id}/edit`)}
+            pagination={{ page, limit, total }}
+            onPageChange={(p) => { setSelectedDiscounts([]); setPage(p); loadDiscounts({ page: p, limit }); }}
+            onLimitChange={(l) => { setSelectedDiscounts([]); setLimit(l); setPage(1); loadDiscounts({ page: 1, limit: l }); }}
+          />
+              
         </div>
       )}
+      <BulkActionBar
+        selectedCount={selectedDiscounts.length}
+        onDelete={handleBulkDelete}
+        onCancel={() => setSelectedDiscounts([])}
+        position="bottom"
+      />
     </div>
   );
 }

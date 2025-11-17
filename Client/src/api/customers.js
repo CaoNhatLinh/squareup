@@ -1,0 +1,53 @@
+import * as apiClient from './apiClient';
+export const fetchCustomers = async (restaurantId, params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.page) queryParams.append('page', params.page);
+  if (params.q) queryParams.append('q', params.q);
+  if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
+  if (params.dateTo) queryParams.append('dateTo', params.dateTo);
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+  if (params.minOrders !== undefined && params.minOrders !== null) queryParams.append('minOrders', params.minOrders);
+  if (params.minSpent !== undefined && params.minSpent !== null) queryParams.append('minSpent', params.minSpent);
+  const url = `/restaurants/${restaurantId}/customers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await apiClient.get(url);
+  return { customers: response.data || [], meta: response.meta || {} };
+};
+
+export const fetchCustomerOrders = async (restaurantId, email, params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+  if (email) {
+    const encoded = encodeURIComponent(email);
+    const url = `/restaurants/${restaurantId}/customers/${encoded}/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClient.get(url);
+    return { orders: response.data || [], meta: response.meta || {} };
+  }
+  const url = `/restaurants/${restaurantId}/customers/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const res = await apiClient.get(url);
+  return res.data;
+};
+export const fetchGuestOrders = async (restaurantId, guestUuid) => {
+  const response = await apiClient.get(`/restaurants/${restaurantId}/customers/guest/${guestUuid}/orders`);
+  return response.data || [];
+};
+export const fetchCustomersCSV = async (restaurantId, params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.q) queryParams.append('q', params.q);
+  if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
+  if (params.dateTo) queryParams.append('dateTo', params.dateTo);
+  if (params.minOrders) queryParams.append('minOrders', params.minOrders);
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+  const url = `${import.meta.env.VITE_API_BASE_URL}/restaurants/${restaurantId}/customers/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch CSV');
+  const blob = await res.blob();
+  return blob;
+};
+
+export default { fetchCustomers, fetchCustomerOrders, fetchGuestOrders };

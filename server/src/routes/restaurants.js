@@ -7,6 +7,7 @@ const specialClosuresRouter = require('./specialClosures');
 const discountsRouter = require('./discounts');
 const rolesRouter = require('./roles');
 const staffRouter = require('./staff');
+const customersRouter = require('./customers');
 const router = express.Router();
 const controller = require('../controllers/restaurantsController');
 router.get('/', verifyToken, controller.getUserRestaurants);
@@ -22,5 +23,6 @@ router.use('/:restaurantId/special-closures', specialClosuresRouter);
 router.use('/:restaurantId/discounts', discountsRouter);
 router.use('/:restaurantId/roles', rolesRouter);
 router.use('/:restaurantId/staff', staffRouter);
+router.use('/:restaurantId/customers', customersRouter);
 
 module.exports = router;

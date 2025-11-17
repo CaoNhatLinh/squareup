@@ -3,9 +3,35 @@ const db = admin.database();
 
 async function listCategories(req, res) {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
+  const sortBy = req.query.sortBy || 'name';
+  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/categories`).get();
-    return res.json(snap.exists() ? snap.val() : {});
+    const allObj = snap.exists() ? snap.val() : {};
+    // Convert to array
+    let list = Object.values(allObj || {});
+    if (q) {
+      list = list.filter(c => (c.name || '').toLowerCase().includes(q));
+    }
+    // sort
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      list = list.sort((a, b) => {
+        const va = (a[sortBy] || '').toString().toLowerCase();
+        const vb = (b[sortBy] || '').toString().toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = list.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = list.slice(startIndex, endIndex);
+    return res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -17,7 +43,7 @@ async function getCategory(req, res) {
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/categories/${categoryId}`).get();
     if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
-    return res.json(snap.val());
+      return res.json({ success: true, data: snap.val() });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -54,6 +80,7 @@ async function createCategory(req, res) {
       createdAt: Date.now() 
     });
     return res.status(201).json({ id, name, image, parentCategoryId, itemIds });
+      return res.status(201).json({ success: true, data: { id, name, image, parentCategoryId, itemIds } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -107,7 +134,7 @@ async function updateCategory(req, res) {
     updates.updatedAt = Date.now();
     await catRef.update(updates);
     const updated = (await catRef.get()).val();
-    return res.json(updated);
+      return res.json({ success: true, data: updated });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });

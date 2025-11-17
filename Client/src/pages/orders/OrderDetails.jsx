@@ -121,10 +121,10 @@ export default function OrderDetails() {
           </h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate(`/${restaurantId}/orders`)}
+            onClick={() => navigate(-1)}
             className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
           >
-            Back to Orders
+            Back
           </button>
         </div>
       </div>
@@ -136,11 +136,11 @@ export default function OrderDetails() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <button
-            onClick={() => navigate(`/${restaurantId}/orders`)}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors font-medium"
           >
             <HiArrowCircleLeft className="w-6 h-6" />
-            Back to Orders List
+            Back
           </button>
         </div>
 

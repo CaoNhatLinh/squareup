@@ -98,10 +98,8 @@ async function getTransactions(req, res) {
         metadata: pi.metadata,
       };
     });
-    return res.status(200).json({
-      transactions: formattedTransactions,
-      has_more: paymentIntents.has_more,
-    });
+    const total = formattedTransactions.length;
+    return res.status(200).json({ success: true, data: formattedTransactions, meta: { total, limit: parseInt(limit, 10) || 100, page: 1 }, has_more: paymentIntents.has_more });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return res.status(500).json({ error: "Failed to fetch transactions" });
@@ -242,7 +240,7 @@ async function getTransactionDetails(req, res) {
       order: orderDetails,
     };
 
-    return res.status(200).json(details);
+    return res.status(200).json({ success: true, data: details });
   } catch (error) {
     console.error("Error fetching transaction details:", error);
     return res
@@ -278,7 +276,7 @@ async function getTransactionStats(req, res) {
         classifyPaymentIntent(pi, "uncaptured")
       ).length,
     };
-    return res.status(200).json(stats);
+    return res.status(200).json({ success: true, data: stats });
   } catch (error) {
     console.error("Error fetching transaction stats:", error);
     return res.status(500).json({ error: "Failed to fetch transaction stats" });
@@ -312,16 +310,7 @@ async function refundTransaction(req, res) {
       refundParams.amount = refundAmount;
     }
     const refund = await stripe.refunds.create(refundParams);
-    return res.status(200).json({
-      success: true,
-      refund: {
-        id: refund.id,
-        amount: refund.amount / 100,
-        currency: refund.currency.toUpperCase(),
-        status: refund.status,
-        reason: refund.reason,
-      }
-    });
+    return res.status(200).json({ success: true, data: { refund: { id: refund.id, amount: refund.amount / 100, currency: refund.currency.toUpperCase(), status: refund.status, reason: refund.reason } } });
   } catch (error) {
     console.error('Error refunding transaction:', error);
     return res.status(500).json({ error: error.message || 'Failed to refund transaction' });

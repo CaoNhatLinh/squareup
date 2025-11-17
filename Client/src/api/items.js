@@ -1,23 +1,30 @@
 import * as client from './apiClient'
 
-export async function fetchItems(restaurantId) {
-  const res = await client.get(`/restaurants/${restaurantId}/items`)
-  return res.data
+export async function fetchItems(restaurantId, params = {}) {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.q) queryParams.append('q', params.q);
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+  const url = `/restaurants/${restaurantId}/items${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const res = await client.get(url);
+  return { items: res.data || [], meta: res.meta || {} };
 }
 
 export async function createItem(restaurantId, body) {
   const res = await client.post(`/restaurants/${restaurantId}/items`, body)
-  return res.data
+  return res.data;
 }
 
 export async function updateItem(restaurantId, itemId, body) {
   const res = await client.put(`/restaurants/${restaurantId}/items/${itemId}`, body)
-  return res.data
+  return res.data;
 }
 
 export async function deleteItem(restaurantId, itemId) {
   const res = await client.del(`/restaurants/${restaurantId}/items/${itemId}`)
-  return res.data
+  return res.data;
 }
 
 /**
@@ -25,5 +32,5 @@ export async function deleteItem(restaurantId, itemId) {
  */
 export async function toggleItemSoldOut(restaurantId, itemId, isSoldOut) {
   const res = await client.patch(`/restaurants/${restaurantId}/items/${itemId}`, { isSoldOut })
-  return res.data
+  return res.data;
 }

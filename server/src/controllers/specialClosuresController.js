@@ -17,7 +17,7 @@ async function fetchSpecialClosures(req, res) {
                 }));
             }
         }
-        res.json(specialClosures);
+        res.json({ success: true, data: specialClosures });
     } catch (error) {
         console.error('Error fetching special closures:', error);
         res.status(500).json({ error: 'Failed to fetch special closures' });
@@ -28,7 +28,7 @@ async function getSpecialClosures(req, res) {
   try {
     const snapshot = await db.ref(`restaurants/${restaurantId}/specialClosures/${specialClosureId}`).once('value');
     const specialClosure = snapshot.val();
-    res.json(specialClosure);
+    res.json({ success: true, data: specialClosure });
   } catch (error) {
     console.error('Error fetching special closures:', error);
     res.status(500).json({ error: 'Failed to fetch special closures' });
@@ -39,7 +39,7 @@ async function addSpecialClosure(req, res) {
   const closure = req.body;
   try {
     await db.ref(`restaurants/${restaurantId}/specialClosures`).push(closure);
-    res.status(201).json({ message: 'Special closure added successfully' });
+    res.status(201).json({ success: true, data: { message: 'Special closure added successfully' } });
   } catch (error) {
     console.error('Error adding special closure:', error);
     res.status(500).json({ error: 'Failed to add special closure' });
@@ -50,7 +50,7 @@ async function updateSpecialClosure(req, res) {
   const updatedClosure = req.body;
   try {
     await db.ref(`restaurants/${restaurantId}/specialClosures/${specialClosureId}`).update(updatedClosure);
-    res.json({ message: 'Special closure updated successfully' });
+    res.json({ success: true, data: { message: 'Special closure updated successfully' } });
   } catch (error) {
     console.error('Error updating special closure:', error);
     res.status(500).json({ error: 'Failed to update special closure' });
@@ -60,7 +60,7 @@ async function removeSpecialClosure(req, res) {
   const { restaurantId, specialClosureId } = req.params;
   try {
     await db.ref(`restaurants/${restaurantId}/specialClosures/${specialClosureId}`).remove();
-    res.json({ message: 'Special closure removed successfully' });
+    res.json({ success: true, data: { message: 'Special closure removed successfully' } });
   } catch (error) {
     console.error('Error removing special closure:', error);
     res.status(500).json({ error: 'Failed to remove special closure' });

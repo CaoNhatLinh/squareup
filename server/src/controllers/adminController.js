@@ -7,10 +7,7 @@ const getAllRestaurants = async (req, res) => {
     const restaurantsData = restaurantsSnapshot.val();
 
     if (!restaurantsData) {
-      return res.status(200).json({
-        success: true,
-        restaurants: [],
-      });
+      return res.status(200).json({ success: true, data: [], meta: { total: 0 } });
     }
 
     const restaurants = Object.values(restaurantsData).map(restaurant => ({
@@ -54,11 +51,7 @@ const getAllRestaurants = async (req, res) => {
       })
     );
 
-    res.status(200).json({
-      success: true,
-      restaurants: restaurantsWithOwnerInfo,
-      total: restaurantsWithOwnerInfo.length,
-    });
+    res.status(200).json({ success: true, data: restaurantsWithOwnerInfo, meta: { total: restaurantsWithOwnerInfo.length } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -82,10 +75,7 @@ const setAdminRole = async (req, res) => {
       updatedAt: Date.now(),
     });
 
-    res.status(200).json({
-      success: true,
-      message: `Admin role set for user ${uid}`,
-    });
+    res.status(200).json({ success: true, data: { message: `Admin role set for user ${uid}` } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -110,10 +100,7 @@ const removeAdminRole = async (req, res) => {
       updatedAt: Date.now(),
     });
 
-    res.status(200).json({
-      success: true,
-      message: `Admin role removed for user ${uid}`,
-    });
+    res.status(200).json({ success: true, data: { message: `Admin role removed for user ${uid}` } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -143,11 +130,7 @@ const getAllUsers = async (req, res) => {
       })
     );
 
-    res.status(200).json({
-      success: true,
-      users,
-      total: users.length,
-    });
+    res.status(200).json({ success: true, data: users, meta: { total: users.length } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

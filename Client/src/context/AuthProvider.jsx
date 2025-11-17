@@ -16,7 +16,8 @@ export function AuthProvider({ children }) {
           // Force refresh to get latest custom claims (role, restaurantId, etc.)
           const idToken = await firebaseUser.getIdToken(true);
           await authApi.sessionLogin(idToken);
-          const sessionData = await authApi.verifySession();
+          const sessionRaw = await authApi.verifySession();
+          const sessionData = sessionRaw && sessionRaw.data !== undefined ? sessionRaw.data : sessionRaw;
           setUser({
             ...firebaseUser,
             isAdmin: sessionData.isAdmin || false,

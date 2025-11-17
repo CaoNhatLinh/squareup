@@ -78,7 +78,6 @@ function ShopPageContent() {
       setError(null);
       try {
         const data = await fetchRestaurantForShop(restaurantId);
-
         setRestaurant({ 
           name: data.name, 
           description: data.description,
@@ -104,8 +103,8 @@ function ShopPageContent() {
         setModifiers(data.modifiers || {});
 
         try {
-          const discounts = await fetchActiveDiscounts(restaurantId);
-          setActiveDiscounts(discounts);
+          const data = await fetchActiveDiscounts(restaurantId);
+          setActiveDiscounts(data.discounts || {});
         } catch (error) {
           console.error('❌ Failed to load discounts:', error);
         }

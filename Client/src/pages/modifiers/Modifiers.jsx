@@ -6,6 +6,7 @@ import {
   HiOutlineAdjustmentsHorizontal,
 } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
+import Table from '@/components/ui/Table';
 
 import { fetchModifiers, deleteModifier } from "@/api/modifers.js";
 import SearchBar from "@/components/common/SearchBar";
@@ -19,33 +20,28 @@ export default function Modifiers() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState([]);
-  const [modifiers, setModifiers] = useState(loaderData?.modifiers || []);
+  const [modifiers, setModifiers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
   const [itemMenus, setItemMenus] = useState({});
 
   useEffect(() => {
-    if (loaderData?.modifiers) {
-      setModifiers(loaderData.modifiers);
-    }
-  }, [loaderData]);
+    const load = async () => {
+      try {
+        const data = await fetchModifiers(restaurantId, { page, limit, q: searchQuery });
+        setModifiers(data.modifiers || []);
+        setTotal((data.meta && data.meta.total) || 0);
+      } catch (err) {
+        console.error('Failed to fetch modifiers:', err);
+      }
+    };
+    load();
+  }, [loaderData, restaurantId, page, limit, searchQuery]);
 
-  const filteredModifiers = React.useMemo(() => {
-    if (!modifiers) return [];
-    return modifiers.filter(
-      (m) =>
-        (m.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (m.displayName || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [modifiers, searchQuery]);
+  const filteredModifiers = modifiers; // server-side filtered
 
-  const refetch = async () => {
-    if (!restaurantId) return;
-    try {
-      const data = await fetchModifiers(restaurantId);
-      setModifiers(Object.values(data || {}));
-    } catch (err) {
-      console.error("Failed to refetch modifiers:", err);
-    }
-  };
+  const refetch = async () => setPage(1);
 
   const handleDeleteModifier = async (modifierId) => {
     if (
@@ -100,134 +96,30 @@ export default function Modifiers() {
         actionLabel={<><HiPlus className="w-5 h-5" /> New Modifier Set</>}
         actionLink={`/${restaurantId}/modifiers/new`}
       />
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
-        <table className="w-full min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 text-left w-12">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-400 text-red-600 w-4 h-4"
-                  checked={
-                    (filteredModifiers || []).length > 0 &&
-                    selectedModifiers.length ===
-                      (filteredModifiers || []).length
-                  }
-                  onChange={handleSelectAll}
-                />
-              </th>
-
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Display Name
-              </th>
-
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                System Name
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Configuration
-              </th>
-              <th className="px-6 py-4 w-16">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-200">
-            {filteredModifiers.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-6 py-10 text-center text-base text-gray-500"
-                >
-                  <p className="mb-2">No modifier sets found.</p>
-
-                  <Link
-                    to={`/${restaurantId}/modifiers/new`}
-                    className="text-red-600 hover:text-red-800 font-medium flex items-center justify-center gap-1"
-                  >
-                    <HiPlus className="w-4 h-4" /> Create your first one!
-                  </Link>
-                </td>
-              </tr>
-            ) : (
-              filteredModifiers.map((modifier) => (
-                <tr
-                  key={modifier.id}
-                  className="group hover:bg-red-50/30 transition-colors duration-200 cursor-pointer"
-                  onClick={() => navigate(`/${restaurantId}/modifiers/${modifier.id}/edit`)}
-                >
-                  <td
-                    className="px-6 py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      className="rounded-md border-gray-300 text-red-600 shadow-sm focus:border-red-300 w-4 h-4 "
-                      checked={selectedModifiers.includes(modifier.id)}
-                      onChange={() =>
-                        setSelectedModifiers((prev) =>
-                          prev.includes(modifier.id)
-                            ? prev.filter((id) => id !== modifier.id)
-                            : [...prev, modifier.id]
-                        )
-                      }
-                      onClick={(e) => e.stopPropagation()} 
-                    />
-                  </td>
-
-                  <td className="px-6 py-4 font-semibold text-lg text-gray-900">
-                    {modifier.displayName || modifier.name}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
-                      {modifier.name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs font-bold px-3 py-1 rounded-full ${
-                          modifier.selectionType === "single"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {modifier.selectionType === "single"
-                          ? "Single Select"
-                          : "Multi Select"}
-                      </span>
-                      {modifier.required && (
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
-                          REQUIRED
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  <td
-                    className="px-6 py-4 "
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex justify-end"
-                    >
-                      <ActionMenu
-                        isOpen={itemMenus[modifier.id]}
-                        onToggle={(open) =>
-                          setItemMenus({ ...itemMenus, [modifier.id]: open })
-                        }
-                        editPath={`/${restaurantId}/modifiers/${modifier.id}/edit`}
-                        onDelete={() => handleDeleteModifier(modifier.id)}
-                        itemName={modifier.displayName || modifier.name}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="p-4">
+        <Table
+          columns={[
+            { key: 'select', title: (<input type="checkbox" className="rounded border-gray-400 text-red-600 w-4 h-4" checked={(modifiers || []).length > 0 && selectedModifiers.length === (modifiers || []).length} onChange={(e) => { if (e.target.checked) setSelectedModifiers((modifiers || []).map(m => m.id)); else setSelectedModifiers([]); }} />), render: (r) => (<input type="checkbox" className="rounded border-gray-400 text-red-600 w-4 h-4" checked={selectedModifiers.includes(r.id)} onChange={(e) => { e.stopPropagation(); setSelectedModifiers(prev => prev.includes(r.id) ? prev.filter(id => id !== r.id) : [...prev, r.id]); }} />) },
+            { key: 'displayName', title: 'Display Name', sortable: true, render: (r) => (r.displayName || r.name) },
+            { key: 'name', title: 'System Name', render: (r) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded-md border border-gray-200">{r.name}</span> },
+            { key: 'configuration', title: 'Configuration', render: (r) => (
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${r.selectionType === 'single' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{r.selectionType === 'single' ? 'Single Select' : 'Multi Select'}</span>
+                  {r.required && <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">REQUIRED</span>}
+                </div>
+            ) },
+            { key: 'actions', title: 'Actions', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={itemMenus[r.id]} onToggle={(open) => setItemMenus({ ...itemMenus, [r.id]: open })} editPath={`/${restaurantId}/modifiers/${r.id}/edit`} onDelete={() => handleDeleteModifier(r.id)} itemName={r.displayName || r.name} /></div>) }
+          ]}
+          data={modifiers}
+          loading={false}
+          rowKey={'id'}
+          onRowClick={(r) => navigate(`/${restaurantId}/modifiers/${r.id}/edit`)}
+          pagination={{ page, limit, total }}
+          onPageChange={(p) => setPage(p)}
+          onLimitChange={(l) => { setLimit(l); setPage(1); }}
+          sortBy={null}
+          sortDir={'asc'}
+        />
       </div>
       <BulkActionBar
         selectedCount={selectedModifiers.length}

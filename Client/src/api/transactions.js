@@ -18,7 +18,7 @@ export async function fetchTransactions(restaurantId, params = {}) {
   const url = `/transactions/${restaurantId}${queryString ? `?${queryString}` : ''}`;
   
   const res = await client.get(url);
-  return res.data;
+  return { transactions: res.data || [], meta: res.meta || {}, has_more: res.has_more };
 }
 
 /**

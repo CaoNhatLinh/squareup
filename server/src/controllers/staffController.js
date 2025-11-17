@@ -4,17 +4,39 @@ const db = admin.database();
 const { sendInvitationEmail } = require('../utils/emailService');
 async function getStaffMembers(req, res) {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
+  const sortBy = req.query.sortBy || 'displayName';
+  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
   try {
     const staffRef = db.ref(`restaurants/${restaurantId}/staff`);
     const snapshot = await staffRef.get();
     if (!snapshot.exists()) {
-      return res.json({ staff: [] });
+      return res.json({ success: true, data: [], meta: { total: 0, limit, page } });
     }
-    const staffList = [];
+    let staffList = [];
     snapshot.forEach((child) => {
       staffList.push({ id: child.key, ...child.val() });
     });
-    return res.json({ staff: staffList });
+    if (q) {
+      staffList = staffList.filter(s => (s.displayName || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q));
+    }
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      staffList = staffList.sort((a, b) => {
+        const va = (a[sortBy] || '').toString().toLowerCase();
+        const vb = (b[sortBy] || '').toString().toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = staffList.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = staffList.slice(startIndex, endIndex);
+    return res.json({ success: true, data: paged, meta: { total, page, limit } });
   } catch (error) {
     console.error('getStaffMembers error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -85,12 +107,7 @@ async function inviteStaff(req, res) {
       invitationLink,
       roleData?.name || 'Staff'
     );
-    return res.status(201).json({
-      message: 'Invitation sent successfully',
-      invitation: { id: invitationRef.key, ...invitationData },
-      emailSent: emailResult.success,
-      token,
-    });
+    return res.status(201).json({ success: true, data: { invitation: { id: invitationRef.key, ...invitationData }, emailSent: emailResult.success, token } });
   } catch (error) {
     console.error('inviteStaff error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -123,12 +140,7 @@ async function getInvitation(req, res) {
     const roleSnapshot = await db.ref(`restaurants/${invitation.restaurantId}/roles/${invitation.roleId}`).get();
     const role = roleSnapshot.exists() ? roleSnapshot.val() : null;
 
-    return res.json({
-      invitation: {
-        ...invitation,
-        role,
-      },
-    });
+    return res.json({ success: true, data: { invitation: { ...invitation, role } } });
   } catch (error) {
     console.error('getInvitation error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -206,14 +218,7 @@ async function acceptInvitation(req, res) {
       acceptedAt: Date.now(),
       userId: userRecord.uid,
     });
-    return res.status(201).json({
-      message: 'Account created successfully',
-      user: {
-        uid: userRecord.uid,
-        email: userRecord.email,
-        displayName,
-      },
-    });
+    return res.status(201).json({ success: true, data: { message: 'Account created successfully', user: { uid: userRecord.uid, email: userRecord.email, displayName } } });
   } catch (error) {
     console.error('acceptInvitation error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -228,7 +233,7 @@ async function removeStaff(req, res) {
       return res.status(404).json({ error: 'Staff member not found' });
     }
     await db.ref(`restaurants/${restaurantId}/staff/${staffId}`).remove();
-    return res.json({ message: 'Staff member removed successfully' });
+    return res.json({ success: true, data: { message: 'Staff member removed successfully' } });
   } catch (error) {
     console.error('removeStaff error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -255,7 +260,7 @@ async function updateStaffRole(req, res) {
       updatedAt: Date.now(),
     });
 
-    return res.json({ message: 'Staff role updated successfully' });
+    return res.json({ success: true, data: { message: 'Staff role updated successfully' } });
   } catch (error) {
     console.error('updateStaffRole error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -289,11 +294,7 @@ async function resendInvitation(req, res) {
       invitation.roleName
     );
 
-    return res.json({
-      message: 'Invitation resent successfully',
-      emailSent: emailResult.success,
-      token,
-    });
+    return res.json({ success: true, data: { message: 'Invitation resent successfully', emailSent: emailResult.success, token } });
   } catch (error) {
     console.error('resendInvitation error:', error);
     return res.status(500).json({ error: 'Server error' });

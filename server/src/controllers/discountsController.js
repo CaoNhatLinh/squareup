@@ -40,7 +40,7 @@ const getActiveDiscounts = async (req, res) => {
         acc[id] = discount;
         return acc;
       }, {});
-    res.json(activeDiscounts);
+    res.json({ success: true, data: activeDiscounts });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch active discounts', message: error.message });
   }
@@ -48,10 +48,19 @@ const getActiveDiscounts = async (req, res) => {
 
 const getDiscounts = async (req, res) => {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
   try {
     const snapshot = await db.ref(`restaurants/${restaurantId}/discounts`).get();
-    const discounts = snapshot.val() || {};
-    res.json(discounts);
+    const discountsObj = snapshot.val() || {};
+    let discounts = Object.values(discountsObj);
+    if (q) discounts = discounts.filter(d => (d.name || '').toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q));
+    const total = discounts.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = discounts.slice(startIndex, endIndex);
+    res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch discounts' });
   }
@@ -65,7 +74,7 @@ const getDiscount = async (req, res) => {
     if (!discount) {
       return res.status(404).json({ error: 'Discount not found' });
     }
-    res.json(discount);
+    res.json({ success: true, data: discount });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch discount' });
   }
@@ -86,7 +95,7 @@ const createDiscount = async (req, res) => {
     };
 
     await newDiscountRef.set(discount);
-    res.status(201).json({ id: discountId, ...discount });
+    res.status(201).json({ success: true, data: { id: discountId, ...discount } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create discount' });
   }
@@ -111,7 +120,7 @@ const updateDiscount = async (req, res) => {
     };
 
     await discountRef.update(updatedDiscount);
-    res.json(updatedDiscount);
+    res.json({ success: true, data: updatedDiscount });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update discount' });
   }
@@ -129,7 +138,7 @@ const deleteDiscount = async (req, res) => {
     }
 
     await discountRef.remove();
-    res.json({ message: 'Discount deleted successfully' });
+    res.json({ success: true, data: { message: 'Discount deleted successfully' } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete discount' });
   }

@@ -2,7 +2,7 @@ import * as apiClient from './apiClient';
 
 export const getRestaurantOrders = async (restaurantId) => {
   const response = await apiClient.get(`/orders/restaurant/${restaurantId}`);
-  return response.data;
+  return { orders: response.data || [], meta: response.meta || {} };
 };
 
 export const getOrderById = async (orderId) => {
@@ -31,5 +31,10 @@ export const updateOrderStatus = async (restaurantId, orderId, status, cancelRea
 
 export const trackOrderStatus = async (orderId) => {
   const response = await apiClient.get(`/orders/track/${orderId}`);
+  return response.data;
+};
+
+export const createOrder = async (restaurantId, orderData) => {
+  const response = await apiClient.post(`/orders/restaurant/${restaurantId}`, orderData);
   return response.data;
 };

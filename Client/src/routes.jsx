@@ -49,6 +49,9 @@ import RolesManagement from "@/pages/settings/RolesManagement";
 import RoleForm from "@/pages/settings/RoleForm";
 import StaffManagement from "@/pages/settings/StaffManagement";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
+import Customers from '@/pages/customers/Customers';
+import CustomerOrders from '@/pages/customers/CustomerOrders';
+import POSPage from '@/pages/pos/POSPage';
 
 
 export const dashboardLoader = async ({ params }) => {
@@ -70,14 +73,13 @@ export const itemsLoader = async ({ params }) => {
   try {
     const { restaurantId } = params;
     const [itemsData, categoriesData, modifiersData] = await Promise.all([
-      fetchItems(restaurantId).catch(() => ({})),
+      fetchItems(restaurantId).catch(() => ({ items: [], meta: {} })),
       fetchCategories(restaurantId).catch(() => ({})),
       fetchModifiers(restaurantId).catch(() => ({})),
     ]);
-
-    const items = Object.values(itemsData || {});
-    const categories = Object.values(categoriesData || {});
-    const modifiers = Object.values(modifiersData || {});
+    const items = itemsData.items || [];
+    const categories = categoriesData?.categories || categoriesData || [];
+    const modifiers = modifiersData?.modifiers || modifiersData || [];
 
     return { items, categories, modifiers };
   } catch (error) {
@@ -91,8 +93,8 @@ export const itemsLoader = async ({ params }) => {
 export const categoriesLoader = async ({ params }) => {
   try {
     const { restaurantId } = params;
-    const data = await fetchCategories(restaurantId).catch(() => ({}));
-    const categories = Object.values(data || {});
+    const data = await fetchCategories(restaurantId).catch(() => ({ categories: [], meta: {} }));
+    const categories = data.categories || [];
     return { categories };
   } catch (error) {
     if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -105,8 +107,8 @@ export const categoriesLoader = async ({ params }) => {
 export const modifiersLoader = async ({ params }) => {
   try {
     const { restaurantId } = params;
-    const data = await fetchModifiers(restaurantId).catch(() => ({}));
-    const modifiers = Object.values(data || {});
+    const data = await fetchModifiers(restaurantId).catch(() => ({ modifiers: [], meta: {} }));
+    const modifiers = data.modifiers || [];
     return { modifiers };
   } catch (error) {
     if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -119,8 +121,8 @@ export const modifiersLoader = async ({ params }) => {
 export const discountsLoader = async ({ params }) => {
   try {
     const { restaurantId } = params;
-    const data = await fetchDiscounts(restaurantId).catch(() => ({}));
-    const discounts = Object.values(data || {});
+    const data = await fetchDiscounts(restaurantId).catch(() => ({ discounts: [], meta: {} }));
+    const discounts = data.discounts || [];
     return { discounts };
   } catch (error) {
     if (error?.response?.status === 401) {
@@ -269,6 +271,9 @@ export const router = createBrowserRouter([
           { path: "settings/roles/create", element: <ProtectedRoute resource="staff" action="create"><RoleForm /></ProtectedRoute> },
           { path: "settings/roles/:roleId/edit", element: <ProtectedRoute resource="staff" action="update"><RoleForm /></ProtectedRoute> },
           { path: "settings/staff", element: <ProtectedRoute resource="staff" action="read"><StaffManagement /></ProtectedRoute> },
+          { path: "customers", element: <ProtectedRoute resource="customers" action="read"><Customers /></ProtectedRoute> },
+          { path: "customers/:customerEmail/orders", element: <ProtectedRoute resource="customers" action="read"><CustomerOrders/></ProtectedRoute> },
+          { path: "pos", element: <ProtectedRoute resource="pos" action="access"><POSPage /></ProtectedRoute> },
         ],
       },
       { path: "*", element: <NotFound /> }, 

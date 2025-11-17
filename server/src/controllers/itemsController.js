@@ -3,9 +3,38 @@ const db = admin.database();
 
 async function listItems(req, res) {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
+  const sortBy = req.query.sortBy || 'name';
+  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/items`).get();
-    return res.json(snap.exists() ? snap.val() : {});
+    const allObj = snap.exists() ? snap.val() : {};
+    let list = Object.values(allObj || {});
+    if (q) {
+      list = list.filter(i => (i.name || '').toLowerCase().includes(q));
+    }
+    // sort
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      list = list.sort((a, b) => {
+        let va = a[sortBy];
+        let vb = b[sortBy];
+        if (va === undefined || va === null) va = '';
+        if (vb === undefined || vb === null) vb = '';
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = list.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = list.slice(startIndex, endIndex);
+    return res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
@@ -38,7 +67,7 @@ async function createItem(req, res) {
     }
 
 
-    return res.status(201).json(itemObj);
+    return res.status(201).json({ success: true, data: itemObj });
   } catch (err) {
     return res.status(500).json({ error: 'Server error' });
   }
@@ -103,7 +132,7 @@ async function updateItem(req, res) {
     updates.updatedAt = Date.now();
     await itemRef.update(updates);
     const updated = (await itemRef.get()).val();
-    return res.json(updated);
+    return res.json({ success: true, data: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Server error' });
   }
@@ -134,7 +163,7 @@ async function deleteItem(req, res) {
         await catsRef.update(updates);
       }
     }
-    return res.json({ ok: true });
+    return res.json({ success: true, data: { ok: true } });
   } catch (err) {
     return res.status(500).json({ error: 'Server error' });
   }

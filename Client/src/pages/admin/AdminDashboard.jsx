@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await getAllRestaurants();
-      setRestaurants(response.data.restaurants || []);
+      setRestaurants(response.restaurants || []);
     } catch (err) {
       console.error('Error fetching restaurants:', err);
       showError('Failed to load restaurants');
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await getAllUsers();
-      setUsers(response.data.users || []);
+      setUsers(response.users || []);
     } catch (err) {
       console.error('Error fetching users:', err);
       showError('Failed to load users');

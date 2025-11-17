@@ -307,7 +307,7 @@ export default function BusinessHours() {
             disabled={saving}
             className="px-8 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-red-200 transition-all"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>

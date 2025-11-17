@@ -16,8 +16,10 @@ export { default as Pagination } from './Pagination';
 export { default as Badge } from './Badge';
 export { default as Avatar } from './Avatar';
 export { default as Modal } from './Modal';
+export { default as Table } from './Table';
 
 // Feedback & Notification Components
 export { default as Alert } from './Alert';
 export { default as Progress } from './Progress';
 export { default as DatePicker } from './DatePicker';
+

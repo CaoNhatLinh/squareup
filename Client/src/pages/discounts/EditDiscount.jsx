@@ -69,8 +69,8 @@ export default function EditDiscount() {
         fetchItems(restaurantId)
       ]).then(([discountData, categoriesData, itemsData]) => {
         setFormData(discountData);
-        setCategories(Object.values(categoriesData || {}));
-        setItems(Object.values(itemsData || {}));
+          setCategories(categoriesData?.categories || categoriesData || []);
+          setItems(itemsData?.items || itemsData || []);
       }).catch(err => {
         console.error('Error loading data:', err);
         error('Failed to load discount data');
@@ -168,7 +168,7 @@ export default function EditDiscount() {
           <h2 className="text-2xl font-bold text-gray-900">Edit Discount</h2>
           <div className="flex items-center gap-3">
             <Button variant="secondary" size="medium" onClick={handleClose}>Cancel</Button>
-            <Button variant="danger" size="medium" onClick={handleSave} loading={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+            <Button variant="primary" size="medium" onClick={handleSave} loading={saving}>{saving ? 'Saving...' : 'Save'}</Button>
           </div>
         </div>
 

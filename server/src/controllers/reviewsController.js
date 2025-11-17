@@ -83,10 +83,7 @@ const addOrderReview = async (req, res) => {
       }
     }
 
-    res.status(200).json({
-      success: true,
-      review: orderReviewData,
-    });
+    res.status(200).json({ success: true, data: orderReviewData });
   } catch (error) {
     console.error("Error adding order review:", error);
     res.status(500).json({ error: error.message });
@@ -119,10 +116,7 @@ const getOrderReviews = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      review: foundOrder.review || null,
-    });
+    res.status(200).json({ success: true, data: foundOrder.review || null });
   } catch (error) {
     console.error("Error getting order reviews:", error);
     res.status(500).json({ error: error.message });
@@ -132,6 +126,8 @@ const getOrderReviews = async (req, res) => {
 const getRestaurantReviews = async (req, res) => {
   try {
     const { restaurantId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID is required" });
@@ -169,12 +165,11 @@ const getRestaurantReviews = async (req, res) => {
     const averageRating = totalRating / reviews.length;
     reviews.sort((a, b) => b.createdAt - a.createdAt);
 
-    res.status(200).json({
-      success: true,
-      reviews,
-      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      totalReviews: reviews.length,
-    });
+    const total = reviews.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = reviews.slice(startIndex, endIndex);
+    res.status(200).json({ success: true, data: paged, meta: { total, limit, page, averageRating: Math.round(averageRating * 10) / 10, totalReviews: total } });
   } catch (error) {
     console.error("Error getting restaurant reviews:", error);
     res.status(500).json({ error: error.message });
@@ -184,6 +179,8 @@ const getRestaurantReviews = async (req, res) => {
 const getItemReviews = async (req, res) => {
   try {
     const { restaurantId, itemId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
 
     if (!restaurantId || !itemId) {
       return res.status(400).json({ error: "Restaurant ID and Item ID are required" });
@@ -206,12 +203,11 @@ const getItemReviews = async (req, res) => {
     const averageRating = totalRating / reviews.length;
     reviews.sort((a, b) => b.createdAt - a.createdAt);
 
-    res.status(200).json({
-      success: true,
-      reviews,
-      averageRating: Math.round(averageRating * 10) / 10,
-      totalReviews: reviews.length,
-    });
+    const total = reviews.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = reviews.slice(startIndex, endIndex);
+    res.status(200).json({ success: true, data: paged, meta: { total, limit, page, averageRating: Math.round(averageRating * 10) / 10, totalReviews: total } });
   } catch (error) {
     console.error("Error getting item reviews:", error);
     res.status(500).json({ error: error.message });

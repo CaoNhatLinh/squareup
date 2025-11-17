@@ -6,11 +6,13 @@ import { useToast } from '@/hooks/useToast';
 import { HiPlus } from 'react-icons/hi';
 import InviteStaffModal from '@/components/settings/InviteStaffModal';
 import StaffList from '@/components/settings/StaffList';
+import Table from '@/components/ui/Table';
 import PageHeader from '@/components/common/PageHeader';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import Dropdown from '@/components/ui/Dropdown';
+import Avatar from '@/components/ui/Avatar';
 
 export default function StaffManagement() {
   const { restaurantId } = useParams();
@@ -18,18 +20,22 @@ export default function StaffManagement() {
   const [staff, setStaff] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const fetchData = async () => {
+  const fetchData = async (opts = {}) => {
     try {
       setLoading(true);
       const [staffData, rolesData] = await Promise.all([
-        getStaffMembers(restaurantId),
+        getStaffMembers(restaurantId, { page: opts.page || page, limit: opts.limit || limit }),
         getRoles(restaurantId),
       ]);
       setStaff(staffData.staff || []);
       setRoles(rolesData.roles || []);
+      setTotal((staffData.meta && staffData.meta.total) || 0);
     } catch (err) {
       console.error('Error fetching data:', err);
       error('Failed to load data');
@@ -151,13 +157,32 @@ export default function StaffManagement() {
           </div>
         </div>
       ) : (
-        <StaffList
-          staff={staff}
-          onEdit={(member) => {
-            setSelectedStaff({ ...member, newRoleId: member.roleId });
-            setShowEditModal(true);
-          }}
-          onRemove={(member) => handleRemove(member.id, member.displayName || member.email)}
+        <Table
+          columns={[
+            { key: 'name', title: 'Name', render: (r) => (
+              <div className="flex items-center gap-4">
+                <Avatar name={r.displayName || r.email} size="small" />
+                <div>
+                  <div className="font-semibold">{r.displayName || r.email}</div>
+                  <div className="text-sm text-gray-500">{r.email}</div>
+                </div>
+              </div>
+            )},
+            { key: 'role', title: 'Role', render: (r) => <div className="text-sm font-medium">{r.roleName || r.roleId}</div> },
+            { key: 'joinedAt', title: 'Joined', render: (r) => (r.joinedAt ? new Date(r.joinedAt).toLocaleString() : '-') },
+            { key: 'actions', title: '', render: (r) => (
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" size="small" onClick={() => { setSelectedStaff({ ...r, newRoleId: r.roleId }); setShowEditModal(true); }}>Edit</Button>
+                <Button variant="danger" size="small" onClick={() => handleRemove(r.id, r.displayName || r.email)}>Remove</Button>
+              </div>
+            )},
+          ]}
+          data={staff}
+          loading={loading}
+          rowKey={'id'}
+          pagination={{ page, limit, total }}
+          onPageChange={(p) => { setPage(p); fetchData({ page: p, limit }); }}
+          onLimitChange={(l) => { setLimit(l); setPage(1); fetchData({ page: 1, limit: l }); }}
         />
       )}
 

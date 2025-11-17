@@ -18,20 +18,37 @@ const PERMISSIONS = ['create', 'read', 'update', 'delete'];
 
 async function getRoles(req, res) {
   const { restaurantId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const q = (req.query.q || '').toLowerCase().trim();
+  const sortBy = req.query.sortBy || 'name';
+  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
   try {
     const rolesRef = db.ref(`restaurants/${restaurantId}/roles`);
     const snapshot = await rolesRef.get();
-
     if (!snapshot.exists()) {
-      return res.json({ roles: [] });
+      return res.json({ success: true, data: [], meta: { total: 0, limit, page } });
     }
-
-    const roles = [];
+    let roles = [];
     snapshot.forEach((child) => {
       roles.push({ id: child.key, ...child.val() });
     });
-
-    return res.json({ roles });
+    if (q) roles = roles.filter(r => (r.name || '').toLowerCase().includes(q));
+    if (sortBy) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      roles = roles.sort((a,b) => {
+        const va = (a[sortBy] || '').toString().toLowerCase();
+        const vb = (b[sortBy] || '').toString().toLowerCase();
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+    }
+    const total = roles.length;
+    const startIndex = Math.max((page - 1) * limit, 0);
+    const endIndex = startIndex + limit;
+    const paged = roles.slice(startIndex, endIndex);
+    return res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (error) {
     console.error('getRoles error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -48,7 +65,7 @@ async function getRole(req, res) {
       return res.status(404).json({ error: 'Role not found' });
     }
 
-    return res.json({ role: { id: roleId, ...roleSnapshot.val() } });
+    return res.json({ success: true, data: { id: roleId, ...roleSnapshot.val() } });
   } catch (error) {
     console.error('getRole error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -76,10 +93,7 @@ async function createRole(req, res) {
       createdBy: req.user.uid,
     };
     await roleRef.set(roleData);
-    return res.status(201).json({
-      message: 'Role created successfully',
-      role: { id: roleRef.key, ...roleData },
-    });
+    return res.status(201).json({ success: true, data: { message: 'Role created successfully', role: { id: roleRef.key, ...roleData } } });
   } catch (error) {
     console.error('createRole error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -108,7 +122,7 @@ async function updateRole(req, res) {
       updates.permissions = permissions;
     }
     await db.ref(`restaurants/${restaurantId}/roles/${roleId}`).update(updates);
-    return res.json({ message: 'Role updated successfully' });
+    return res.json({ success: true, data: { message: 'Role updated successfully' } });
   } catch (error) {
     console.error('updateRole error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -134,7 +148,7 @@ async function deleteRole(req, res) {
       });
     }
     await db.ref(`restaurants/${restaurantId}/roles/${roleId}`).remove();
-    return res.json({ message: 'Role deleted successfully' });
+    return res.json({ success: true, data: { message: 'Role deleted successfully' } });
   } catch (error) {
     console.error('deleteRole error:', error);
     return res.status(500).json({ error: 'Server error' });
@@ -142,10 +156,7 @@ async function deleteRole(req, res) {
 }
 
 async function getPermissionsStructure(req, res) {
-  return res.json({
-    resources: RESOURCES,
-    permissions: PERMISSIONS,
-  });
+  return res.json({ success: true, data: { resources: RESOURCES, permissions: PERMISSIONS } });
 }
 
 function validatePermissions(permissions) {

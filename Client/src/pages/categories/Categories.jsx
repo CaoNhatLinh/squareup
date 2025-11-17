@@ -8,6 +8,7 @@ import {
 } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
 import { fetchCategories, deleteCategory } from "@/api/categories.js";
+import Table from '@/components/ui/Table';
 import SearchBar from "@/components/common/SearchBar";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import ActionMenu from "@/components/common/ActionMenu";
@@ -21,14 +22,20 @@ export default function Categories() {
   const [categoryMenus, setCategoryMenus] = useState({});
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
+  const [sortBy, setSortBy] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
 
   useEffect(() => {
     if (!restaurantId) return;
     const loadCategories = async () => {
       setLoading(true);
       try {
-        const data = await fetchCategories(restaurantId);
-        setCategories(Object.values(data || {}));
+        const data = await fetchCategories(restaurantId, { page, limit, q: searchQuery, sortBy, sortDir });
+        setCategories(data.categories || []);
+        setTotal((data.meta && data.meta.total) || 0);
       } catch (err) {
         console.error("Failed to load categories:", err);
       } finally {
@@ -37,47 +44,26 @@ export default function Categories() {
     };
 
     loadCategories();
-  }, [restaurantId]);
+  }, [restaurantId, page, limit, searchQuery, sortBy, sortDir]);
 
   const refetchCategories = async () => {
     if (!restaurantId) return;
     try {
-      const data = await fetchCategories(restaurantId);
-      setCategories(Object.values(data || {}));
+      const data = await fetchCategories(restaurantId, { page, limit, q: searchQuery });
+      setCategories(data.categories || []);
+      setTotal((data.meta && data.meta.total) || 0);
     } catch (err) {
       console.error("Failed to refetch categories:", err);
     }
   };
 
-  const organizedCategories = React.useMemo(() => {
-    if (!categories) return [];
-    const parentCategories = categories
-      .filter((cat) => !cat.parentCategoryId)
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    const result = [];
-    parentCategories.forEach((parent) => {
-      result.push(parent);
-      const children = categories
-        .filter((cat) => cat.parentCategoryId === parent.id)
-        .sort((a, b) => a.name.localeCompare(b.name));
-      result.push(...children);
-    });
-
-    return result;
-  }, [categories]);
+  // categories are provided by the server; we show them as-is (server can order them)
 
   const isSubcategory = (category) => {
     return !!category.parentCategoryId;
   };
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedCategories((categories || []).map((cat) => cat.id));
-    } else {
-      setSelectedCategories([]);
-    }
-  };
+  // The header select checkbox is handled in the Table column definition.
 
   const handleSelectCategory = (categoryId) => {
     if (selectedCategories.includes(categoryId)) {
@@ -123,9 +109,7 @@ export default function Categories() {
     }
   };
 
-  const filteredCategories = organizedCategories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Using organizedCategories directly
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -138,145 +122,77 @@ export default function Categories() {
         actionLink={`/${restaurantId}/categories/new`}
       />
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
-        <table className="w-full min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3 text-left w-12">
+      <div className="p-4">
+        <Table
+          columns={[
+            {
+              key: 'select',
+              title: (
                 <input
                   type="checkbox"
                   className="rounded border-gray-400 text-red-600 w-4 h-4"
-                  checked={
-                    (categories || []).length > 0 &&
-                    selectedCategories.length === (categories || []).length
-                  }
-                  onChange={handleSelectAll}
+                  checked={(categories || []).length > 0 && selectedCategories.length === (categories || []).length}
+                  onChange={(e) => { if (e.target.checked) setSelectedCategories((categories || []).map(c => c.id)); else setSelectedCategories([]); }}
                 />
-              </th>
-
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Category Name
-              </th>
-
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Type
-              </th>
-
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Items Count
-              </th>
-              <th className="px-6 py-3 w-16">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-6 py-8 text-center text-sm text-gray-500"
-                >
-                  <LoadingSpinner size="large" color="red" />
-                  <p className="mt-2">Loading categories...</p>
-                </td>
-              </tr>
-            ) : filteredCategories.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-6 py-8 text-center text-sm text-gray-500"
-                >
-                  No categories found. Click 'Create Category' to begin.
-                </td>
-              </tr>
-            ) : (
-              filteredCategories.map((category) => (
-                <tr
-                  key={category.id}
-                  className={`hover:bg-red-50/50 cursor-pointer ${
-                    isSubcategory(category) ? "bg-gray-50/50" : "bg-white"
-                  }`}
-                  onClick={() => navigate(`/${restaurantId}/categories/${category.id}/edit`)}
-                >
-                  <td
-                    className="px-6 py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-400 text-red-600 w-4 h-4"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => handleSelectCategory(category.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {isSubcategory(category) ? (
-                        <HiChevronRight className="w-4 h-4 text-gray-500 ml-4 flex-shrink-0" />
-                      ) : (
-                        <HiOutlineTag className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                      )}
-
-                      <span
-                        className={`text-base font-semibold ${
-                          isSubcategory(category)
-                            ? "text-gray-700"
-                            : "text-gray-900"
-                        }`}
-                      >
-                        {category.name}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded ${
-                        isSubcategory(category)
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {isSubcategory(category)
-                        ? "Subcategory"
-                        : "Parent Category"}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 text-base font-semibold text-gray-800">
-                    {Array.isArray(category.itemIds)
-                      ? category.itemIds.length
-                      : category.itemIds
-                      ? Object.values(category.itemIds).length
-                      : 0}
-                  </td>
-
-                  <td
-                    className="px-6 py-4 w-16"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-end">
-                      <ActionMenu
-                        isOpen={categoryMenus[category.id]}
-                        onToggle={(open) =>
-                          setCategoryMenus({
-                            ...categoryMenus,
-                            [category.id]: open,
-                          })
-                        }
-                        editPath={`/${restaurantId}/categories/${category.id}/edit`}
-                        onDelete={() => handleDeleteCategory(category.id)}
-                        itemName={category.name}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ),
+              render: (r) => (
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-400 text-red-600 w-4 h-4"
+                  checked={selectedCategories.includes(r.id)}
+                  onChange={(e) => { e.stopPropagation(); handleSelectCategory(r.id); }}
+                />
+              ),
+            },
+            {
+              key: 'name',
+              title: 'Category Name',
+              sortable: true,
+              render: (r) => (
+                <div className="flex items-center gap-2">
+                  {isSubcategory(r) ? (
+                    <HiChevronRight className="w-4 h-4 text-gray-500 ml-4 flex-shrink-0" />
+                  ) : (
+                    <HiOutlineTag className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  )}
+                  <span className={`text-base font-semibold ${isSubcategory(r) ? 'text-gray-700' : 'text-gray-900'}`}>{r.name}</span>
+                </div>
+              ),
+            },
+            { key: 'type', title: 'Type', render: (r) => (isSubcategory(r) ? 'Subcategory' : 'Parent Category'), },
+            { key: 'item_count', title: 'Items Count', align: 'right', render: (r) => (Array.isArray(r.itemIds) ? r.itemIds.length : (r.itemIds ? Object.values(r.itemIds).length : 0)), },
+            { key: 'actions', title: 'Actions', render: (r) => (
+                <div className="flex justify-end">
+                  <ActionMenu
+                    isOpen={categoryMenus[r.id]}
+                    onToggle={(open) => setCategoryMenus({ ...categoryMenus, [r.id]: open })}
+                    editPath={`/${restaurantId}/categories/${r.id}/edit`}
+                    onDelete={() => handleDeleteCategory(r.id)}
+                    itemName={r.name}
+                  />
+                </div>
+              ),
+            },
+          ]}
+          data={categories}
+          loading={loading}
+          rowKey={'id'}
+          onRowClick={(r) => navigate(`/${restaurantId}/categories/${r.id}/edit`)}
+          pagination={{ page, limit, total }}
+          onPageChange={(p) => setPage(p)}
+          onLimitChange={(l) => { setLimit(l); setPage(1); }}
+          sortBy={null}
+          sortDir={'asc'}
+          onSortChange={(key) => {
+            if (key === sortBy) {
+              setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+            } else {
+              setSortBy(key);
+              setSortDir('asc');
+            }
+            setPage(1);
+          }}
+        />
       </div>
 
       <BulkActionBar

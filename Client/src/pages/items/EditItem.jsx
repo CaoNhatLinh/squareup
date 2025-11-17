@@ -48,14 +48,20 @@ const renderFilterList = (
               className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 rounded-full text-sm text-red-800 font-medium"
             >
               {item.name}
-              <button
-                onClick={() =>
-                  setSelected(selected.filter((s) => s.id !== item.id))
-                }
-                className="text-red-500 hover:text-red-700 p-0.5"
-              >
-                <HiXMark className="w-4 h-4" />
-                <Button variant="ghost" size="small" onClick={() => setSelected(selected.filter((s) => s.id !== item.id))} icon={HiXMark} className="p-0.5" />
+              <Button
+                variant="ghost"
+                size="small"
+                onClick={() => setSelected(selected.filter((s) => s.id !== item.id))}
+                icon={HiXMark}
+                className="p-0.5 text-red-500 hover:text-red-700"
+                aria-label={`Remove ${item.name}`}
+              />
+            </span>
+          ))}
+        </div>
+      )}
+
+      {search && (
         <div className="max-h-56 overflow-y-auto">
           {filtered.map((item) => {
             const isSelected = selected.find((s) => s.id === item.id);
@@ -120,7 +126,7 @@ export default function EditItem() {
       ),
     ])
       .then(([itemsData, categoriesData, modifiersData]) => {
-        const items = Object.values(itemsData || {});
+        const items = itemsData?.items || itemsData || [];
         const item = items.find((i) => i.id === itemId);
         if (item) {
           setFormData({
@@ -131,14 +137,14 @@ export default function EditItem() {
           });
           if (item.image) setImagePreview(item.image);
         }
-        const cats = Object.values(categoriesData || {});
+        const cats = categoriesData?.categories || categoriesData || [];
         setCategories(cats);
         const itemCategories = cats.filter(
           (cat) => cat.itemIds && cat.itemIds.includes(itemId)
         );
         setSelectedCategories(itemCategories);
 
-        const mods = Object.values(modifiersData || {});
+        const mods = modifiersData?.modifiers || modifiersData || [];
         setModifiers(mods);
         if (item && Array.isArray(item.modifierIds)) {
           const itemMods = mods.filter((m) => item.modifierIds.includes(m.id));
@@ -213,12 +219,10 @@ export default function EditItem() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Edit Item: {formData.name || itemId}
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Edit Item: {formData.name || itemId}</h2>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="small" onClick={handleClose} icon={HiXMark} className="p-2" aria-label="Close" />
-            <Button variant="danger" size="medium" onClick={handleSave} loading={saving || uploading} disabled={saving || uploading}>{saving || uploading ? 'Saving...' : 'Save Changes'}</Button>
+            <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
+            <Button variant="primary" size="medium" onClick={handleSave} loading={saving || uploading} disabled={saving || uploading}>{saving || uploading ? 'Saving...' : 'Save'}</Button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-8">

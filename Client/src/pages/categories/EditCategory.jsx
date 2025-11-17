@@ -59,19 +59,20 @@ export default function EditCategory() {
           setImagePreview(categoryData.image);
         } 
 
-        const topLevelCategories = Object.values(allCategories || {}).filter(
+        const categoriesArray = allCategories?.categories || allCategories || [];
+        const topLevelCategories = categoriesArray.filter(
           (cat) => !cat.parentCategoryId && cat.id !== categoryId 
         );
         setCategories(topLevelCategories);
 
         if (categoryData.parentCategoryId) {
-          const parent = Object.values(allCategories || {}).find(
+          const parent = categoriesArray.find(
             (cat) => cat.id === categoryData.parentCategoryId
           );
           if (parent) setSelectedParent(parent);
         } 
 
-        const allItems = Object.values(itemsData || {});
+        const allItems = itemsData?.items || itemsData || [];
         setItems(allItems);
 
         if (categoryData.itemIds && Array.isArray(categoryData.itemIds)) {
@@ -184,23 +185,12 @@ export default function EditCategory() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Edit Category: {formData.name}
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Edit Category: {formData.name}</h2>
           <div className="flex items-center gap-3">
-            <Button
-              variant="primary"
-              onClick={handleClose}
-            >
-              <HiXMark className="w-6 h-6" />
+            <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving || uploading}>
+              {saving || uploading ? "Saving..." : "Save"}
             </Button>
-            <button
-              onClick={handleSave}
-              disabled={saving || uploading}
-              className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-              {saving || uploading ? "Saving..." : "Save Changes"}
-            </button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-6">

@@ -29,7 +29,7 @@ export default function CheckoutSuccess() {
     const fetchOrder = async () => {
       try {
         const response = await getOrderBySession(sessionId, restaurantId);
-        if (response.success && response.order) {
+        if (response.order) {
           setOrder(response.order);
           clearCart();
           localStorage.setItem('lastOrderId', response.order.id);

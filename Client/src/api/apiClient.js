@@ -1,14 +1,30 @@
 import axios from 'axios'
+
 const instance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, 
 })
 
+export function parseApiResponse(response) {
+  const payload = response?.data;
+  if (!payload) return { data: null };
+  // If payload uses { success, data, meta } shape, unwrap to normalized shape
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    return {
+      success: payload.success !== undefined ? payload.success : true,
+      data: payload.data,
+      meta: payload.meta || {},
+      has_more: payload.has_more || false,
+    };
+  }
+  // Otherwise, return { data } with the whole payload
+  return { data: payload };
+}
+
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => parseApiResponse(response),
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect if not already on signin/signup/accept-invitation pages
       const currentPath = window.location.pathname;
       if (!currentPath.includes('/signin') && 
           !currentPath.includes('/signup') && 

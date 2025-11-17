@@ -6,7 +6,7 @@ async function getUser(req, res) {
   try {
     const snap = await db.ref(`users/${uid}`).get();
     if (!snap.exists()) return res.status(404).json({ error: 'User not found' });
-    return res.json({ id: uid, ...snap.val() });
+    return res.json({ success: true, data: { id: uid, ...snap.val() } });
   } catch (err) {
     console.error('getUser error:', err);
     return res.status(500).json({ error: 'Server error' });
@@ -16,14 +16,14 @@ async function getUser(req, res) {
 async function getAllUsers(req, res) {
   try {
     const snap = await db.ref('users').get();
-    if (!snap.exists()) return res.json({ users: [] });
+    if (!snap.exists()) return res.json({ success: true, data: [] });
     
     const users = [];
     snap.forEach((child) => {
       users.push({ id: child.key, ...child.val() });
     });
     
-    return res.json({ users });
+    return res.json({ success: true, data: users });
   } catch (err) {
     console.error('getAllUsers error:', err);
     return res.status(500).json({ error: 'Server error' });

@@ -19,7 +19,7 @@ export default function CreateModifier() {
   const [options, setOptions] = useState([]);
   const [draggingIndex, setDraggingIndex] = useState(null);
 
-  const handleClose = () => navigate(-1);
+  const handleClose = () => navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
 
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.displayName.trim()) {
@@ -50,7 +50,7 @@ export default function CreateModifier() {
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate(`/${restaurantId}/modifiers`);
+      navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
     } catch (err) {
       console.error("Failed to create modifier:", err);
       alert("Failed to create modifier: " + (err.message || err));
@@ -88,21 +88,21 @@ export default function CreateModifier() {
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <Button variant="ghost" size="small" onClick={handleClose} className="p-2" icon={HiXMark} aria-label="Close" />
+            <h2 className="text-2xl font-bold text-gray-900">Create New Modifier Set</h2>
 
-          <h2 className="text-2xl font-bold text-gray-900">
-            Create New Modifier Set
-          </h2>
-
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            loading={saving}
-            aria-label="Save modifier"
-          >
-            Save Set
-          </Button>
-        </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                loading={saving}
+                disabled={disabled}
+                aria-label="Save modifier"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
@@ -117,7 +117,8 @@ export default function CreateModifier() {
                 placeholder="System Name (e.g., pizza_crust_size)"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="text-sm font-medium"
+                className={`text-sm font-medium px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2
+                ${isNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}
               />
               <p className="text-xs text-gray-500 mt-1 ml-1">
                 Internal, system use only. (No spaces or special characters)
@@ -131,7 +132,8 @@ export default function CreateModifier() {
                 placeholder="Customer Display Name (e.g., Choose your size)"
                 value={formData.displayName}
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                className="text-lg font-semibold"
+                className={`text-lg font-semibold px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2
+                ${isDisplayNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}
               />
               <p className="text-xs text-gray-500 mt-1 ml-1">
                 Visible to customers.
@@ -250,9 +252,9 @@ export default function CreateModifier() {
                         </Button>
                       </div>
                     </div>
-                  );
+                    );
                 })}
-              </div>
+                  </div>
 
                 <div className="p-4 border-t border-gray-200">
                   <Button
