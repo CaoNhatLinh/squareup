@@ -1,0 +1,158 @@
+import React from 'react';
+
+// === ĐÃ GỘP: INVOICE_TYPES (Giải quyết lỗi biên dịch) ===
+const INVOICE_TYPES = {
+    REGULAR: 'regular',
+    VAT: 'vat',
+    TEMPORARY: 'temporary',
+};
+// =========================================================
+
+// Utility to display currency cleanly
+const formatCurrency = (amount) => {
+    return `$${Number(amount ?? 0).toFixed(2)}`;
+};
+
+export default function InvoiceTemplate({ 
+  invoiceData, 
+  restaurant, 
+  invoiceType = INVOICE_TYPES.REGULAR 
+}) {
+  const {
+    orderNumber,
+    date,
+    customerInfo,
+    items,
+    subtotal,
+    discount,
+    taxAmount,
+    taxRate,
+    total,
+    paymentMethod,
+    paymentDetails
+  } = invoiceData;
+
+  const isVAT = invoiceType === INVOICE_TYPES.VAT;
+
+  return (
+    <div className="max-w-[80mm] mx-auto bg-white p-4 font-mono text-sm">
+      <div className="text-center mb-4">
+        <h1 className="text-lg font-bold uppercase">{restaurant?.name || "RESTAURANT NAME"}</h1>
+        {restaurant?.address && (
+          <p className="text-xs">{restaurant.address}</p>
+        )}
+        {restaurant?.phone && (
+          <p className="text-xs">Tel: {restaurant.phone}</p>
+        )}
+        {isVAT && restaurant?.taxId && (
+          <p className="text-xs">TAX ID: {restaurant.taxId}</p>
+        )}
+      </div>
+
+      <div className="border-t-2 border-dashed border-gray-400 my-3" />
+
+      <div className="text-center mb-3">
+        <h2 className="base font-bold uppercase">
+          {isVAT ? "TAX INVOICE (VAT)" : invoiceType === INVOICE_TYPES.TEMPORARY ? "PRE-CHECK BILL" : "INVOICE"}
+        </h2>
+        <p className="text-xs">No: {orderNumber || `ORD-${Date.now()}`}</p>
+        <p className="text-xs">{date ? new Date(date).toLocaleString('en-US') : new Date().toLocaleString('en-US')}</p>
+      </div>
+      {(customerInfo?.name || customerInfo?.phone) && (
+        <div className="mb-3 text-xs">
+          <p>Customer: {customerInfo.name || "Walk-in Guest"}</p>
+          {customerInfo.phone && <p>Phone: {customerInfo.phone}</p>}
+          {isVAT && customerInfo.taxId && <p>Customer Tax ID: {customerInfo.taxId}</p>}
+          {isVAT && customerInfo.address && <p>Address: {customerInfo.address}</p>}
+        </div>
+      )}
+
+      <div className="border-t-2 border-dashed border-gray-400 my-3" />
+      <div className="mb-3">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-gray-400">
+              <th className="text-left py-1">Item</th>
+              <th className="text-center py-1">Qty</th>
+              <th className="text-right py-1">Price</th>
+              <th className="text-right py-1">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items?.map((item, idx) => {
+              const itemTotal = (Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0);
+              return (
+                <tr key={idx} className="border-b border-gray-200">
+                  <td className="py-1">
+                    <div>{item.name}</div>
+                    {item.selectedOptions && item.selectedOptions.length > 0 && (
+                      <div className="text-[10px] text-gray-600 pl-2">
+                        {item.selectedOptions.map((opt, i) => (
+                          <div key={i}>+ {opt.name}</div>
+                        ))}
+                      </div>
+                    )}
+                    {item.notes && (
+                      <div className="text-[10px] text-gray-600 italic pl-2">
+                        Notes: {item.notes}
+                      </div>
+                    )}
+                  </td>
+                  <td className="text-center py-1">{item.quantity}</td>
+                  <td className="text-right py-1">{formatCurrency(item.price ?? 0)}</td>
+                  <td className="text-right py-1">{formatCurrency(itemTotal)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="border-t-2 border-dashed border-gray-400 my-3" />
+      <div className="text-xs space-y-1 mb-3">
+        <div className="flex justify-between">
+          <span>Subtotal:</span>
+          <span>{formatCurrency(subtotal ?? 0)}</span>
+        </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Discount:</span>
+            <span>-{formatCurrency(discount ?? 0)}</span>
+          </div>
+        )}
+        {taxAmount > 0 && (
+          <div className="flex justify-between">
+            <span>Tax {taxRate ? `(${(taxRate * 100).toFixed(0)}%)` : ''}:</span>
+            <span>{formatCurrency(taxAmount ?? 0)}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-bold text-base border-t border-gray-400 pt-1">
+          <span>GRAND TOTAL:</span>
+          <span>{formatCurrency(total ?? 0)}</span>
+        </div>
+      </div>
+      <div className="text-xs mb-3">
+        <p>Payment: {paymentMethod || "CASH"}</p>
+        {paymentDetails?.eWalletPhone && (
+          <p>E-Wallet Phone: {paymentDetails.eWalletPhone}</p>
+        )}
+        {paymentDetails?.bankTransferInfo && (
+          <>
+            <p>Bank Name: {paymentDetails.bankTransferInfo.bankName}</p>
+            <p>Account No: {paymentDetails.bankTransferInfo.accountNumber}</p>
+          </>
+        )}
+      </div>
+
+      <div className="border-t-2 border-dashed border-gray-400 my-3" />
+      <div className="text-center text-xs">
+        <p className="font-semibold mb-1">THANK YOU!</p>
+        <p>See you again!</p>
+        {isVAT && (
+          <p className="mt-2 text-[10px]">
+            Valid VAT Invoice - Please verify information
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

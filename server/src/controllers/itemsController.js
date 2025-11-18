@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const db = admin.database();
 
+const { calculateItemDiscounts } = require('../utils/itemDiscountCalculator');
 async function listItems(req, res) {
   const { restaurantId } = req.params;
   const page = parseInt(req.query.page, 10) || 1;
@@ -12,6 +13,18 @@ async function listItems(req, res) {
     const snap = await db.ref(`restaurants/${restaurantId}/items`).get();
     const allObj = snap.exists() ? snap.val() : {};
     let list = Object.values(allObj || {});
+    // Apply active discounts similar to /restaurants/:id/shop
+    try {
+      const discountsSnap = await db.ref(`restaurants/${restaurantId}/discounts`).get();
+      const categoriesSnap = await db.ref(`restaurants/${restaurantId}/categories`).get();
+      const discounts = discountsSnap.exists() ? discountsSnap.val() : {};
+      const categories = categoriesSnap.exists() ? categoriesSnap.val() : {};
+      const itemsMap = allObj || {};
+      const itemsWithDiscounts = calculateItemDiscounts(itemsMap, categories, discounts);
+      list = Object.values(itemsWithDiscounts || {});
+    } catch (discountError) {
+      console.error('Error applying discounts to items list:', discountError);
+    }
     if (q) {
       list = list.filter(i => (i.name || '').toLowerCase().includes(q));
     }

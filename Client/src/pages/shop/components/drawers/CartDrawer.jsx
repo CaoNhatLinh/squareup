@@ -3,6 +3,7 @@ import { useShop } from "@/context/ShopContext.jsx";
 import { useGuestUser } from "@/context/GuestUserContext.jsx";
 import { useParams } from "react-router-dom";
 import RemoveItemModal from "@/pages/shop/components/modals/RemoveItemModal";
+import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
 import { createCheckoutSession } from "@/api/checkout";
 import { useToast } from "@/hooks/useToast";
 import { 
@@ -250,9 +251,9 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                         <p className="text-sm text-gray-600 mb-1">${item.price.toFixed(2)}</p>
                       )}
 
-                      {item.selectedOptions.length > 0 && (
+                      {normalizeSelectedOptions(item.selectedOptions).length > 0 && (
                         <div className="mb-2">
-                          {item.selectedOptions.map((option, idx) => (
+                          {normalizeSelectedOptions(item.selectedOptions).map((option, idx) => (
                             <p key={idx} className="text-sm text-gray-700">
                               {option.name}
                             </p>

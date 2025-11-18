@@ -29,7 +29,11 @@ export default function Layout({ children }) {
             />
           )}
           <div className="flex-1 min-h-screen overflow-y-auto flex flex-col ">
-            {showSidebar && <NotificationPermissionBanner />}
+            {showSidebar && (
+              <>
+                <NotificationPermissionBanner />
+              </>
+            )}
 
             <main className={showSidebar ? "flex-1 p-6 md:ml-64" : "flex-1"}>
               {children || <Outlet />}

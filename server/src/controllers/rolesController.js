@@ -12,9 +12,11 @@ const RESOURCES = [
   'reviews',
   'business_settings',
   'staff',
+  'customers',
+  'pos',
 ];
 
-const PERMISSIONS = ['create', 'read', 'update', 'delete'];
+const PERMISSIONS = ['create', 'read', 'update', 'delete', 'access'];
 
 async function getRoles(req, res) {
   const { restaurantId } = req.params;

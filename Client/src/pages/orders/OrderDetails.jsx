@@ -12,6 +12,7 @@ import {
 } from "react-icons/hi";
 import { useOrderNotification } from "@/hooks/useOrderNotification";
 import { getNextStatus, getStatusButtonText } from "@/utils/statusUtils";
+import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
 import { formatDate } from "@/utils/dateUtils";
 import { StatusBadge } from "@/utils/uiUtils";
 
@@ -295,11 +296,12 @@ export default function OrderDetails() {
                         </div>
                       );
                     })()}
-                    <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-600 mt-1">
                       <span className="font-semibold">{item.quantity}x</span> @
-                      ${(() => {
+                      ${(function() {
                         const basePrice = item.price || 0;
-                        const optionsTotal = item.selectedOptions?.reduce((sum, opt) => sum - (opt.price || 0), 0) || 0;
+                        const optsArray = normalizeSelectedOptions(item.selectedOptions);
+                        const optionsTotal = optsArray.reduce((sum, opt) => sum + (opt.price || 0), 0) || 0;
                         const originalPrice = basePrice + optionsTotal;
                         return (originalPrice / item.quantity).toFixed(2);
                       })()} each
@@ -333,9 +335,9 @@ export default function OrderDetails() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  {item.selectedOptions && item.selectedOptions.length > 0 && (
+                    {normalizeSelectedOptions(item.selectedOptions).length > 0 && (
                     <div className="space-y-1">
-                      {item.selectedOptions.map((opt, idx) => (
+                      {normalizeSelectedOptions(item.selectedOptions).map((opt, idx) => (
                         <p
                           key={idx}
                           className="text-sm text-gray-600 flex items-center gap-2"

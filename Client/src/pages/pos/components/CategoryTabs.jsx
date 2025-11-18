@@ -1,4 +1,4 @@
-export default function CategoryTabs({ categories, selectedCategory, onSelectCategory }) {
+export default function CategoryTabs({ categories, selectedCategory, onSelectCategory, items = {} }) {
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3 overflow-x-auto">
       <div className="flex gap-2">
@@ -22,7 +22,12 @@ export default function CategoryTabs({ categories, selectedCategory, onSelectCat
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            {category.name}
+            {category.name} {" "}
+            {(() => {
+              const ids = Array.isArray(category.itemIds) ? category.itemIds : (category.itemIds ? Object.values(category.itemIds) : []);
+              const count = ids.filter(id => items[id]).length;
+              return <span className="text-xs text-gray-500">({count})</span>
+            })()}
           </button>
         ))}
       </div>

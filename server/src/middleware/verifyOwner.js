@@ -1,9 +1,21 @@
 const admin = require('firebase-admin');
 const db = admin.database();
+const { getDecodedUserFromRequest } = require('../utils/auth');
 
 async function verifyOwner(req, res, next) {
   try {
-    const user = req.user;
+    // ensure we have a decoded user on the request
+    let user = req.user;
+    if (!user) {
+      try {
+        user = await getDecodedUserFromRequest(req);
+      } catch (err) {
+        if (err?.status === 403 && err?.isGuest) {
+          return res.status(403).json({ error: 'Guest users cannot manage restaurants' });
+        }
+        return res.status(401).json({ error: err?.message || 'Authentication required' });
+      }
+    }
     
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });

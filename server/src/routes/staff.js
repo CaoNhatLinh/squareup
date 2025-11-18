@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const verifyAdmin = require('../middleware/verifyAdmin');
+const verifyOwner = require('../middleware/verifyOwner');
 const staffController = require('../controllers/staffController');
 
-router.get('/', verifyAdmin, staffController.getStaffMembers);
+router.get('/', verifyOwner, staffController.getStaffMembers);
 
-router.post('/invite', verifyAdmin, staffController.inviteStaff);
-router.patch('/:staffId/role', verifyAdmin, staffController.updateStaffRole);
-router.delete('/:staffId', verifyAdmin, staffController.removeStaff);
+router.post('/invite', verifyOwner, staffController.inviteStaff);
+router.patch('/:staffId/role', verifyOwner, staffController.updateStaffRole);
+router.delete('/:staffId', verifyOwner, staffController.removeStaff);
 
-router.post('/invitations/:invitationId/resend', verifyAdmin, staffController.resendInvitation);
+router.post('/invitations/:invitationId/resend', verifyOwner, staffController.resendInvitation);
 
 module.exports = router;

@@ -2,49 +2,35 @@ const admin = require('firebase-admin');
 
 async function verifyToken(req, res, next) {
   try {
-    const sessionCookie = req.cookies?.session;
-    if (sessionCookie) {
-      try {
-        const decoded = await admin.auth().verifySessionCookie(sessionCookie, true);
-        
-        if (decoded.role === 'guest') {
-          return res.status(403).json({ 
-            error: 'Guest users cannot access management routes',
-            isGuest: true 
-          });
-        }
-        
-        req.user = decoded;
-        return next();
-      } catch (err) {
-        console.log('Session cookie verification failed:', err.message);
-      }
+    if (!req.user) {
+      const decoded = await getDecodedUserFromRequest(req);
+      req.user = decoded;
     }
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing or invalid authentication' });
-    }
-    
-    const idToken = authHeader.split(' ')[1];
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    if (decoded.role === 'guest') {
-      return res.status(403).json({ 
-        error: 'Guest users cannot access management routes',
-        isGuest: true 
-      });
-    }
-    
-    req.user = decoded;
-    next();
+    return next();
   } catch (err) {
-    console.error('verifyToken error:', err);
-    return res.status(401).json({ error: 'Unauthorized' });
+    if (err?.status === 403 && err?.isGuest) {
+      return res.status(403).json({ error: err.message, isGuest: true });
+    }
+    return res.status(err?.status || 401).json({ error: err?.message || 'Unauthorized' });
   }
 }
 
-async function verifyRestaurantOwnership(req, res, next) {
-  const userId = req.user.uid;
+const { getDecodedUserFromRequest } = require('../utils/auth');
+
+async function verifyMembership(req, res, next) {
+  let user = req.user;
+  if (!user) {
+    try {
+      user = await getDecodedUserFromRequest(req);
+      req.user = user;
+    } catch (err) {
+      if (err?.status === 403 && err?.isGuest) {
+        return res.status(403).json({ error: 'Guest users cannot manage restaurants' });
+      }
+      return res.status(err?.status || 401).json({ error: err?.message || 'Authentication required' });
+    }
+  }
+  const userId = user.uid;
   const restaurantId = req.params.restaurantId;
   
   if (!restaurantId) {
@@ -52,13 +38,12 @@ async function verifyRestaurantOwnership(req, res, next) {
   }
   
   try {
-    const userRecord = await admin.auth().getUser(userId);
-    const customClaims = userRecord.customClaims || {};
-    if (req.user.admin || customClaims.admin) {
+    // Use normalized claims on req.user. No need to re-fetch getUser unless required.
+    if (req.user.admin) {
       req.restaurantId = restaurantId;
       return next();
     }
-    if (customClaims.role === 'guest') {
+    if (req.user.role === 'guest') {
       return res.status(403).json({ error: 'Guest users cannot manage restaurants' });
     }
     const db = admin.database();
@@ -71,9 +56,9 @@ async function verifyRestaurantOwnership(req, res, next) {
     req.restaurantId = restaurantId;
     next();
   } catch (err) {
-    console.error('verifyRestaurantOwnership error:', err);
+    console.error('verifyMembership error:', err);
     return res.status(500).json({ error: 'Server error' });
   }
 }
 
-module.exports = { verifyToken, verifyRestaurantOwnership };
+module.exports = { verifyToken, verifyMembership, getDecodedUserFromRequest };

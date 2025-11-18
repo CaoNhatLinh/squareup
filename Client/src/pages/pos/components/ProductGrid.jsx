@@ -7,6 +7,7 @@ export default function ProductGrid({
   categories,
   items,
   selectedCategory,
+  query = '',
   onAddToCart,
   modifiers,
 }) {
@@ -15,7 +16,8 @@ export default function ProductGrid({
 
   const filteredItems = useMemo(() => {
     const itemsArray = Object.values(items);
-    if (selectedCategory === "all") return itemsArray;
+    const searchQuery = (query || '').toLowerCase().trim();
+    if (selectedCategory === "all" && !searchQuery) return itemsArray;
 
     const category = categories.find((cat) => cat.id === selectedCategory);
     if (!category) return [];
@@ -26,8 +28,12 @@ export default function ProductGrid({
       ? Object.values(category.itemIds)
       : [];
 
-    return itemsArray.filter((item) => categoryItemIds.includes(item.id));
-  }, [items, categories, selectedCategory]);
+    let filtered = itemsArray.filter((item) => categoryItemIds.includes(item.id));
+    if (searchQuery) {
+      filtered = filtered.filter(i => (i.name || '').toLowerCase().includes(searchQuery));
+    }
+    return filtered;
+  }, [items, categories, selectedCategory, query]);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);

@@ -7,7 +7,7 @@ export default function MenuItem({ item, level = 0 }) {
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const Icon = item.icon;
-  const { newOrderIds } = useOrderNotification(); 
+  const { newOrderIds, newPosOrderIds } = useOrderNotification(); 
   const hasActiveChild = React.useMemo(() => {
     if (!item.children) return false;
     const checkActive = (children) => {
@@ -27,7 +27,10 @@ export default function MenuItem({ item, level = 0 }) {
   const hasChildren = item.children && item.children.length > 0;
   const paddingLeft = `${(level + 1) * 16}px`;
   if (!hasChildren && item.to) {
-    const showBadge = item.badge && newOrderIds.length > 0;
+    // Default orders badge
+    const isOrdersPath = item.to && (item.to.endsWith('/orders') || item.to.includes('/orders'));
+    const isPosPath = item.to && (item.to.endsWith('/pos') || item.to.includes('/pos'));
+    const badgeCount = (isOrdersPath && item.badge) ? newOrderIds.length : (isPosPath ? newPosOrderIds.length : 0);
     return (
       <NavLink
         to={item.to}
@@ -51,9 +54,9 @@ export default function MenuItem({ item, level = 0 }) {
           />
         )}
         <span className="flex-1">{item.label}</span>
-        {showBadge && (
+        {badgeCount > 0 && (
           <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold bg-red-500 text-white rounded-full">
-            {newOrderIds.length}
+            {badgeCount}
           </span>
         )}
       </NavLink>

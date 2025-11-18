@@ -1,0 +1,46 @@
+// Payment method constants
+export const PAYMENT_METHODS = {
+  CASH: 'cash',
+  CARD: 'card',
+  STRIPE: 'stripe',
+  BANK_TRANSFER: 'bank_transfer',
+  SPLIT: 'split'
+};
+
+export const PAYMENT_METHOD_LABELS = {
+  [PAYMENT_METHODS.CASH]: 'Cash',
+  [PAYMENT_METHODS.CARD]: 'Card (Stripe)',
+  [PAYMENT_METHODS.STRIPE]: 'Credit/Debit Card',
+  [PAYMENT_METHODS.BANK_TRANSFER]: 'Bank Transfer (QR)',
+  [PAYMENT_METHODS.SPLIT]: 'Split Bill'
+};
+
+export const PAYMENT_METHOD_ICONS = {
+  [PAYMENT_METHODS.CASH]: '💵',
+  [PAYMENT_METHODS.CARD]: '💳',
+  [PAYMENT_METHODS.STRIPE]: '💳',
+  [PAYMENT_METHODS.BANK_TRANSFER]: '🏦',
+  [PAYMENT_METHODS.SPLIT]: '✂️'
+};
+
+// Discount types
+export const DISCOUNT_TYPES = {
+  PERCENTAGE: 'percentage',
+  FIXED_AMOUNT: 'fixed_amount',
+  ITEM_DISCOUNT: 'item_discount',
+  BILL_DISCOUNT: 'bill_discount',
+  COUPON: 'coupon',
+  LOYALTY: 'loyalty'
+};
+
+// Invoice types
+export const INVOICE_TYPES = {
+  REGULAR: 'regular',
+  VAT: 'vat',
+  TEMPORARY: 'temporary'
+};
+
+// Kitchen/Bar categories
+export const KITCHEN_CATEGORIES = ['food', 'appetizer', 'main', 'dessert', 'sides'];
+export const BAR_CATEGORIES = ['drinks', 'beverages', 'cocktails', 'beer', 'wine'];
+

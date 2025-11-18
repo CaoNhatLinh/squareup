@@ -1,7 +1,11 @@
+import Badge from "@/components/ui/Badge";
+
 export default function ProductCard({ item, onClick, onQuickAdd }) {
-  const hasDiscount = item.hasDiscount && item.discountedPrice < item.price;
-  const isSoldOut = item.isSoldOut === true;
-  const displayPrice = hasDiscount ? item.discountedPrice : item.price;
+  const hasDiscount = Boolean(item?.hasDiscount) && Number(item?.discountedPrice) < Number(item?.price);
+  const isSoldOut = item?.isSoldOut === true || (item?.stock !== undefined && item?.stock <= 0);
+  const isLowStock = item?.stock !== undefined && item?.stock > 0 && item?.stock <= 5;
+  const displayPrice = Number(hasDiscount ? item?.discountedPrice : item?.price || 0);
+  const originalPrice = Number(item?.originalPrice ?? item?.price ?? 0);
 
   return (
     <div
@@ -42,17 +46,22 @@ export default function ProductCard({ item, onClick, onQuickAdd }) {
 
         {/* Discount Badge */}
         {hasDiscount && !isSoldOut && (
-          <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-            -{item.discountPercent}%
+          <div className="absolute top-2 right-2">
+            <Badge variant="danger">-{item.discountPercent}%</Badge>
+          </div>
+        )}
+
+        {/* Low Stock Badge */}
+        {isLowStock && !isSoldOut && (
+          <div className="absolute top-2 left-2">
+            <Badge variant="warning">{item.stock} left</Badge>
           </div>
         )}
 
         {/* Sold Out Badge */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-3 py-1 rounded-lg font-bold text-sm">
-              HẾT HÀNG
-            </span>
+            <Badge variant="danger" size="large">OUT OF STOCK</Badge>
           </div>
         )}
       </div>
@@ -71,7 +80,7 @@ export default function ProductCard({ item, onClick, onQuickAdd }) {
                   ${displayPrice.toFixed(2)}
                 </span>
                 <span className="text-gray-400 line-through text-xs">
-                  ${item.originalPrice.toFixed(2)}
+                  ${originalPrice.toFixed(2)}
                 </span>
               </div>
             ) : (

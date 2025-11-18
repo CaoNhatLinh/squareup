@@ -19,6 +19,8 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+const attachUser = require('./middleware/attachUser');
+app.use(attachUser);
 
 const checkoutRouter = require('./routes/checkout');
 app.use('/api/checkout', checkoutRouter);
@@ -34,6 +36,7 @@ const adminRouter = require('./routes/admin');
 const reviewsRouter = require('./routes/reviews');
 const transactionsRouter = require('./routes/transactions');
 const invitationsRouter = require('./routes/invitations');
+const stripeRouter = require('./routes/stripe');
 
 app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/auth', authRouter);
@@ -44,6 +47,8 @@ app.use('/api/admin', adminRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api', reviewsRouter);
 app.use('/api/invitations', invitationsRouter);
+app.use('/api/stripe', stripeRouter);
+// Tables routes are mounted under /api/restaurants/:restaurantId/tables via restaurants router
 const rolesController = require('./controllers/rolesController');
 const verifyAdmin = require('./middleware/verifyAdmin');
 app.get('/api/roles/permissions-structure', verifyAdmin, rolesController.getPermissionsStructure);

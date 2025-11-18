@@ -20,6 +20,10 @@ export const useOrderNotifications = (
     const saved = localStorage.getItem("newOrderIds");
     return saved ? JSON.parse(saved) : [];
   });
+  const [newPosOrderIds, setNewPosOrderIds] = useState(() => {
+    const saved = localStorage.getItem("newPosOrderIds");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [lastOrderCount, setLastOrderCount] = useState(null);
   const audioRef = useRef(null);
   const isInitialLoad = useRef(true);
@@ -67,11 +71,21 @@ export const useOrderNotifications = (
             showDesktopNotification(order);
           }
 
+          // add to general new order ids
           setNewOrderIds((prev) => {
             const updated = [...new Set([...prev, order.id])];
             localStorage.setItem("newOrderIds", JSON.stringify(updated));
             return updated;
           });
+
+          // if this is a POS / dine_in order, also add to pos-specific ids
+          if (order.orderType === 'dine_in' || order.orderType === 'pos' || order.orderType === 'in_store') {
+            setNewPosOrderIds((prev) => {
+              const updated = [...new Set([...prev, order.id])];
+              localStorage.setItem("newPosOrderIds", JSON.stringify(updated));
+              return updated;
+            });
+          }
           success(
             `New Order #${order.orderId?.substring(0, 8).toUpperCase()} - $${order.amount?.toFixed(2)}`,
             8000,
@@ -100,19 +114,39 @@ export const useOrderNotifications = (
     });
   };
 
+  const markPosOrderAsViewed = (orderId) => {
+    setNewPosOrderIds((prev) => {
+      const updated = prev.filter((id) => id !== orderId);
+      localStorage.setItem("newPosOrderIds", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const markAllAsRead = () => {
     setNewOrderIds([]);
     localStorage.setItem("newOrderIds", JSON.stringify([]));
+  };
+  const markAllPosAsRead = () => {
+    setNewPosOrderIds([]);
+    localStorage.setItem("newPosOrderIds", JSON.stringify([]));
   };
 
   const isNewOrder = (orderId) => {
     return newOrderIds.includes(orderId);
   };
 
+  const isNewPosOrder = (orderId) => {
+    return newPosOrderIds.includes(orderId);
+  };
+
   return {
     newOrderIds,
+    newPosOrderIds,
     markOrderAsViewed,
+    markAllPosAsRead,
+    markPosOrderAsViewed,
     markAllAsRead,
     isNewOrder,
+    isNewPosOrder,
   };
 };

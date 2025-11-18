@@ -22,8 +22,8 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
   // Home - Always visible
   menuItems.push({ to: `/${restaurantId}/dashboard`, label: "Home", icon: HiHome });
 
-  // POS - Point of Sale for in-store orders
-  if (hasAnyPermission('pos')) {
+  // POS - Point of Sale for in-store orders: show to owner by default or users with pos permission
+  if (isOwner || hasAnyPermission('pos')) {
     menuItems.push({ 
       to: `/${restaurantId}/pos`, 
       label: "Point of Sale", 

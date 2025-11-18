@@ -10,6 +10,7 @@ router.post(
 
 router.use(express.json());
 router.post("/create-session", checkoutController.createCheckoutSession);
+router.post("/calculate-discounts", checkoutController.calculateCartDiscountsEndpoint);
 router.get("/session/:sessionId", checkoutController.getSessionStatus);
 router.post("/cleanup-pending", checkoutController.cleanupOldPendingOrders);
 

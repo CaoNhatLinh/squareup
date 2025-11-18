@@ -16,7 +16,7 @@ export default function RoleForm() {
     permissions: {},
   });
   const [resources, setResources] = useState([]);
-  const [permissionTypes] = useState(['create', 'read', 'update', 'delete']);
+  const [permissionTypes, setPermissionTypes] = useState(['create', 'read', 'update', 'delete']);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -25,14 +25,14 @@ export default function RoleForm() {
       try {
         const structure = await getPermissionsStructure();
         setResources(structure.resources || []);
+        setPermissionTypes(structure.permissions || ['create', 'read', 'update', 'delete']);
         const initialPermissions = {};
         (structure.resources || []).forEach(resource => {
-          initialPermissions[resource] = {
-            create: false,
-            read: false,
-            update: false,
-            delete: false,
-          };
+          const perms = {};
+          (structure.permissions || ['create','read','update','delete']).forEach(p => {
+            perms[p] = false;
+          });
+          initialPermissions[resource] = perms;
         });
         if (isEdit) {
           const data = await getRole(restaurantId, roleId);
@@ -78,16 +78,16 @@ export default function RoleForm() {
       perm => formData.permissions[resource]?.[perm]
     );
 
+    const newPerms = {};
+    permissionTypes.forEach((perm) => {
+      newPerms[perm] = !allSelected;
+    });
+
     setFormData(prev => ({
       ...prev,
       permissions: {
         ...prev.permissions,
-        [resource]: {
-          create: !allSelected,
-          read: !allSelected,
-          update: !allSelected,
-          delete: !allSelected,
-        },
+        [resource]: newPerms,
       },
     }));
   };
@@ -184,17 +184,17 @@ export default function RoleForm() {
                         {permissionTypes.every(perm => formData.permissions[resource]?.[perm]) ? 'Deselect All' : 'Select All'}
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {permissionTypes.map((perm) => (
-                        <Checkbox
-                          key={perm}
-                          label={<span className="text-sm text-gray-700 capitalize">{perm}</span>}
-                          checked={formData.permissions[resource]?.[perm] || false}
-                          onChange={() => handlePermissionChange(resource, perm)}
-                          size="small"
-                        />
-                      ))}
-                    </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {permissionTypes.map((perm) => (
+                          <Checkbox
+                            key={perm}
+                            label={<span className="text-sm text-gray-700 capitalize">{perm}</span>}
+                            checked={formData.permissions[resource]?.[perm] || false}
+                            onChange={() => handlePermissionChange(resource, perm)}
+                            size="small"
+                          />
+                        ))}
+                      </div>
                   </Card>
                 ))}
               </div>

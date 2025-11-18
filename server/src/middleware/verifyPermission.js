@@ -3,7 +3,15 @@ const db = admin.database();
 function verifyPermission(resource, permission) {
   return async (req, res, next) => {
     try {
-      const user = req.user;
+      let user = req.user;
+      if (!user) {
+        try {
+            const { getDecodedUserFromRequest } = require('../utils/auth');
+          user = await getDecodedUserFromRequest(req);
+        } catch (err) {
+          return res.status(401).json({ error: 'Authentication required' });
+        }
+      }
       if (!user) {
         return res.status(401).json({ error: 'Authentication required' });
       }
@@ -55,32 +63,27 @@ function verifyPermission(resource, permission) {
 
 async function verifyStaffOrAdmin(req, res, next) {
   try {
-    const user = req.user;
-    
+    let user = req.user;
     if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      try {
+          const { getDecodedUserFromRequest } = require('../utils/auth');
+        user = await getDecodedUserFromRequest(req);
+        req.user = user;
+      } catch (err) {
+        if (err?.status === 403 && err?.isGuest) {
+          return res.status(403).json({ error: 'Guest users cannot access this route', isGuest: true });
+        }
+        return res.status(err?.status || 401).json({ error: err?.message || 'Authentication required' });
+      }
     }
     if (user.admin) {
       return next();
     }
-      const userRole = user.role || user.customClaims?.role || null;
-      if (userRole === 'staff') {
-        req.staffRestaurantId = user.restaurantId || user.customClaims?.restaurantId;
-        return next();
-      }
-
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'No token provided' });
-      }
-
-      const token = authHeader.split('Bearer ')[1];
-      const decodedToken = await admin.auth().verifyIdToken(token);
-    
-      if (decodedToken.role === 'staff') {
-        req.staffRestaurantId = decodedToken.restaurantId;
-        return next();
-      }
+    const userRole = user.role || user.customClaims?.role || null;
+    if (userRole === 'staff') {
+      req.staffRestaurantId = user.restaurantId || user.customClaims?.restaurantId;
+      return next();
+    }
 
       return res.status(403).json({ error: 'Access denied' });
   } catch (error) {
@@ -128,6 +131,8 @@ function getAllPermissions() {
     'reviews',
     'business_settings',
     'staff',
+    'customers',
+    'pos',
   ];
 
   const allPermissions = {};
@@ -137,6 +142,7 @@ function getAllPermissions() {
       read: true,
       update: true,
       delete: true,
+      access: true,
     };
   });
 

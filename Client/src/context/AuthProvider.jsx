@@ -11,35 +11,42 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Always create fresh session with force-refreshed token to get latest custom claims
         try {
-          // Force refresh to get latest custom claims (role, restaurantId, etc.)
           const idToken = await firebaseUser.getIdToken(true);
           await authApi.sessionLogin(idToken);
           const sessionRaw = await authApi.verifySession();
           const sessionData = sessionRaw && sessionRaw.data !== undefined ? sessionRaw.data : sessionRaw;
-          setUser({
-            ...firebaseUser,
+          const normalized = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            // keep `isAdmin` for existing logic but also expose `admin` for normalized server parity
             isAdmin: sessionData.isAdmin || false,
+            admin: !!sessionData.isAdmin,
             role: sessionData.role || 'user',
             restaurantId: sessionData.restaurantId || null,
-            permissions: sessionData.permissions || {}
-          });
+            permissions: sessionData.permissions || {},
+            customClaims: sessionRaw || sessionData || {},
+          };
+          setUser({ ...firebaseUser, ...normalized });
         } catch (error) {
           console.error('Session creation failed:', error);
           // Clear any stale cookies and set fallback user
           try {
             await authApi.sessionLogout();
-          } catch (logoutErr) {
+          } catch {
             // ignore
           }
-          setUser({
-            ...firebaseUser,
+          const normalized = {
+            uid: firebaseUser?.uid,
+            email: firebaseUser?.email,
             isAdmin: false,
+            admin: false,
             role: 'user',
             restaurantId: null,
-            permissions: {}
-          });
+            permissions: {},
+            customClaims: {},
+          };
+          setUser({ ...firebaseUser, ...normalized });
         }
       } else {
         setUser(null);

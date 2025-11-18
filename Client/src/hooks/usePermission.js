@@ -6,6 +6,8 @@ import { useAuth } from './useAuth';
 export const hasPermissionForUser = (user, resource, action) => {
   if (!user) return false;
   if (user?.isAdmin) return true;
+  // Owner should have full permissions for their restaurant
+  if (user?.role === 'owner') return true;
   if (user?.role === 'staff' && user?.permissions) {
     return user.permissions[resource]?.[action] === true;
   }
@@ -57,6 +59,8 @@ export const usePermissions = () => {
       'reviews',
       'business_settings',
       'staff',
+      'customers',
+      'pos',
     ];
 
     const allPermissions = {};
@@ -66,10 +70,40 @@ export const usePermissions = () => {
         read: true,
         update: true,
         delete: true,
+        access: true,
       };
     });
 
     return allPermissions;
+  }
+
+  // Owner has all permissions similar to admin
+  if (user?.role === 'owner') {
+    const allResources = [
+      'items',
+      'categories',
+      'modifiers',
+      'discounts',
+      'orders',
+      'transactions',
+      'reviews',
+      'business_settings',
+      'staff',
+      'customers',
+      'pos',
+    ];
+
+    const allPerms = {};
+    allResources.forEach(resource => {
+      allPerms[resource] = {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        access: true,
+      };
+    });
+    return allPerms;
   }
 
   return user?.permissions || {};

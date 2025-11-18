@@ -1,0 +1,38 @@
+import React from 'react';
+import Modal from './Modal';
+
+export const Dialog = ({ open, onOpenChange, children }) => {
+  return (
+    <Modal isOpen={open} onClose={() => onOpenChange(false)}>
+      {children}
+    </Modal>
+  );
+};
+
+export const DialogContent = ({ children, className = '' }) => {
+  return (
+    <div className={`bg-white rounded-lg shadow-xl max-w-md w-full p-6 ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export const DialogHeader = ({ children, className = '' }) => {
+  return <div className={`mb-4 ${className}`}>{children}</div>;
+};
+
+export const DialogTitle = ({ children, className = '' }) => {
+  return <h2 className={`text-xl font-semibold ${className}`}>{children}</h2>;
+};
+
+export const DialogDescription = ({ children, className = '' }) => {
+  return <p className={`text-gray-600 text-sm mt-2 ${className}`}>{children}</p>;
+};
+
+export const DialogFooter = ({ children, className = '' }) => {
+  return (
+    <div className={`mt-6 flex justify-end gap-2 ${className}`}>
+      {children}
+    </div>
+  );
+};

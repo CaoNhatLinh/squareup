@@ -51,7 +51,8 @@ import StaffManagement from "@/pages/settings/StaffManagement";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
 import Customers from '@/pages/customers/Customers';
 import CustomerOrders from '@/pages/customers/CustomerOrders';
-import POSPage from '@/pages/pos/POSPage';
+import TableListPage from '@/pages/pos/TableListPage';
+import TablePOSPage from '@/pages/pos/TablePOSPage';
 
 
 export const dashboardLoader = async ({ params }) => {
@@ -273,10 +274,11 @@ export const router = createBrowserRouter([
           { path: "settings/staff", element: <ProtectedRoute resource="staff" action="read"><StaffManagement /></ProtectedRoute> },
           { path: "customers", element: <ProtectedRoute resource="customers" action="read"><Customers /></ProtectedRoute> },
           { path: "customers/:customerEmail/orders", element: <ProtectedRoute resource="customers" action="read"><CustomerOrders/></ProtectedRoute> },
-          { path: "pos", element: <ProtectedRoute resource="pos" action="access"><POSPage /></ProtectedRoute> },
+          { path: "pos", element: <ProtectedRoute resource="pos" action="access"><TableListPage /></ProtectedRoute> },
+          { path: "pos/table/:tableId", element: <ProtectedRoute resource="pos" action="access"><TablePOSPage /></ProtectedRoute> },
         ],
       },
-      { path: "*", element: <NotFound /> }, 
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

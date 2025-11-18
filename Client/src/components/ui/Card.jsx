@@ -71,9 +71,24 @@ const CardFooter = ({ children, className = '' }) => (
   </div>
 );
 
+const CardContent = ({ children, className = '' }) => (
+  <div className={className}>
+    {children}
+  </div>
+);
+
+const CardDescription = ({ children, className = '' }) => (
+  <p className={`text-sm text-gray-600 ${className}`}>
+    {children}
+  </p>
+);
+
 Card.Header = CardHeader;
 Card.Title = CardTitle;
 Card.Body = CardBody;
 Card.Footer = CardFooter;
+Card.Content = CardContent;
+Card.Description = CardDescription;
 
 export default Card;
+export { Card, CardHeader, CardTitle, CardBody, CardFooter, CardContent, CardDescription };

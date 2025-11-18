@@ -21,5 +21,5 @@ export function getAllGuestUuids() {
       }
     }
   });
-  return guestUuids;
+  return guestUuids;  
 }

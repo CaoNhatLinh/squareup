@@ -113,6 +113,129 @@ const createCheckoutSession = async (req, res) => {
   }
 };
 
+const createOrderFromPOS = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { items, customerInfo, paymentMethod, orderType } = req.body;
+    if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const restaurantSnapshot = await db.ref(`restaurants/${restaurantId}`).get();
+    const restaurant = restaurantSnapshot.val();
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+
+    const discountResult = await calculateCartDiscounts(restaurantId, items.map(i => ({ ...i, totalPrice: (i.price || 0) * (i.quantity || 1) })));
+
+    const subtotal = items.reduce((sum, i) => sum + ((i.price || 0) * (i.quantity || 1)), 0);
+    const totalDiscount = discountResult.totalDiscount || 0;
+    const totalAmount = subtotal - totalDiscount;
+
+    const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
+    const orderData = {
+      id: orderId,
+      orderId,
+      restaurantId,
+      restaurantName: restaurant.name || '',
+      // status should reflect payment: completed when paid, pending otherwise
+      status: (req.body.paymentStatus === 'paid') ? 'completed' : 'pending',
+      // Accept paymentStatus from client if present; fall back to cash=paid, else pending
+      paymentStatus: req.body.paymentStatus || (paymentMethod === 'cash' ? 'paid' : 'pending'),
+      amount: totalAmount,
+      totalAmount,
+      currency: 'USD',
+      items: items.map(i => ({
+        itemId: i.itemId || '',
+        groupKey: i.groupKey || '',
+        name: i.name || '',
+        image: i.image || null,
+        price: i.price || 0,
+        quantity: i.quantity || 1,
+        totalPrice: (i.price || 0) * (i.quantity || 1),
+        selectedOptions: i.selectedOptions || [],
+      })),
+      discount: {
+        totalDiscount,
+        appliedDiscounts: discountResult.appliedDiscounts,
+        discountBreakdown: discountResult.discountBreakdown,
+        itemDiscounts: discountResult.itemDiscounts,
+      },
+      subtotal,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      customerInfo: customerInfo || null,
+      orderType: orderType || 'dine_in'
+    };
+    await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
+    return res.status(201).json({ success: true, data: orderData });
+  } catch (error) {
+    console.error('createOrderFromPOS error:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Hold order endpoints
+const createHoldOrder = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { items, customerInfo, holdName, notes } = req.body;
+    if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const holdId = `hold_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const holdData = {
+      id: holdId,
+      restaurantId,
+      items,
+      customerInfo: customerInfo || null,
+      name: holdName || `Hold ${new Date().toISOString()}`,
+      notes: notes || null,
+      createdAt: Date.now(),
+    };
+    await db.ref(`heldOrders/${restaurantId}/${holdId}`).set(holdData);
+    return res.status(201).json({ success: true, data: holdData });
+  } catch (error) {
+    console.error('createHoldOrder error:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const getHoldOrders = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    if (!restaurantId) return res.status(400).json({ error: 'Restaurant ID required' });
+    const snapshot = await db.ref(`heldOrders/${restaurantId}`).get();
+    const data = snapshot.val() || {};
+    return res.status(200).json({ success: true, data: Object.values(data) });
+  } catch (error) {
+    console.error('getHoldOrders error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const deleteHoldOrder = async (req, res) => {
+  try {
+    const { restaurantId, holdId } = req.params;
+    if (!restaurantId || !holdId) return res.status(400).json({ error: 'Missing required fields' });
+    await db.ref(`heldOrders/${restaurantId}/${holdId}`).remove();
+    return res.status(200).json({ success: true, message: 'Hold removed' });
+  } catch (error) {
+    console.error('deleteHoldOrder error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+const calculateCartDiscountsEndpoint = async (req, res) => {
+  try {
+    const { restaurantId, items } = req.body;
+    if (!restaurantId || !items) return res.status(400).json({ error: 'Missing required fields' });
+    const result = await calculateCartDiscounts(restaurantId, items);
+    return res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('calculateCartDiscountsEndpoint error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
 const handleWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -634,6 +757,11 @@ const cleanupOldPendingOrders = async (req, res) => {
 module.exports = {
   createCheckoutSession,
   handleWebhook,
+  createOrderFromPOS,
+  createHoldOrder,
+  getHoldOrders,
+  deleteHoldOrder,
+  calculateCartDiscountsEndpoint,
   getOrderBySession,
   getAllOrders,
   getAllOrdersAdmin,

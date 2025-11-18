@@ -73,3 +73,4 @@ export async function del(url, opts = {}) {
   const headers = await buildAuthHeaders(null, opts.idToken)
   return instance.delete(url, { headers })
 }
+
