@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import { createRole, updateRole, getRole, getPermissionsStructure } from '@/api/roles';
 import { useToast } from '@/hooks/useToast';
 import PageHeader from "@/components/common/PageHeader";
 import { LoadingSpinner, Input, Checkbox, Button, Card } from '@/components/ui';
 export default function RoleForm() {
-  const { restaurantId, roleId } = useParams();
+  const { roleId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
   const { success, error } = useToast();
   const isEdit = Boolean(roleId);
@@ -109,7 +111,7 @@ export default function RoleForm() {
         await createRole(restaurantId, formData);
         success('Role created successfully');
       }
-      navigate(`/${restaurantId}/settings/roles`);
+      navigate(`/restaurant/settings/roles`);
     } catch (err) {
       console.error('Error saving role:', err);
       error(err.response?.data?.error || 'Failed to save role');
@@ -128,7 +130,7 @@ export default function RoleForm() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <PageHeader title={isEdit ? 'Edit Role' : 'Create New Role'} subtitle="Define a role and its permissions for your staff members." onBack={() => navigate(`/${restaurantId}/settings/roles`)} />
+      <PageHeader title={isEdit ? 'Edit Role' : 'Create New Role'} subtitle="Define a role and its permissions for your staff members." onBack={() => navigate(`/restaurant/settings/roles`)} />
 
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
@@ -203,7 +205,7 @@ export default function RoleForm() {
             <div className="flex justify-end space-x-3">
               <Button
                 variant="secondary"
-                onClick={() => navigate(`/${restaurantId}/settings/roles`)}
+                onClick={() => navigate(`/restaurant/settings/roles`)}
                 type="button"
               >
                 Cancel

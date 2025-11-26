@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Radio = ({
   label,
   checked = false,

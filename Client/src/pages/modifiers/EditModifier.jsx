@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 
 import { getModifier, updateModifier } from "@/api/modifers";
 import {
@@ -13,7 +14,8 @@ import { HiXMark } from "react-icons/hi2";
 import { Input, Button, Checkbox, RadioGroup, LoadingSpinner } from '@/components/ui';
 
 export default function EditModifier() {
-  const { modifierId, restaurantId } = useParams();
+  const { modifierId, restaurantId: paramRestaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -45,7 +47,7 @@ export default function EditModifier() {
       } catch (err) {
         console.error("Failed to load modifier", err);
         alert("Failed to load modifier details.");
-        navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
+        navigate(`/restaurant/modifiers`);
       } finally {
         setLoading(false);
       }
@@ -81,7 +83,7 @@ export default function EditModifier() {
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
+      navigate(`/restaurant/modifiers`);
     } catch (err) {
       console.error("Failed to update modifier", err);
       alert("Failed to update modifier: " + (err.message || err));
@@ -136,7 +138,7 @@ export default function EditModifier() {
           <h2 className="text-2xl font-bold text-gray-900">Edit Modifier Set: {formData.displayName || formData.name}</h2>
 
           <div className="flex items-center gap-3">
-            <Button variant="secondary" size="small" onClick={() => navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers')}>Cancel</Button>
+            <Button variant="secondary" size="small" onClick={() => navigate(`/restaurant/modifiers`)}>Cancel</Button>
             <Button
               variant="primary"
               size="medium"

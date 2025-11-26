@@ -10,40 +10,40 @@ import {
 export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') => {
   const menuItems = [];
 
-  // Helper function to check if user has any permission for a resource
+  
   const hasAnyPermission = (resource) => {
     if (!permissions[resource]) return false;
     return Object.values(permissions[resource]).some(perm => perm === true);
   };
 
-  // Check if user is owner (not staff)
+  
   const isOwner = userRole !== 'staff';
 
-  // Home - Always visible
-  menuItems.push({ to: `/${restaurantId}/dashboard`, label: "Home", icon: HiHome });
+  
+  menuItems.push({ to: `/restaurant/dashboard`, label: "Home", icon: HiHome });
 
-  // POS - Point of Sale for in-store orders: show to owner by default or users with pos permission
+  
   if (isOwner || hasAnyPermission('pos')) {
     menuItems.push({ 
-      to: `/${restaurantId}/pos`, 
+      to: `/restaurant/pos`, 
       label: "Point of Sale", 
       icon: HiShoppingCart 
     });
   }
 
-  // Items & services section
+  
   const itemsChildren = [];
   if (hasAnyPermission('items')) {
-    itemsChildren.push({ to: `/${restaurantId}/items`, label: "Item library" });
+    itemsChildren.push({ to: `/restaurant/items`, label: "Item library" });
   }
   if (hasAnyPermission('categories')) {
-    itemsChildren.push({ to: `/${restaurantId}/categories`, label: "Categories" });
+    itemsChildren.push({ to: `/restaurant/categories`, label: "Categories" });
   }
   if (hasAnyPermission('modifiers')) {
-    itemsChildren.push({ to: `/${restaurantId}/modifiers`, label: "Modifiers" });
+    itemsChildren.push({ to: `/restaurant/modifiers`, label: "Modifiers" });
   }
   if (hasAnyPermission('discounts')) {
-    itemsChildren.push({ to: `/${restaurantId}/discounts`, label: "Discounts" });
+    itemsChildren.push({ to: `/restaurant/discounts`, label: "Discounts" });
   }
 
   if (itemsChildren.length > 0) {
@@ -54,15 +54,15 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
     });
   }
 
-  // Payments & invoices section
+  
   const paymentsChildren = [];
   const ordersSubChildren = [];
   
   if (hasAnyPermission('orders')) {
-    ordersSubChildren.push({ to: `/${restaurantId}/orders`, label: "All orders", badge: true });
+    ordersSubChildren.push({ to: `/restaurant/orders`, label: "All orders", badge: true });
   }
   if (hasAnyPermission('reviews')) {
-    ordersSubChildren.push({ to: `/${restaurantId}/reviews`, label: "Reviews" });
+    ordersSubChildren.push({ to: `/restaurant/reviews`, label: "Reviews" });
   }
   
   if (ordersSubChildren.length > 0) {
@@ -73,7 +73,7 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
   }
   
   if (hasAnyPermission('transactions')) {
-    paymentsChildren.push({ to: `/${restaurantId}/transactions`, label: "Transactions" });
+    paymentsChildren.push({ to: `/restaurant/transactions`, label: "Transactions" });
   }
 
   if (paymentsChildren.length > 0) {
@@ -84,37 +84,41 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
     });
   }
 
-  // Customers list - visible if user has access to orders or customers feature
+  
   if (hasAnyPermission('orders') || hasAnyPermission('customers') || isOwner) {
     menuItems.push({
       label: "Customers",
       icon: HiUserGroup,
-      to: `/${restaurantId}/customers`,
+      to: `/restaurant/customers`,
     });
   }
 
-  // Settings section
+  
   const settingsChildren = [];
   const businessSubChildren = [];
   
-  // Business settings - Owner only
+  
   if (isOwner) {
-    businessSubChildren.push(
+      businessSubChildren.push(
       {
-        to: `/${restaurantId}/settings/business/about`,
+        to: `/restaurant/settings/business/about`,
         label: "About & Contact",
       },
       {
-        to: `/${restaurantId}/settings/business/hours`,
+        to: `/restaurant/settings/business/hours`,
         label: "Business Hours",
       },
       {
-        to: `/${restaurantId}/settings/business/special-closures`,
+        to: `/restaurant/settings/business/special-closures`,
         label: "Special Closures",
       },
       {
-        to: `/${restaurantId}/settings/restaurant`,
+        to: `/restaurant/settings/restaurant`,
         label: "Restaurant Settings",
+      },
+      {
+        to: `/restaurant/settings/website-builder`,
+        label: "Website Builder",
       }
     );
   }
@@ -126,30 +130,30 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
     });
   }
 
-  // Staff management - Only for admins
+  
   if (hasAnyPermission('staff')) {
     settingsChildren.push({
       label: "Staff & Roles",
       children: [
         {
-          to: `/${restaurantId}/settings/staff`,
+          to: `/restaurant/settings/staff`,
           label: "Staff Members",
         },
         {
-          to: `/${restaurantId}/settings/roles`,
+          to: `/restaurant/settings/roles`,
           label: "Roles & Permissions",
         },
       ],
     });
   }
 
-  // Developer tools - Only for owners
+  
   if (isOwner) {
     settingsChildren.push({
       label: "Developer",
       children: [
         {
-          to: `/${restaurantId}/settings/developer-tools`,
+          to: `/restaurant/settings/developer-tools`,
           label: "Developer Tools",
         },
       ],

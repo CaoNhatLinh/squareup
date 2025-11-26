@@ -1,8 +1,5 @@
 const { admin, db } = require('../config/firebaseAdmin');
 
-/**
- * Get all tables for a restaurant
- */
 exports.getTables = async (req, res) => {
   try {
     const { restaurantId } = req.params;
@@ -11,7 +8,7 @@ exports.getTables = async (req, res) => {
       .ref(`restaurants/${restaurantId}/tables`)
       .orderByChild('isActive')
       .equalTo(true)
-      .once('value');
+      .get();
 
     const tables = [];
     const tablesData = tablesSnapshot.val();
@@ -25,7 +22,6 @@ exports.getTables = async (req, res) => {
       });
     }
 
-    // Sort by createdAt desc
     tables.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     res.json(tables);
@@ -35,16 +31,14 @@ exports.getTables = async (req, res) => {
   }
 };
 
-/**
- * Get a specific table by ID
- */
+
 exports.getTableById = async (req, res) => {
   try {
     const { restaurantId, tableId } = req.params;
 
     const tableSnapshot = await db
       .ref(`restaurants/${restaurantId}/tables/${tableId}`)
-      .once('value');
+      .get();
 
     if (!tableSnapshot.exists()) {
       return res.status(404).json({ error: 'Table not found' });
@@ -81,6 +75,8 @@ exports.createTable = async (req, res) => {
       isActive: true,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      customerInfo: req.body.customerInfo || null,
+      notes: req.body.notes || null,
     };
 
     const newTableRef = db.ref(`restaurants/${restaurantId}/tables`).push();
@@ -105,11 +101,14 @@ exports.updateTable = async (req, res) => {
     const { name, items } = req.body;
 
     const tableRef = db.ref(`restaurants/${restaurantId}/tables/${tableId}`);
-    const tableSnapshot = await tableRef.once('value');
+    const tableSnapshot = await tableRef.get();
 
     if (!tableSnapshot.exists()) {
       return res.status(404).json({ error: 'Table not found' });
     }
+
+    // Optimistic locking: client can pass expectedUpdatedAt to prevent race updates
+    const expectedUpdatedAt = req.body.expectedUpdatedAt;
 
     const updateData = {
       updatedAt: Date.now(),
@@ -125,6 +124,20 @@ exports.updateTable = async (req, res) => {
     if (items !== undefined) {
       updateData.items = items;
       updateData.status = items.length > 0 ? 'occupied' : 'available';
+    }
+    if (req.body.customerInfo !== undefined) {
+      updateData.customerInfo = req.body.customerInfo || null;
+    }
+    if (req.body.notes !== undefined) {
+      updateData.notes = req.body.notes || null;
+    }
+
+    // If client provided expectedUpdatedAt, validate it against current record
+    if (expectedUpdatedAt !== undefined && tableSnapshot.exists()) {
+      const current = tableSnapshot.val();
+      if ((current.updatedAt || 0) !== expectedUpdatedAt) {
+        return res.status(409).json({ error: 'Conflict: the table was modified by another user', currentUpdatedAt: current.updatedAt });
+      }
     }
 
     await tableRef.update(updateData);
@@ -181,7 +194,7 @@ exports.deleteTable = async (req, res) => {
 exports.mergeTables = async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    const { sourceTableIds, targetTableId, newTableName } = req.body;
+    const { sourceTableIds, targetTableId, newTableName, expectedUpdatedAt = {} } = req.body;
 
     if (!sourceTableIds || !Array.isArray(sourceTableIds) || sourceTableIds.length === 0) {
       return res.status(400).json({ error: 'Source table IDs are required' });
@@ -194,19 +207,23 @@ exports.mergeTables = async (req, res) => {
     const allTableIds = [...sourceTableIds, targetTableId];
     const tablesData = [];
 
-    // Get all tables
+    // Get all tables and validate expectedUpdatedAt if present
     for (const tableId of allTableIds) {
       const tableSnapshot = await db
         .ref(`restaurants/${restaurantId}/tables/${tableId}`)
-        .once('value');
+        .get();
       
       if (!tableSnapshot.exists()) {
         return res.status(404).json({ error: `Table ${tableId} not found` });
       }
       
+      const record = tableSnapshot.val();
+      if (expectedUpdatedAt && expectedUpdatedAt[tableId] !== undefined && (record.updatedAt || 0) !== expectedUpdatedAt[tableId]) {
+        return res.status(409).json({ error: `Conflict: table ${tableId} was modified by another user`, currentUpdatedAt: record.updatedAt });
+      }
       tablesData.push({ 
         id: tableId, 
-        data: tableSnapshot.val() 
+        data: record,
       });
     }
 
@@ -239,7 +256,7 @@ exports.mergeTables = async (req, res) => {
     await db.ref().update(updates);
 
     // Get updated target table
-    const updatedSnapshot = await targetRef.once('value');
+    const updatedSnapshot = await targetRef.get();
     res.json({
       id: targetTableId,
       ...updatedSnapshot.val(),
@@ -258,16 +275,28 @@ exports.clearTable = async (req, res) => {
     const { restaurantId, tableId } = req.params;
 
     const tableRef = db.ref(`restaurants/${restaurantId}/tables/${tableId}`);
-    const tableSnapshot = await tableRef.once('value');
+    const tableSnapshot = await tableRef.get();
 
     if (!tableSnapshot.exists()) {
       return res.status(404).json({ error: 'Table not found' });
+    }
+
+    const expectedUpdatedAt = req.body.expectedUpdatedAt;
+
+    // conflict check
+    if (expectedUpdatedAt !== undefined && tableSnapshot.exists()) {
+      const current = tableSnapshot.val();
+      if ((current.updatedAt || 0) !== expectedUpdatedAt) {
+        return res.status(409).json({ error: 'Conflict: the table was modified by another user', currentUpdatedAt: current.updatedAt });
+      }
     }
 
     await tableRef.update({
       items: [],
       status: 'available',
       updatedAt: Date.now(),
+      customerInfo: null,
+      notes: null,
     });
 
     const updatedSnapshot = await tableRef.once('value');

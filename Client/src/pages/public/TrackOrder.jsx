@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { trackOrderStatus } from "@/api/orders";
 import {
@@ -168,7 +168,7 @@ export default function TrackOrder() {
     ];
     const currentIndex = statusOrder.indexOf(status);
     if (currentIndex === -1) return 0;
-    if (status === "completed" || status === "cancelled") return 100; // Hoàn thành hoặc Hủy thì coi như 100% về mặt tiến độ (cho trạng thái cuối)
+    if (status === "completed" || status === "cancelled") return 100; 
     return ((currentIndex + 1) / (statusOrder.length - 1)) * 100;
   };
 
@@ -417,45 +417,66 @@ export default function TrackOrder() {
               ))}
             </div>
           </div>
-          
-          {order.status === 'cancelled' && (
+
+          {order.status === "cancelled" && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="bg-red-50 border border-red-200 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-red-900 mb-3 flex items-center gap-2">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Order Cancelled
                 </h3>
-                
+
                 {order.cancelReason && (
                   <div className="mb-3">
-                    <p className="text-sm font-medium text-red-900 mb-1">Reason:</p>
+                    <p className="text-sm font-medium text-red-900 mb-1">
+                      Reason:
+                    </p>
                     <p className="text-sm text-red-700 capitalize">
-                      {order.cancelReason.replace(/_/g, ' ')}
+                      {order.cancelReason.replace(/_/g, " ")}
                     </p>
                   </div>
                 )}
-                
+
                 {order.cancelNote && (
                   <div className="mb-3">
-                    <p className="text-sm font-medium text-red-900 mb-1">Additional Note:</p>
+                    <p className="text-sm font-medium text-red-900 mb-1">
+                      Additional Note:
+                    </p>
                     <p className="text-sm text-red-700 italic">
                       "{order.cancelNote}"
                     </p>
                   </div>
                 )}
-                
+
                 {order.refunded && (
                   <div className="mt-4 pt-4 border-t border-red-200">
                     <div className="flex items-center gap-2 text-green-700">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       <p className="font-semibold">Payment Refunded</p>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      Your payment has been refunded and will appear in your account within 5-10 business days.
+                      Your payment has been refunded and will appear in your
+                      account within 5-10 business days.
                     </p>
                   </div>
                 )}

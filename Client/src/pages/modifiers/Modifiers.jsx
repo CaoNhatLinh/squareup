@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLoaderData, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {  useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import {
   HiPlus,
-  HiOutlineSquares2X2,
   HiOutlineAdjustmentsHorizontal,
 } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
@@ -15,8 +15,7 @@ import ActionMenu from "@/components/common/ActionMenu";
 import { LoadingSpinner, Button, Modal } from '@/components/ui';
 
 export default function Modifiers() {
-  const { restaurantId } = useParams();
-  const loaderData = useLoaderData();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState([]);
@@ -25,9 +24,10 @@ export default function Modifiers() {
   const [limit, setLimit] = useState(25);
   const [total, setTotal] = useState(0);
   const [itemMenus, setItemMenus] = useState({});
-
+  const [loading,setLoading]=useState(true);
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
         const data = await fetchModifiers(restaurantId, { page, limit, q: searchQuery });
         setModifiers(data.modifiers || []);
@@ -35,11 +35,12 @@ export default function Modifiers() {
       } catch (err) {
         console.error('Failed to fetch modifiers:', err);
       }
+      finally {
+        setLoading(false);
+      }
     };
     load();
-  }, [loaderData, restaurantId, page, limit, searchQuery]);
-
-  const filteredModifiers = modifiers; // server-side filtered
+  }, [ restaurantId, page, limit, searchQuery]);
 
   const refetch = async () => setPage(1);
 
@@ -58,12 +59,6 @@ export default function Modifiers() {
       console.error("Failed to delete modifier", err);
       alert("Failed to delete modifier");
     }
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked)
-      setSelectedModifiers((filteredModifiers || []).map((m) => m.id));
-    else setSelectedModifiers([]);
   };
 
   const handleBulkDelete = async () => {
@@ -94,7 +89,7 @@ export default function Modifiers() {
         SearchBarComponent={SearchBar}
         searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search modifier sets...', className: 'w-72' }}
         actionLabel={<><HiPlus className="w-5 h-5" /> New Modifier Set</>}
-        actionLink={`/${restaurantId}/modifiers/new`}
+        actionLink={`/restaurant/modifiers/new`}
       />
       <div className="p-4">
         <Table
@@ -108,12 +103,12 @@ export default function Modifiers() {
                   {r.required && <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">REQUIRED</span>}
                 </div>
             ) },
-            { key: 'actions', title: 'Actions', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={itemMenus[r.id]} onToggle={(open) => setItemMenus({ ...itemMenus, [r.id]: open })} editPath={`/${restaurantId}/modifiers/${r.id}/edit`} onDelete={() => handleDeleteModifier(r.id)} itemName={r.displayName || r.name} /></div>) }
+            { key: 'actions', title: 'Actions', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={itemMenus[r.id]} onToggle={(open) => setItemMenus({ ...itemMenus, [r.id]: open })} editPath={`/restaurant/modifiers/${r.id}/edit`} onDelete={() => handleDeleteModifier(r.id)} itemName={r.displayName || r.name} /></div>) }
           ]}
           data={modifiers}
-          loading={false}
+          loading={loading}
           rowKey={'id'}
-          onRowClick={(r) => navigate(`/${restaurantId}/modifiers/${r.id}/edit`)}
+          onRowClick={(r) => navigate(`/restaurant/modifiers/${r.id}/edit`)}
           pagination={{ page, limit, total }}
           onPageChange={(p) => setPage(p)}
           onLimitChange={(l) => { setLimit(l); setPage(1); }}

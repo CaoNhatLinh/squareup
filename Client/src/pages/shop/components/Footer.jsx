@@ -189,8 +189,6 @@ export default function Footer({ restaurant }) {
             </div>
           </div>
         </div>
-
-        {/* Bottom Bar */}
         <div className="border-t border-gray-200 pt-8 mt-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm">

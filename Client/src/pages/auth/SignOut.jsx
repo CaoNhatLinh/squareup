@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
-import { sessionLogout } from '../../api/auth';
+import { auth } from '@/firebase';
+import { sessionLogout } from '@/api/auth';
 import { useNavigate } from 'react-router-dom';
 
 export default function SignOut() {

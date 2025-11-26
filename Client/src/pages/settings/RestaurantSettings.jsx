@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/useToast";
@@ -86,8 +86,6 @@ export default function RestaurantSettings() {
           Manage your restaurant's operational status and account settings.
         </p>
       </div>
-
-      {/* Active/Inactive Toggle */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -141,8 +139,6 @@ export default function RestaurantSettings() {
           </button>
         </div>
       </div>
-
-      {/* Danger Zone */}
       <div className="bg-white rounded-xl shadow-lg p-6 border border-red-200">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -178,8 +174,6 @@ export default function RestaurantSettings() {
           </div>
         </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-200 animate-in fade-in zoom-in-95 duration-300">

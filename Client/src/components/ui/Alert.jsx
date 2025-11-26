@@ -1,4 +1,3 @@
-import React from 'react';
 import { HiCheckCircle, HiExclamationCircle, HiInformationCircle, HiXCircle, HiX } from 'react-icons/hi';
 
 const Alert = ({

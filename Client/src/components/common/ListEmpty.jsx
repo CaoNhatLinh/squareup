@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function ListEmpty({ title = 'No items', subtitle = '', actionLabel, onAction }) {
   return (
     <div className="text-center py-12 bg-white rounded-lg shadow">

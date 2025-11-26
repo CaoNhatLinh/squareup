@@ -18,6 +18,13 @@ router.get('/:restaurantId/shop', controller.getRestaurantForShop);
 router.get('/:restaurantId', verifyToken, controller.getRestaurant);
 router.put('/:restaurantId', verifyToken, verifyOwner, controller.updateRestaurant);
 router.delete('/:restaurantId', verifyToken, verifyOwner, controller.deleteRestaurant);
+
+// Site config routes
+router.get('/slug/:slug', controller.findRestaurantBySlug);
+router.put('/:restaurantId/site-config', verifyToken, verifyOwner, controller.updateRestaurantSiteConfig);
+router.get('/check-slug/:slug', controller.checkSlugAvailability);
+router.post('/generate-slug', controller.generateSlugEndpoint);
+
 router.use('/:restaurantId/categories', categoriesRouter);
 router.use('/:restaurantId/items', itemsRouter);
 router.use('/:restaurantId/modifiers', modifiersRouter);

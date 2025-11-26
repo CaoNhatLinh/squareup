@@ -11,7 +11,6 @@ async function listCategories(req, res) {
   try {
     const snap = await db.ref(`restaurants/${restaurantId}/categories`).get();
     const allObj = snap.exists() ? snap.val() : {};
-    // Convert to array
     let list = Object.values(allObj || {});
     if (q) {
       list = list.filter(c => (c.name || '').toLowerCase().includes(q));

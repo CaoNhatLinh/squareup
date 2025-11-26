@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from "react";
 import { HiExclamationCircle } from 'react-icons/hi';
 
 const Input = forwardRef(({

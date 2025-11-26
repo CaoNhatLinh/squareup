@@ -1,8 +1,8 @@
-import * as client from './apiClient'
+import * as client from '@/api/apiClient'
 
 export async function verifySession() {
   const res = await client.get('/auth/verifySession');
-  // client.get returns normalized shape { data, meta, success }
+  
   return res.data;
 }
 
@@ -22,7 +22,7 @@ export async function sessionLogout() {
     return res.data;
   } catch (error) {
     console.error('sessionLogout failed:', error)
-    // Don't throw - allow logout to proceed even if server call fails
+    
     return { ok: false }
   }
 }

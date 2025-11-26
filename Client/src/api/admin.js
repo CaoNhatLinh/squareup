@@ -1,4 +1,4 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 
 export const getAllRestaurants = () => {
   return apiClient.get('/admin/restaurants').then(res => ({ restaurants: res.data || [], meta: res.meta || {} }));

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import {
   fetchSpecialClosures,
   addSpecialClosure,
@@ -16,7 +16,8 @@ import {
 import DatePicker from "react-datepicker";
 import PageHeader from "@/components/common/PageHeader";
 export default function SpecialClosures() {
-  const { restaurantId } = useParams();
+  const { restaurant } = useRestaurant();
+  const restaurantId = restaurant?.id;
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [closures, setClosures] = useState([]);

@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import useAppStore from '@/store/useAppStore';
 import { fetchRestaurantForShop } from "@/api/restaurants";
 import { fetchActiveDiscounts } from "@/api/discounts";
-import { ShopProvider} from "@/context/ShopProvider.jsx";
+import { ShopProvider } from "@/context/ShopProvider.jsx";
 import { useShop } from "@/context/ShopContext.jsx";
 import {
   ShopHeader,
@@ -15,10 +16,10 @@ import {
   CartDrawer,
   PromotionsDrawer,
   Footer,
-} from "./components";
+} from "@/pages/shop/components";
 
 function ShopPageContent() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const {
     restaurant,
     setRestaurant,
@@ -32,7 +33,6 @@ function ShopPageContent() {
     setActiveDiscounts,
     addToCart,
   } = useShop();
-
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +48,7 @@ function ShopPageContent() {
         id: cat.id,
         element: document.getElementById(`category-${cat.id}`),
       }));
-      const scrollPosition = window.scrollY + 200; 
+      const scrollPosition = window.scrollY + 200;
       for (let i = categoryElements.length - 1; i >= 0; i--) {
         const { id, element } = categoryElements[i];
         if (element && element.offsetTop <= scrollPosition) {
@@ -78,13 +78,13 @@ function ShopPageContent() {
       setError(null);
       try {
         const data = await fetchRestaurantForShop(restaurantId);
-        setRestaurant({ 
-          name: data.name, 
+        setRestaurant({
+          name: data.name,
           description: data.description,
           id: data.id,
           isOpen: data.isOpen,
           nextOpenTime: data.nextOpenTime,
-          closureReason: data.closureReason, 
+          closureReason: data.closureReason,
           hours: data.hours,
           address: data.address,
           phone: data.phone,
@@ -95,7 +95,8 @@ function ShopPageContent() {
           featuredImage: data.featuredImage,
           socialMedia: data.socialMedia,
           specialClosures: data.specialClosures,
-          active: data.active
+          active: data.active,
+          slug: data.slug
         });
         const cats = data.categories ? Object.values(data.categories) : [];
         setCategories(cats);
@@ -174,14 +175,13 @@ function ShopPageContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <ShopHeader 
+      <ShopHeader
         onCartClick={() => setIsCartOpen(true)}
         onPromotionsClick={() => setIsPromotionsOpen(true)}
         hasActiveDiscounts={Object.keys(activeDiscounts).length}
         isRestaurantActive={restaurant.active}
-        restaurantId={restaurantId}
       />
-      
+
       {restaurant.active === false && (
         <div className="bg-red-600 text-white text-center py-4 px-4">
           <div className="max-w-4xl mx-auto">
@@ -192,8 +192,8 @@ function ShopPageContent() {
           </div>
         </div>
       )}
-      
-      <RestaurantBanner 
+
+      <RestaurantBanner
         restaurant={restaurant}
         onInfoClick={() => setIsInfoDrawerOpen(true)}
         onPromotionsClick={() => setIsPromotionsOpen(true)}
@@ -221,7 +221,7 @@ function ShopPageContent() {
           onQuickAdd={handleQuickAdd}
         />
       </div>
-      
+
       <Footer restaurant={restaurant} />
 
       {isModalOpen && selectedItem && (
@@ -258,7 +258,6 @@ function ShopPageContent() {
       <PromotionsDrawer
         isOpen={isPromotionsOpen}
         onClose={() => setIsPromotionsOpen(false)}
-        restaurantId={restaurantId}
       />
     </div>
   );

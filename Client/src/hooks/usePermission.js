@@ -1,12 +1,10 @@
-import { useAuth } from './useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
-/**
- * Hook to check if user has specific permission
- */
+
 export const hasPermissionForUser = (user, resource, action) => {
   if (!user) return false;
   if (user?.isAdmin) return true;
-  // Owner should have full permissions for their restaurant
+  
   if (user?.role === 'owner') return true;
   if (user?.role === 'staff' && user?.permissions) {
     return user.permissions[resource]?.[action] === true;
@@ -19,18 +17,16 @@ export const usePermission = (resource, action) => {
   return hasPermissionForUser(user, resource, action);
 };
 
-/**
- * Hook to check if user has any permission for a resource
- */
+
 export const useHasAnyPermission = (resource) => {
   const { user } = useAuth();
 
-  // Admin has all permissions
+  
   if (user?.isAdmin) {
     return true;
   }
 
-  // Check if staff has any permission for this resource
+  
   if (user?.role === 'staff' && user?.permissions) {
     const resourcePerms = user.permissions[resource];
     if (resourcePerms) {
@@ -41,14 +37,12 @@ export const useHasAnyPermission = (resource) => {
   return false;
 };
 
-/**
- * Hook to get all permissions for current user
- */
+
 export const usePermissions = () => {
   const { user } = useAuth();
 
   if (user?.isAdmin) {
-    // Return all permissions for admin
+    
     const allResources = [
       'items',
       'categories',
@@ -77,7 +71,7 @@ export const usePermissions = () => {
     return allPermissions;
   }
 
-  // Owner has all permissions similar to admin
+  
   if (user?.role === 'owner') {
     const allResources = [
       'items',

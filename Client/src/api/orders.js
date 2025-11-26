@@ -1,4 +1,4 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 
 export const getRestaurantOrders = async (restaurantId) => {
   const response = await apiClient.get(`/orders/restaurant/${restaurantId}`);
@@ -39,17 +39,4 @@ export const createOrder = async (restaurantId, orderData) => {
   return response.data;
 };
 
-export const createHoldOrder = async (restaurantId, holdData) => {
-  const response = await apiClient.post(`/orders/restaurant/${restaurantId}/hold`, holdData);
-  return response.data;
-};
 
-export const getHoldOrders = async (restaurantId) => {
-  const response = await apiClient.get(`/orders/restaurant/${restaurantId}/holds`);
-  return response.data;
-};
-
-export const deleteHoldOrder = async (restaurantId, holdId) => {
-  const response = await apiClient.delete(`/orders/restaurant/${restaurantId}/hold/${holdId}`);
-  return response.data;
-};

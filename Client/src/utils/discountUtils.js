@@ -1,10 +1,6 @@
 
 
-/**
- * Get the status of a discount based on current time and settings
- * @param {object} discount - Discount object
- * @returns {string} Status: 'active', 'inactive', 'upcoming', 'expired'
- */
+
 export const getDiscountStatus = (discount) => {
   const now = Date.now();
   if (discount.setDateRange) {
@@ -35,11 +31,7 @@ export const getDiscountStatus = (discount) => {
   return 'active';
 };
 
-/**
- * Get descriptive text for what a discount applies to
- * @param {object} discount - Discount object
- * @returns {string} Description text
- */
+
 export const getAppliedToText = (discount) => {
   if (discount.discountApplyTo === 'item_category') {
     if (discount.addAllItemsToPurchase) {
@@ -67,11 +59,7 @@ export const getAppliedToText = (discount) => {
   return 'Special Offer';
 };
 
-/**
- * Get time range text for discount display
- * @param {object} discount - Discount object
- * @returns {string} Time range text
- */
+
 export const getTimeText = (discount) => {
   if (discount.setSchedule && discount.scheduleTimeStart && discount.scheduleTimeEnd) {
     return `${discount.scheduleTimeStart} - ${discount.scheduleTimeEnd}`;
@@ -79,11 +67,7 @@ export const getTimeText = (discount) => {
   return 'All Day';
 };
 
-/**
- * Get discount amount display text
- * @param {object} discount - Discount object
- * @returns {string} Amount display text
- */
+
 export const getAmountDisplay = (discount) => {
   if (discount.amountType === 'percentage') {
     return `${discount.amount}%`;

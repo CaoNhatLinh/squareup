@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../../firebase';
-import { upsertRestaurant, fetchRestaurant } from '../../api/restaurants';
-import { sessionLogin } from '../../api/auth';
+import { auth, googleProvider } from '@/firebase';
+import { upsertRestaurant, fetchRestaurant } from '@/api/restaurants';
+import { sessionLogin } from '@/api/auth';
 import { useNavigate } from 'react-router-dom';
 
 export default function SignIn() {
@@ -16,10 +16,10 @@ export default function SignIn() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // AuthProvider will handle session creation via onAuthStateChanged
-      // Wait for it to complete (session setup + user state)
+      
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
-      // Force full page reload to clear any cached state
+      
       window.location.href = '/restaurants';
     } catch (err) {
       console.error(err);
@@ -53,11 +53,11 @@ export default function SignIn() {
       }
       console.log('Restaurant created/updated');
       
-      // AuthProvider will handle session creation via onAuthStateChanged
-      // Wait for it to complete (session setup + user state)
+      
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Force full page reload to clear any cached state
+      
       window.location.href = '/restaurants'; 
     } catch (err) {
       console.error('Google sign in error:', err);

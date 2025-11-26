@@ -1,12 +1,17 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
+import { useShop } from '@/context/ShopContext';
+import { Button } from '@/components/ui';
 import { getGuestOrderHistory } from "@/api/guestUsers";
 import { useGuestUser } from "@/context/GuestUserContext";
 import { format } from "date-fns";
 
 export default function OrderHistory() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
+  const { restaurant } = useShop();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { guestUuid, loading: guestLoading } = useGuestUser();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,14 +19,19 @@ export default function OrderHistory() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (guestLoading || !guestUuid) {
+      
+      if (guestLoading) return;
+      
+      if (!guestUuid) {
+        setOrders([]);
+        setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       setError(null);
       try {
-        console.log('Fetching orders for guest:', guestUuid);
+        
         const data = await getGuestOrderHistory(restaurantId, guestUuid);
         setOrders(data || []);
       } catch (err) {
@@ -81,14 +91,11 @@ export default function OrderHistory() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate(`/shop/${restaurantId}`)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
+          <Button variant="ghost" onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order`)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-          </button>
+          </Button>
           <h1 className="text-2xl font-bold">Order History</h1>
         </div>
       </div>
@@ -107,12 +114,7 @@ export default function OrderHistory() {
             </svg>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h2>
             <p className="text-gray-500 mb-6">Start shopping to see your order history here</p>
-            <button
-              onClick={() => navigate(`/shop/${restaurantId}`)}
-              className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-            >
-              Start Shopping
-            </button>
+            <Button onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order`)} variant="primary" className="px-6 py-3">Start Shopping</Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -174,19 +176,9 @@ export default function OrderHistory() {
                   </div>
 
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => navigate(`/track-order/${order.id}`)}
-                      className="flex-1 bg-black text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-                    >
-                      Track Order
-                    </button>
-                    {(order.status === "completed" ) && !order.review && (
-                      <button
-                        onClick={() => navigate(`/shop/${restaurantId}/review/${order.id}`)}
-                        className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
-                      >
-                        Write Review
-                      </button>
+                    <Button onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order/track-order/${order.id}`)} variant="primary" className="flex-1">Track Order</Button>
+                    {(order.status === "completed") && !order.review && (
+                      <Button onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order/review/${order.id}`)} variant="warning" className="flex-1">Write Review</Button>
                     )}
                     {order.review && (
                       <div className="flex-1 bg-green-50 border border-green-200 py-2 px-4 rounded-lg flex items-center justify-center gap-2">

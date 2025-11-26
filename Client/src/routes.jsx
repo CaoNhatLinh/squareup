@@ -19,17 +19,15 @@ import BusinessAbout from "@/pages/settings/BusinessAbout";
 import BusinessHours from "@/pages/settings/BusinessHours";
 import SpecialClosures from "@/pages/settings/SpecialClosures";
 import { fetchRestaurant } from "@/api/restaurants";
-import { fetchCategories } from "@/api/categories";
-import { fetchItems } from "@/api/items";
 import Modifiers from "@/pages/modifiers/Modifiers";
 import CreateModifier from "@/pages/modifiers/CreateModifier";
 import EditModifier from "@/pages/modifiers/EditModifier";
-import { fetchModifiers } from "@/api/modifers";
 import Discounts from "@/pages/discounts/Discounts";
 import CreateDiscount from "@/pages/discounts/CreateDiscount";
 import EditDiscount from "@/pages/discounts/EditDiscount";
 import { fetchDiscounts } from "@/api/discounts";
 import ShopPage from "@/pages/shop/ShopPage";
+import { ShopProvider } from "@/context/ShopProvider";
 import ShopLayout from "@/pages/shop/ShopLayout";
 import CheckoutSuccessWrapper from "@/pages/shop/checkout/CheckoutSuccessWrapper";
 import CheckoutCancelled from "@/pages/shop/checkout/CheckoutCancelled";
@@ -40,8 +38,9 @@ import NotFound from "@/pages/NotFound";
 import OrderDetails from "@/pages/orders/OrderDetails";
 import DeveloperTools from "@/pages/settings/DeveloperTools";
 import TrackOrder from "@/pages/public/TrackOrder";
+import PublicStorefront from "@/pages/public/PublicStorefront";
 import RestaurantSettings from "@/pages/settings/RestaurantSettings";
-// import Profile from "@/pages/Profile";
+import WebsiteBuilder from "@/pages/settings/WebsiteBuilder";
 import Reviews from "@/pages/reviews/Reviews";
 import Transactions from "@/pages/transactions/Transactions";
 import TransactionDetails from "@/pages/transactions/TransactionDetails";
@@ -49,18 +48,18 @@ import RolesManagement from "@/pages/settings/RolesManagement";
 import RoleForm from "@/pages/settings/RoleForm";
 import StaffManagement from "@/pages/settings/StaffManagement";
 import AcceptInvitation from "@/pages/auth/AcceptInvitation";
-import Customers from '@/pages/customers/Customers';
-import CustomerOrders from '@/pages/customers/CustomerOrders';
-import TableListPage from '@/pages/pos/TableListPage';
-import TablePOSPage from '@/pages/pos/TablePOSPage';
+import Customers from "@/pages/customers/Customers";
+import CustomerOrders from "@/pages/customers/CustomerOrders";
+import TableListPage from "@/pages/pos/TableListPage";
+import TablePOSPage from "@/pages/pos/TablePOSPage";
 
-
-export const dashboardLoader = async ({ params }) => {
+export const dashboardLoader = async () => {
   try {
-    const { restaurantId } = params;
-    // Only load restaurant data - individual pages will load their own data when needed
+    const restaurantId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("restaurantId")
+        : null;
     const restaurant = await fetchRestaurant(restaurantId).catch(() => null);
-
     return { restaurant };
   } catch (error) {
     if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -70,59 +69,16 @@ export const dashboardLoader = async ({ params }) => {
   }
 };
 
-export const itemsLoader = async ({ params }) => {
+export const discountsLoader = async () => {
   try {
-    const { restaurantId } = params;
-    const [itemsData, categoriesData, modifiersData] = await Promise.all([
-      fetchItems(restaurantId).catch(() => ({ items: [], meta: {} })),
-      fetchCategories(restaurantId).catch(() => ({})),
-      fetchModifiers(restaurantId).catch(() => ({})),
-    ]);
-    const items = itemsData.items || [];
-    const categories = categoriesData?.categories || categoriesData || [];
-    const modifiers = modifiersData?.modifiers || modifiersData || [];
-
-    return { items, categories, modifiers };
-  } catch (error) {
-    if (error?.response?.status === 401 || error?.response?.status === 403) {
-      throw redirect("/signin");
-    }
-    throw redirect("/signin");
-  } 
-};
-
-export const categoriesLoader = async ({ params }) => {
-  try {
-    const { restaurantId } = params;
-    const data = await fetchCategories(restaurantId).catch(() => ({ categories: [], meta: {} }));
-    const categories = data.categories || [];
-    return { categories };
-  } catch (error) {
-    if (error?.response?.status === 401 || error?.response?.status === 403) {
-      throw redirect("/signin");
-    }
-    throw redirect("/signin");
-  }
-};
-
-export const modifiersLoader = async ({ params }) => {
-  try {
-    const { restaurantId } = params;
-    const data = await fetchModifiers(restaurantId).catch(() => ({ modifiers: [], meta: {} }));
-    const modifiers = data.modifiers || [];
-    return { modifiers };
-  } catch (error) {
-    if (error?.response?.status === 401 || error?.response?.status === 403) {
-      throw redirect("/signin");
-    }
-    throw redirect("/signin");
-  }
-};
-
-export const discountsLoader = async ({ params }) => {
-  try {
-    const { restaurantId } = params;
-    const data = await fetchDiscounts(restaurantId).catch(() => ({ discounts: [], meta: {} }));
+    const restaurantId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("restaurantId")
+        : null;
+    const data = await fetchDiscounts(restaurantId).catch(() => ({
+      discounts: [],
+      meta: {},
+    }));
     const discounts = data.discounts || [];
     return { discounts };
   } catch (error) {
@@ -133,19 +89,9 @@ export const discountsLoader = async ({ params }) => {
   }
 };
 
-export const ordersLoader = async ({ params }) => {
-  try {
-    return { restaurantId: params.restaurantId };
-  } catch (error) {
-    console.error("Error in orders loader:", error);
-    throw redirect("/signin");
-  }
-};
-
-
 export const router = createBrowserRouter([
   {
-    path: "/shop/:restaurantId",
+    path: "/shop",
     element: <ShopLayout />,
     children: [
       {
@@ -154,11 +100,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "order-history",
-        element: <OrderHistory />,
+        element: <ShopProvider><OrderHistory /></ShopProvider>,
       },
       {
         path: "review/:orderId",
-        element: <OrderReview />,
+        element: <ShopProvider><OrderReview /></ShopProvider>,
       },
       {
         path: "success",
@@ -166,14 +112,23 @@ export const router = createBrowserRouter([
       },
       {
         path: "cancelled",
-        element: <CheckoutCancelled />,
+        element: <ShopProvider><CheckoutCancelled /></ShopProvider>,
       },
     ],
   },
   {
-    path: "/track-order/:orderId",
-    element: <TrackOrder />,
-  }, 
+    path: "/:slug/order",
+    element: <ShopLayout />,
+    children: [
+      { index: true, element: <ShopPage /> },
+      { path: "order-history", element: <ShopProvider><OrderHistory /></ShopProvider> },
+      { path: "review/:orderId", element: <ShopProvider><OrderReview /></ShopProvider> },
+      { path: "success", element: <CheckoutSuccessWrapper /> },
+      { path: "cancelled", element: <ShopProvider><CheckoutCancelled /></ShopProvider> },
+      { path: "track-order/:orderId", element: <TrackOrder /> },
+    ]
+  },
+
   {
     path: "/restaurants",
     element: <RestaurantSelector />,
@@ -183,7 +138,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminRoute><Layout /></AdminRoute>,
+    element: (
+      <AdminRoute>
+        <Layout />
+      </AdminRoute>
+    ),
     children: [
       {
         index: true,
@@ -191,29 +150,54 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { index: true, element: <Home /> }, 
+  { index: true, element: <Home /> },
   { path: "signin", element: <SignIn /> },
   { path: "signup", element: <SignUp /> },
   { path: "signout", element: <SignOut /> },
   { path: "accept-invitation", element: <AcceptInvitation /> },
+
   {
     element: <Layout />,
     children: [
-
       {
         path: "dashboard",
         loader: async () => {
           throw redirect("/restaurants");
         },
-      }, 
+      },
       {
-        path: ":restaurantId",
+        path: "pos",
+        element: (
+          <ProtectedRoute resource="pos" action="access">
+            <TableListPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "pos/table/:tableId",
+        element: (
+          <ProtectedRoute resource="pos" action="access">
+            <TablePOSPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "pos/table/new",
+        element: (
+          <ProtectedRoute resource="pos" action="create">
+            <TablePOSPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "restaurant",
         children: [
           {
             index: true,
             element: <Dashboard />,
-            loader: dashboardLoader, 
+            loader: dashboardLoader,
           },
+          { path: "settings/website-builder", element: <WebsiteBuilder /> },
           {
             path: "dashboard",
             element: <Dashboard />,
@@ -226,40 +210,107 @@ export const router = createBrowserRouter([
                 <ItemLibrary />
               </ProtectedRoute>
             ),
-            loader: itemsLoader,
           },
-          { path: "items/new", element: <CreateItem />, loader: itemsLoader },
-          { path: "items/:itemId/edit", element: <ProtectedRoute resource="items" action="update"><EditItem /></ProtectedRoute> ,loader: itemsLoader },
+          { path: "items/new", element: <CreateItem /> },
+          {
+            path: "items/:itemId/edit",
+            element: (
+              <ProtectedRoute resource="items" action="update">
+                <EditItem />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "categories",
-            element: <ProtectedRoute resource="categories" action="read"><Categories /></ProtectedRoute>,
-            loader: categoriesLoader,
+            element: (
+              <ProtectedRoute resource="categories" action="read">
+                <Categories />
+              </ProtectedRoute>
+            ),
           },
-          { path: "categories/new", element: <ProtectedRoute resource="categories" action="create"><CreateCategory /></ProtectedRoute> },
-          { path: "categories/:categoryId/edit", element: <ProtectedRoute resource="categories" action="update"><EditCategory /></ProtectedRoute> },
+          {
+            path: "categories/new",
+            element: (
+              <ProtectedRoute resource="categories" action="create">
+                <CreateCategory />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "categories/:categoryId/edit",
+            element: (
+              <ProtectedRoute resource="categories" action="update">
+                <EditCategory />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "modifiers",
-            element: <ProtectedRoute resource="modifiers" action="read"><Modifiers /></ProtectedRoute>,
-            loader: modifiersLoader,
+            element: (
+              <ProtectedRoute resource="modifiers" action="read">
+                <Modifiers />
+              </ProtectedRoute>
+            ),
           },
-          { path: "modifiers/new", element: <ProtectedRoute resource="modifiers" action="create"><CreateModifier /></ProtectedRoute> },
-          { path: "modifiers/:modifierId/edit", element: <ProtectedRoute resource="modifiers" action="update"><EditModifier /></ProtectedRoute> },
+          {
+            path: "modifiers/new",
+            element: (
+              <ProtectedRoute resource="modifiers" action="create">
+                <CreateModifier />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "modifiers/:modifierId/edit",
+            element: (
+              <ProtectedRoute resource="modifiers" action="update">
+                <EditModifier />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "discounts",
-            element: <ProtectedRoute resource="discounts" action="read"><Discounts /></ProtectedRoute>,
+            element: (
+              <ProtectedRoute resource="discounts" action="read">
+                <Discounts />
+              </ProtectedRoute>
+            ),
             loader: discountsLoader,
           },
-          { path: "discounts/new", element: <ProtectedRoute resource="discounts" action="create"><CreateDiscount /></ProtectedRoute> },
-          { path: "discounts/:discountId/edit", element: <ProtectedRoute resource="discounts" action="update"><EditDiscount /></ProtectedRoute> },
+          {
+            path: "discounts/new",
+            element: (
+              <ProtectedRoute resource="discounts" action="create">
+                <CreateDiscount />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "discounts/:discountId/edit",
+            element: (
+              <ProtectedRoute resource="discounts" action="update">
+                <EditDiscount />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "orders",
             element: <Orders />,
-            loader: ordersLoader,
           },
           { path: "orders/:orderId", element: <OrderDetails /> },
-          { path: "reviews", element: <ProtectedRoute resource="reviews" action="read"><Reviews /></ProtectedRoute> },
+          {
+            path: "reviews",
+            element: (
+              <ProtectedRoute resource="reviews" action="read">
+                <Reviews />
+              </ProtectedRoute>
+            ),
+          },
           { path: "transactions", element: <Transactions /> },
-          { path: "transactions/:paymentIntentId", element: <TransactionDetails /> },
+          {
+            path: "transactions/:paymentIntentId",
+            element: <TransactionDetails />,
+          },
           { path: "settings/business/about", element: <BusinessAbout /> },
           { path: "settings/business/hours", element: <BusinessHours /> },
           {
@@ -267,18 +318,85 @@ export const router = createBrowserRouter([
             element: <SpecialClosures />,
           },
           { path: "settings/restaurant", element: <RestaurantSettings /> },
+          { path: "settings/website-builder", element: <WebsiteBuilder /> },
           { path: "settings/developer-tools", element: <DeveloperTools /> },
-          { path: "settings/roles", element: <ProtectedRoute resource="staff" action="read"><RolesManagement /></ProtectedRoute> },
-          { path: "settings/roles/create", element: <ProtectedRoute resource="staff" action="create"><RoleForm /></ProtectedRoute> },
-          { path: "settings/roles/:roleId/edit", element: <ProtectedRoute resource="staff" action="update"><RoleForm /></ProtectedRoute> },
-          { path: "settings/staff", element: <ProtectedRoute resource="staff" action="read"><StaffManagement /></ProtectedRoute> },
-          { path: "customers", element: <ProtectedRoute resource="customers" action="read"><Customers /></ProtectedRoute> },
-          { path: "customers/:customerEmail/orders", element: <ProtectedRoute resource="customers" action="read"><CustomerOrders/></ProtectedRoute> },
-          { path: "pos", element: <ProtectedRoute resource="pos" action="access"><TableListPage /></ProtectedRoute> },
-          { path: "pos/table/:tableId", element: <ProtectedRoute resource="pos" action="access"><TablePOSPage /></ProtectedRoute> },
+          {
+            path: "settings/roles",
+            element: (
+              <ProtectedRoute resource="staff" action="read">
+                <RolesManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "settings/roles/create",
+            element: (
+              <ProtectedRoute resource="staff" action="create">
+                <RoleForm />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "settings/roles/:roleId/edit",
+            element: (
+              <ProtectedRoute resource="staff" action="update">
+                <RoleForm />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "settings/staff",
+            element: (
+              <ProtectedRoute resource="staff" action="read">
+                <StaffManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "customers",
+            element: (
+              <ProtectedRoute resource="customers" action="read">
+                <Customers />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "customers/:customerEmail/orders",
+            element: (
+              <ProtectedRoute resource="customers" action="read">
+                <CustomerOrders />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "pos",
+            element: (
+              <ProtectedRoute resource="pos" action="access">
+                <TableListPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "pos/table/:tableId",
+            element: (
+              <ProtectedRoute resource="pos" action="access">
+                <TablePOSPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "pos/table/new",
+            element: (
+              <ProtectedRoute resource="pos" action="create">
+                <TablePOSPage />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
-      { path: "*", element: <NotFound /> },
+
     ],
   },
+  { path: "/:slug", element: <PublicStorefront /> },
+  { path: "*", element: <NotFound /> },
 ]);

@@ -1,8 +1,9 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import MainSidebar from "./MainSidebar";
+import useAppStore from '@/store/useAppStore'
+import MainSidebar from "@/components/MainSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import NotificationPermissionBanner from "./notifications/NotificationPermissionBanner";
+import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
 import { OrderNotificationProvider } from "@/context/OrderNotificationProvider.jsx";
 import { RestaurantProvider } from "@/context/RestaurantProvider.jsx";
 
@@ -12,12 +13,26 @@ export default function Layout({ children }) {
   const location = useLocation();
 
   const isSelectorRoute = location.pathname === "/restaurants";
-  const isShopRoute =
-    location.pathname.startsWith("/shop/") ||
-    location.pathname.startsWith("/track-order/");
+  const isShopRoute = (() => {
+    const firstSegment = (location.pathname.split('/')[1] || '').toLowerCase();
+    const reserved = ['admin','signin','signup','signout','restaurant','accept-invitation','pos','restaurants','dashboard','settings','api','track-order'];
+    if (location.pathname.startsWith('/shop/') || location.pathname.startsWith('/track-order/')) return true;
+    if (firstSegment && !reserved.includes(firstSegment)) return true;
+    return false;
+  })();
+  const isPublicStorefront = location.pathname !== "/" && 
+    !location.pathname.startsWith("/restaurant") && 
+    !location.pathname.startsWith("/admin") && 
+    !location.pathname.startsWith("/signin") && 
+    !location.pathname.startsWith("/signup") && 
+    !location.pathname.startsWith("/signout") && 
+    !location.pathname.startsWith("/accept-invitation") &&
+    !location.pathname.startsWith("/pos");
   
-  const showSidebar = !isSelectorRoute && !isShopRoute && 
+  const showSidebar = !isSelectorRoute && !isShopRoute && !isPublicStorefront && 
     (user || authLoading);
+  const collapsed = useAppStore(s => s.sidebarCollapsed)
+  const mainClass = showSidebar ? `flex-1 ${collapsed ? 'md:ml-20' : 'md:ml-64'}` : 'flex-1'
   return (
     <RestaurantProvider>
       <OrderNotificationProvider>
@@ -35,7 +50,7 @@ export default function Layout({ children }) {
               </>
             )}
 
-            <main className={showSidebar ? "flex-1 p-6 md:ml-64" : "flex-1"}>
+            <main className={mainClass}>
               {children || <Outlet />}
             </main>
           </div>

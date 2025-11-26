@@ -1,11 +1,13 @@
-import { MdClose } from "react-icons/md";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";import { MdClose } from "react-icons/md";
+
 import DiscountDetailModal from "@/pages/shop/components/modals/DiscountDetailModal";
 import { fetchActiveDiscounts } from "@/api/discounts";
+import useAppStore from '@/store/useAppStore';
 import { getDiscountStatus, getAppliedToText, getTimeText } from "@/utils/discountUtils";
 import { formatDateShort } from "@/utils/dateUtils";
 
-export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
+export default function PromotionsDrawer({ isOpen, onClose }) {
+  const restaurantId = useAppStore(s => s.restaurantId);
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const [allDiscounts, setAllDiscounts] = useState({});
   const [loading, setLoading] = useState(false);
@@ -109,8 +111,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                           <p className="text-sm font-semibold mt-1">OFF</p>
                         </div>
                       </div>
-
-                      {/* Right side - Details */}
                       <div className="flex-1 p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="text-lg font-bold text-gray-900">{discount.name}</h3>
@@ -136,7 +136,6 @@ export default function PromotionsDrawer({ isOpen, onClose, restaurantId }) {
                           )}
                         </div>
 
-                        {/* Date */}
                         {discount.setDateRange && (discount.dateRangeStart || discount.dateRangeEnd) && (
                           <div className="flex items-center text-sm text-gray-600 mb-2">
                             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">

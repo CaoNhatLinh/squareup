@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { requestNotificationPermission, getNotificationPermissionStatus } from '@/utils/desktopNotification';
 import { HiBell } from 'react-icons/hi2';
 import { useToast } from '@/hooks/useToast';

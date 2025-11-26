@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import {
   HiPlus,
   HiOutlineSquares2X2,
@@ -15,7 +16,7 @@ import ActionMenu from "@/components/common/ActionMenu";
 import { LoadingSpinner, Checkbox, Button } from '@/components/ui';
 
 export default function Categories() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -57,13 +58,13 @@ export default function Categories() {
     }
   };
 
-  // categories are provided by the server; we show them as-is (server can order them)
+  
 
   const isSubcategory = (category) => {
     return !!category.parentCategoryId;
   };
 
-  // The header select checkbox is handled in the Table column definition.
+  
 
   const handleSelectCategory = (categoryId) => {
     if (selectedCategories.includes(categoryId)) {
@@ -109,7 +110,7 @@ export default function Categories() {
     }
   };
 
-  // Using organizedCategories directly
+  
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -119,7 +120,7 @@ export default function Categories() {
         SearchBarComponent={SearchBar}
         searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search categories...', className: 'w-72' }}
         actionLabel={<><HiPlus className="w-5 h-5" /> Create Category</>}
-        actionLink={`/${restaurantId}/categories/new`}
+        actionLink={`/restaurant/categories/new`}
       />
 
       <div className="p-4">
@@ -166,7 +167,7 @@ export default function Categories() {
                   <ActionMenu
                     isOpen={categoryMenus[r.id]}
                     onToggle={(open) => setCategoryMenus({ ...categoryMenus, [r.id]: open })}
-                    editPath={`/${restaurantId}/categories/${r.id}/edit`}
+                    editPath={`/restaurant/categories/${r.id}/edit`}
                     onDelete={() => handleDeleteCategory(r.id)}
                     itemName={r.name}
                   />
@@ -177,7 +178,7 @@ export default function Categories() {
           data={categories}
           loading={loading}
           rowKey={'id'}
-          onRowClick={(r) => navigate(`/${restaurantId}/categories/${r.id}/edit`)}
+          onRowClick={(r) => navigate(`/restaurant/categories/${r.id}/edit`)}
           pagination={{ page, limit, total }}
           onPageChange={(p) => setPage(p)}
           onLimitChange={(l) => { setLimit(l); setPage(1); }}

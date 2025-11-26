@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { useShop } from "@/context/ShopContext.jsx";
 import { useGuestUser } from "@/context/GuestUserContext.jsx";
-import { useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import RemoveItemModal from "@/pages/shop/components/modals/RemoveItemModal";
 import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
 import { createCheckoutSession } from "@/api/checkout";
 import { useToast } from "@/hooks/useToast";
-import { 
-  HiArrowLeft, 
-  HiTrash, 
-  HiMapPin, 
-  HiCheck, 
-  HiPlus, 
-  HiShoppingCart 
+import {
+  HiArrowLeft,
+  HiTrash,
+  HiMapPin,
+  HiCheck,
+  HiPlus,
+  HiShoppingCart
 } from "react-icons/hi2";
+import { Button, Input } from '@/components/ui';
 
 export default function CartDrawer({ isOpen, onClose, onEditItem }) {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const { guestUuid } = useGuestUser();
   const { restaurant, cart, removeFromCart, clearCart, getCartTotal, discountCalculation } = useShop();
   const { error: showError } = useToast();
@@ -24,6 +25,9 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
   const [itemToRemove, setItemToRemove] = useState(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [orderType, setOrderType] = useState('delivery');
+  const [deliveryAddress, setDeliveryAddress] = useState({ line1: '', city: '', postalCode: '', instructions: '' });
+  const [seatNumber, setSeatNumber] = useState('');
   const [showClearCartConfirm, setShowClearCartConfirm] = useState(false);
   const {
     subtotal = totalAmount,
@@ -34,7 +38,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
     appliedDiscounts = [],
     discountAmounts = {}
   } = discountCalculation || {};
-  
+
   const handleRemoveClick = (item) => {
     setItemToRemove(item);
     setShowRemoveModal(true);
@@ -63,17 +67,19 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
       showError("Sorry, the restaurant is currently closed. Please come back during business hours.");
       return;
     }
-    
+
     if (!restaurantId) {
       showError("Restaurant ID is invalid. Please reload the page.");
       return;
     }
     setCheckoutLoading(true);
     try {
+      const returnUrl = `${window.location.origin}/${restaurant?.slug ? restaurant.slug : 'shop'}/order/success`;
       const response = await createCheckoutSession(
         restaurantId,
         cart,
-        guestUuid
+        guestUuid,
+        { orderType, deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined, seatNumber: orderType === 'dine_in' ? seatNumber : undefined, returnUrl }
       );
 
       if (response.url) {
@@ -87,7 +93,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
       setCheckoutLoading(false);
     }
   };
-  
+
   if (!isOpen) return null;
   return (
     <>
@@ -109,14 +115,10 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
             <h2 className="text-lg font-bold text-gray-900">Your Order</h2>
           </div>
           {cart.length > 0 && (
-            <button
-              onClick={handleClearCart}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm"
-              title="Clear all items from cart"
-            >
+            <Button onClick={handleClearCart} variant="destructive" size="small" className="flex items-center gap-1.5" title="Clear all items from cart">
               <HiTrash className="w-4 h-4" />
               <span>Clear</span>
-            </button>
+            </Button>
           )}
         </div>
         <div className="px-4 py-2 bg-white border-b">
@@ -124,6 +126,28 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
           <div className="flex items-start gap-2 text-sm text-gray-600">
             <HiMapPin className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
             <span>{restaurant?.address || "restaurant address"}</span>
+          </div>
+          <div className="mt-3">
+            <label className="text-sm font-medium">Order Type</label>
+            <div className="flex gap-2 mt-2">
+              <Button onClick={() => setOrderType('delivery')} variant={orderType === 'delivery' ? 'default' : 'outline'} size="small">Delivery</Button>
+              <Button onClick={() => setOrderType('pickup')} variant={orderType === 'pickup' ? 'default' : 'outline'} size="small">Pickup</Button>
+              <Button onClick={() => setOrderType('dine_in')} variant={orderType === 'dine_in' ? 'default' : 'outline'} size="small">Dine-in</Button>
+            </div>
+            {orderType === 'delivery' && (
+              <div className="mt-2 grid grid-cols-1 gap-2">
+                <Input value={deliveryAddress.line1} onChange={(e) => setDeliveryAddress(prev => ({ ...prev, line1: e.target.value }))} placeholder="Address line 1" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={deliveryAddress.city} onChange={(e) => setDeliveryAddress(prev => ({ ...prev, city: e.target.value }))} placeholder="City" />
+                  <Input value={deliveryAddress.postalCode} onChange={(e) => setDeliveryAddress(prev => ({ ...prev, postalCode: e.target.value }))} placeholder="Postal code" />
+                </div>
+              </div>
+            )}
+            {orderType === 'dine_in' && (
+              <div className="mt-2">
+                <Input value={seatNumber} onChange={(e) => setSeatNumber(e.target.value)} placeholder="Seat number (optional)" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -134,7 +158,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                 <span className="text-gray-700">Subtotal:</span>
                 <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
               </div>
-              
+
               {appliedDiscounts.length > 0 ? (
                 <div className="space-y-1">
                   {appliedDiscounts.map((discount, idx) => (
@@ -168,7 +192,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                   <span className="font-medium text-green-700">-${totalDiscount.toFixed(2)}</span>
                 </div>
               )}
-              
+
               <div className="pt-1 border-t border-green-300 flex items-center justify-between">
                 <span className="font-bold text-gray-900">Total:</span>
                 <span className="font-bold text-lg text-gray-900">${total.toFixed(2)}</span>
@@ -179,24 +203,10 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
         {cart.length > 0 && (
           <div className="px-4 py-2 bg-white ">
-            <button 
-              onClick={handleCheckout}
-              disabled={checkoutLoading || restaurant?.isOpen === false}
-              className={`w-full py-3 rounded-full font-bold text-base transition-colors flex items-center justify-between px-4 ${
-                restaurant?.isOpen === false
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              }`}
-            >
-              <span>
-                {restaurant?.isOpen === false
-                  ? "Closed - Cannot Order"
-                  : checkoutLoading
-                  ? "Processing..."
-                  : "Checkout"}
-              </span>
+            <Button onClick={handleCheckout} disabled={checkoutLoading || restaurant?.isOpen === false} variant="destructive" size="large" className="w-full flex items-center justify-between px-4 py-3">
+              <span>{restaurant?.isOpen === false ? "Closed - Cannot Order" : checkoutLoading ? "Processing..." : "Checkout"}</span>
               <span>${(total || totalAmount).toFixed(2)}</span>
-            </button>
+            </Button>
             {restaurant?.isOpen === false && restaurant?.nextOpenTime && (
               <p className="text-xs text-red-600 text-center mt-1">
                 Opens {restaurant.nextOpenTime}
@@ -207,13 +217,10 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
         {cart.length > 0 && (
           <div className="px-4 py-2 bg-white">
-            <button 
-              onClick={onClose}
-              className="w-full border-2 border-gray-900 text-gray-900 py-2 rounded-full font-bold text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
+            <Button onClick={onClose} variant="outline" className="w-full flex items-center justify-center gap-2" size="small">
               <HiPlus className="w-4 h-4" />
               <span>Add More Items</span>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -266,13 +273,13 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                       )}
 
                       <div className="flex gap-4 mt-2">
-                        <button 
+                        <button
                           onClick={() => onEditItem(item)}
                           className="text-sm text-blue-600 font-medium hover:underline"
                         >
                           Edit
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleRemoveClick(item)}
                           className="text-sm text-red-600 font-medium hover:underline"
                         >
@@ -300,18 +307,8 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
                 Are you sure you want to remove all items from your cart? This action cannot be undone.
               </p>
               <div className="flex gap-3">
-                <button
-                  onClick={() => setShowClearCartConfirm(false)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmClearCart}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Clear Cart
-                </button>
+                <Button variant="outline" className="flex-1" onClick={() => setShowClearCartConfirm(false)}>Cancel</Button>
+                <Button variant="destructive" className="flex-1" onClick={handleConfirmClearCart}>Clear Cart</Button>
               </div>
             </div>
           </div>

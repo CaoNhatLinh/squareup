@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { RestaurantSelectionContext } from '../context/RestaurantSelectionContext';
+import { useContext } from "react";
+import { RestaurantSelectionContext } from '@/context/RestaurantSelectionContext';
 
 export function useRestaurantSelection() {
   const context = useContext(RestaurantSelectionContext);

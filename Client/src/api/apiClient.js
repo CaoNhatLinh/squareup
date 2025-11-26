@@ -8,7 +8,7 @@ const instance = axios.create({
 export function parseApiResponse(response) {
   const payload = response?.data;
   if (!payload) return { data: null };
-  // If payload uses { success, data, meta } shape, unwrap to normalized shape
+  
   if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
     return {
       success: payload.success !== undefined ? payload.success : true,
@@ -17,7 +17,7 @@ export function parseApiResponse(response) {
       has_more: payload.has_more || false,
     };
   }
-  // Otherwise, return { data } with the whole payload
+  
   return { data: payload };
 }
 
@@ -35,6 +35,15 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+instance.interceptors.request.use((config) => {
+  if (config && config.url && /\/restaurants\/(undefined|null)/.test(config.url)) {
+    
+    throw new Error(`Invalid API request to ${config.url}. restaurantId is missing or invalid.`);
+  }
+  return config;
+});
 
 
 async function buildAuthHeaders(contentType, idTokenOverride) {
@@ -73,4 +82,6 @@ export async function del(url, opts = {}) {
   const headers = await buildAuthHeaders(null, opts.idToken)
   return instance.delete(url, { headers })
 }
+
+export const apiClient = instance;
 

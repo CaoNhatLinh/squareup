@@ -1,4 +1,4 @@
-import React from 'react';
+import { Children, cloneElement } from "react";
 
 const Avatar = ({
   src,
@@ -75,7 +75,7 @@ const Avatar = ({
 };
 
 const AvatarGroup = ({ children, max = 3, size = 'medium', className = '' }) => {
-  const childrenArray = React.Children.toArray(children);
+  const childrenArray = Children.toArray(children);
   const displayedChildren = childrenArray.slice(0, max);
   const remaining = childrenArray.length - max;
 
@@ -95,7 +95,7 @@ const AvatarGroup = ({ children, max = 3, size = 'medium', className = '' }) => 
           className="relative ring-2 ring-white rounded-full"
           style={{ zIndex: max - index }}
         >
-          {React.cloneElement(child, { size })}
+          {cloneElement(child, { size })}
         </div>
       ))}
       {remaining > 0 && (

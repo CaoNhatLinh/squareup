@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../../firebase';
-import { upsertRestaurant } from '../../api/restaurants';
-import { sessionLogin } from '../../api/auth';
+import { auth } from '@/firebase';
+import { upsertRestaurant } from '@/api/restaurants';
+import { sessionLogin } from '@/api/auth';
 import { useNavigate } from 'react-router-dom';
 
 export default function SignUp() {

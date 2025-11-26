@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from "react";
 import { HiX } from 'react-icons/hi';
-import Button from './Button';
+import Button from '@/components/ui/Button';
 
 const Modal = ({
   isOpen,

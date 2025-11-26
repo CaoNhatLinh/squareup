@@ -1,5 +1,5 @@
-import  {  useState, useCallback, useEffect } from "react";
-import { ShopContext } from "./ShopContext";
+import { useCallback, useEffect, useState } from "react";
+import { ShopContext } from "@/context/ShopContext";
 import { useDiscountCalculation } from "@/hooks/useDiscountCalculation";
 
 const CART_STORAGE_KEY = "shop_cart";
@@ -27,6 +27,104 @@ export function ShopProvider({ children }) {
       console.error("Error saving cart to localStorage:", error);
     }
   }, [cart]);
+
+  
+  useEffect(() => {
+    if (cart.length === 0) {
+      
+      
+      
+      const sampleItems = [
+        {
+          id: 'sample-1',
+          name: 'Classic Burger',
+          price: 8.75,
+          image: null,
+          description: 'Juicy beef burger with cheese',
+          discount: null,
+          selectedOptions: [],
+          quantity: 2,
+          totalPrice: 17.5,
+          specialInstruction: '',
+          groupKey: 'sample-1_',
+          itemId: 'sample-1',
+          categoryId: null,
+        },
+        {
+          id: 'sample-2',
+          name: 'Crispy Fries',
+          price: 3.5,
+          image: null,
+          description: 'Crispy golden fries',
+          discount: null,
+          selectedOptions: [],
+          quantity: 1,
+          totalPrice: 3.5,
+          specialInstruction: '',
+          groupKey: 'sample-2_',
+          itemId: 'sample-2',
+          categoryId: null,
+        }
+      ];
+      
+      
+      setCart(sampleItems);
+    }
+  }, []);
+
+  
+  useEffect(() => {
+    
+    if (Object.keys(items).length === 0 && Object.keys(modifiers).length === 0) return;
+
+    setCart((prevCart) => {
+      const validCart = prevCart.filter((cartItem) => {
+        
+        if (cartItem.id.startsWith('sample-')) return true;
+
+        const item = items[cartItem.itemId];
+
+        
+        if (!item) {
+          console.warn(`Removing item ${cartItem.name} from cart because it no longer exists.`);
+          return false;
+        }
+
+        
+        
+        
+        
+
+        
+        if (cartItem.selectedOptions && cartItem.selectedOptions.length > 0) {
+          const allModifiersValid = cartItem.selectedOptions.every(option => {
+            const modifier = modifiers[option.modifierId];
+            if (!modifier) {
+              console.warn(`Removing item ${cartItem.name} because modifier group ${option.modifierId} is missing.`);
+              return false;
+            }
+
+            
+            if (!modifier.options || !modifier.options[option.id]) {
+              console.warn(`Removing item ${cartItem.name} because modifier option ${option.name} is missing.`);
+              return false;
+            }
+            return true;
+          });
+
+          if (!allModifiersValid) return false;
+        }
+
+        return true;
+      });
+
+      
+      if (validCart.length !== prevCart.length) {
+        return validCart;
+      }
+      return prevCart;
+    });
+  }, [items, modifiers]);
 
   const getCartItemGroupKey = useCallback((itemId, selectedOptions) => {
     const sortedOptions = [...selectedOptions].sort((a, b) =>

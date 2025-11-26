@@ -1,18 +1,7 @@
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import Dropdown from "./Dropdown";
-import Button from "./Button";
-/**
- * Component Phân trang đơn giản, trực quan và đẹp mắt.
- * Sử dụng các phần tử HTML cơ bản.
- * * Props:
- * - currentPage: Trang hiện tại
- * - totalPages: Tổng số trang
- * - totalItems: Tổng số mục
- * - itemsPerPage: Số mục trên mỗi trang (để tính toán thông tin hiển thị)
- * - onPageChange(page): Hàm xử lý khi chuyển trang
- * - onLimitChange(limit): Hàm xử lý khi thay đổi giới hạn
- * - className: Lớp CSS tùy chỉnh cho container
- */
+import Dropdown from "@/components/ui/Dropdown";
+import Button from "@/components/ui/Button";
+
 const Pagination = ({
   currentPage = 1,
   totalPages,
@@ -25,13 +14,13 @@ const Pagination = ({
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Ẩn toàn bộ nếu chỉ có 1 trang và không có mục nào
+  
   if (totalPages <= 1 && totalItems === 0) return null;
 
-  // Logic hiển thị số trang tinh gọn
+  
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisible = 5; // Chỉ hiển thị tối đa 5 nút số trang
+    const maxVisible = 5; 
 
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
@@ -54,7 +43,7 @@ const Pagination = ({
       pages.push(totalPages);
     }
 
-    // Đảm bảo không có '...' trùng lặp hoặc ở cạnh nhau
+    
     return pages.filter(
       (page, index, arr) => page !== "..." || arr[index - 1] !== "..."
     );

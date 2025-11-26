@@ -1,4 +1,4 @@
-import * as client from './apiClient'
+import * as client from '@/api/apiClient'
 
 export async function fetchModifiers(restaurantId, params = {}) {
   const queryParams = new URLSearchParams();

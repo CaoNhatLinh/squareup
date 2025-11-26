@@ -6,7 +6,7 @@ const db = admin.database();
 
 const createCheckoutSession = async (req, res) => {
   try {
-    const { restaurantId, items, returnUrl, guestUuid } = req.body;
+    const { restaurantId, items, returnUrl, guestUuid, orderType, deliveryAddress } = req.body;
 
     if (!restaurantId || !items || items.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -63,6 +63,10 @@ const createCheckoutSession = async (req, res) => {
     const pendingOrderId = `pending_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
+    if ((orderType === 'delivery') && !deliveryAddress && !req.body.customerInfo?.address) {
+      return res.status(400).json({ error: 'Delivery orders require a deliveryAddress or customerInfo.address' });
+    }
+
     const pendingOrderData = {
       restaurantId,
       restaurantName: restaurant.name,
@@ -78,20 +82,63 @@ const createCheckoutSession = async (req, res) => {
       status: "pending",
       createdAt: Date.now(),
       guestUuid: guestUuid || null,
+      orderType: orderType || 'delivery',
+      deliveryAddress: deliveryAddress || null,
+      seatNumber: req.body.seatNumber || null,
     };
 
+    // --- VALIDATION: Check if items and modifiers still exist ---
+    if (items && Array.isArray(items) && items.length > 0) {
+      const dbItems = restaurant.items || {};
+      const dbModifiers = restaurant.modifiers || {};
+
+      for (const item of items) {
+        // Skip validation for sample items or items without itemId
+        if (!item.itemId || (item.id && item.id.startsWith('sample-'))) continue;
+
+        const dbItem = dbItems[item.itemId];
+        if (!dbItem) {
+          return res.status(400).json({ error: `Item '${item.name}' is no longer available. Please update your cart.` });
+        }
+
+        // Check modifiers
+        if (item.selectedOptions && Array.isArray(item.selectedOptions)) {
+          for (const option of item.selectedOptions) {
+            const modifier = dbModifiers[option.modifierId];
+            if (!modifier) {
+              return res.status(400).json({ error: `Modifier for '${item.name}' is no longer available. Please update your cart.` });
+            }
+            if (!modifier.options || !modifier.options[option.id]) {
+              return res.status(400).json({ error: `Option '${option.name}' for '${item.name}' is no longer available. Please update your cart.` });
+            }
+          }
+        }
+      }
+    }
+    // --- END VALIDATION ---
+
     await db.ref(`pendingOrders/${pendingOrderId}`).set(pendingOrderData);
-    const successUrl = returnUrl
+    const restaurantSlug = restaurant.slug || restaurantId; // Fallback to restaurantId if no slug
+
+    let successUrlBase = returnUrl
       ? returnUrl.replace("checkout-return", "success")
-      : `${req.headers.origin}/shop/${restaurantId}/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${req.headers.origin}/shop/${restaurantId}/cancelled`;
+      : `${req.headers.origin}/${restaurantSlug}/order/success`;
+
+    if (successUrlBase.includes('?')) {
+      successUrlBase += '&session_id={CHECKOUT_SESSION_ID}';
+    } else {
+      successUrlBase += '?session_id={CHECKOUT_SESSION_ID}';
+    }
+
+    const successUrl = successUrlBase;
+    const cancelUrl = `${req.headers.origin}/${restaurantSlug}/order/cancelled`;
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
       success_url: successUrl,
       cancel_url: cancelUrl,
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes from now
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       metadata: {
         pendingOrderId,
         restaurantId,
@@ -116,7 +163,7 @@ const createCheckoutSession = async (req, res) => {
 const createOrderFromPOS = async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    const { items, customerInfo, paymentMethod, orderType } = req.body;
+    const { items, customerInfo, paymentMethod, orderType, seatNumber, deliveryAddress } = req.body;
     if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -131,14 +178,16 @@ const createOrderFromPOS = async (req, res) => {
     const totalAmount = subtotal - totalDiscount;
 
     const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
+    const finalOrderType = orderType || 'dine_in';
+    if (finalOrderType === 'delivery' && !deliveryAddress && !customerInfo?.address) {
+      return res.status(400).json({ error: 'Delivery orders require a deliveryAddress or customerInfo.address' });
+    }
     const orderData = {
       id: orderId,
       orderId,
       restaurantId,
       restaurantName: restaurant.name || '',
-      // status should reflect payment: completed when paid, pending otherwise
       status: (req.body.paymentStatus === 'paid') ? 'completed' : 'pending',
-      // Accept paymentStatus from client if present; fall back to cash=paid, else pending
       paymentStatus: req.body.paymentStatus || (paymentMethod === 'cash' ? 'paid' : 'pending'),
       amount: totalAmount,
       totalAmount,
@@ -163,7 +212,9 @@ const createOrderFromPOS = async (req, res) => {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       customerInfo: customerInfo || null,
-      orderType: orderType || 'dine_in'
+      orderType: finalOrderType,
+      seatNumber: finalOrderType === 'dine_in' ? seatNumber || null : null,
+      deliveryAddress: finalOrderType === 'delivery' ? deliveryAddress || customerInfo?.address || null : null,
     };
     await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
     return res.status(201).json({ success: true, data: orderData });
@@ -172,58 +223,6 @@ const createOrderFromPOS = async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 };
-
-// Hold order endpoints
-const createHoldOrder = async (req, res) => {
-  try {
-    const { restaurantId } = req.params;
-    const { items, customerInfo, holdName, notes } = req.body;
-    if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    const holdId = `hold_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const holdData = {
-      id: holdId,
-      restaurantId,
-      items,
-      customerInfo: customerInfo || null,
-      name: holdName || `Hold ${new Date().toISOString()}`,
-      notes: notes || null,
-      createdAt: Date.now(),
-    };
-    await db.ref(`heldOrders/${restaurantId}/${holdId}`).set(holdData);
-    return res.status(201).json({ success: true, data: holdData });
-  } catch (error) {
-    console.error('createHoldOrder error:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-};
-
-const getHoldOrders = async (req, res) => {
-  try {
-    const { restaurantId } = req.params;
-    if (!restaurantId) return res.status(400).json({ error: 'Restaurant ID required' });
-    const snapshot = await db.ref(`heldOrders/${restaurantId}`).get();
-    const data = snapshot.val() || {};
-    return res.status(200).json({ success: true, data: Object.values(data) });
-  } catch (error) {
-    console.error('getHoldOrders error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-};
-
-const deleteHoldOrder = async (req, res) => {
-  try {
-    const { restaurantId, holdId } = req.params;
-    if (!restaurantId || !holdId) return res.status(400).json({ error: 'Missing required fields' });
-    await db.ref(`heldOrders/${restaurantId}/${holdId}`).remove();
-    return res.status(200).json({ success: true, message: 'Hold removed' });
-  } catch (error) {
-    console.error('deleteHoldOrder error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-};
-
 const calculateCartDiscountsEndpoint = async (req, res) => {
   try {
     const { restaurantId, items } = req.body;
@@ -302,6 +301,9 @@ const handleWebhook = async (req, res) => {
             customerEmail: session.customer_details?.email || null,
             customerName: session.customer_details?.name || null,
             guestUuid: pendingOrder.guestUuid || null,
+            orderType: pendingOrder.orderType || 'delivery',
+            deliveryAddress: pendingOrder.deliveryAddress || pendingOrder.customerInfo || null,
+            seatNumber: pendingOrder.seatNumber || null,
 
             items: pendingOrder.items.map((item) => ({
               itemId: item.itemId || "",
@@ -425,12 +427,10 @@ const getAllOrders = async (req, res) => {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    let orders = Object.values(ordersData).sort((a,b) => b.createdAt - a.createdAt);
-    // search q (by id or email)
+    let orders = Object.values(ordersData).sort((a, b) => b.createdAt - a.createdAt);
     if (q) {
       orders = orders.filter(o => (o.id || '').toLowerCase().includes(q) || (o.customerEmail || '').toLowerCase().includes(q));
     }
-    // sort
     if (sortBy) {
       const dir = sortDir === 'asc' ? 1 : -1;
       orders = orders.sort((a, b) => {
@@ -596,7 +596,7 @@ const updateOrderStatus = async (req, res) => {
           const paymentIntent = await stripe.paymentIntents.retrieve(
             paymentIntentId,
             {
-              expand: ["latest_charge"], 
+              expand: ["latest_charge"],
             }
           );
 
@@ -612,11 +612,11 @@ const updateOrderStatus = async (req, res) => {
               reason: "requested_by_customer",
             });
 
-            
+
             refundSuccess = true;
             refundId = refund.id;
           } else {
-            
+
           }
         } else {
           console.log(
@@ -631,7 +631,7 @@ const updateOrderStatus = async (req, res) => {
         status,
         updatedAt: Date.now(),
         [`statusHistory/${status}`]: Date.now(),
-        refunded: refundSuccess || order.refunded || false, // Giữ lại trạng thái refunded cũ nếu đã có
+        refunded: refundSuccess || order.refunded || false,
         refundId: refundId || order.refundId || null,
         refundedAt: refundSuccess ? Date.now() : order.refundedAt || null,
         refundError: refundError,
@@ -758,9 +758,6 @@ module.exports = {
   createCheckoutSession,
   handleWebhook,
   createOrderFromPOS,
-  createHoldOrder,
-  getHoldOrders,
-  deleteHoldOrder,
   calculateCartDiscountsEndpoint,
   getOrderBySession,
   getAllOrders,

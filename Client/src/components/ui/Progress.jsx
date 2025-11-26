@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Progress = ({
   value = 0,
   max = 100,

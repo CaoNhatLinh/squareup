@@ -34,9 +34,6 @@ const uploadImage = async (req, res) => {
   }
 };
 
-/**
- * Upload image from file (multipart/form-data)
- */
 const uploadImageFile = async (req, res) => {
   try {
     if (!req.file) {

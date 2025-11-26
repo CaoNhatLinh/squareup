@@ -1,4 +1,4 @@
-import * as client from './apiClient'
+import * as client from '@/api/apiClient'
 
 export async function fetchItems(restaurantId, params = {}) {
   const queryParams = new URLSearchParams();
@@ -27,9 +27,7 @@ export async function deleteItem(restaurantId, itemId) {
   return res.data;
 }
 
-/**
- * Toggle item sold out status
- */
+
 export async function toggleItemSoldOut(restaurantId, itemId, isSoldOut) {
   const res = await client.patch(`/restaurants/${restaurantId}/items/${itemId}`, { isSoldOut })
   return res.data;

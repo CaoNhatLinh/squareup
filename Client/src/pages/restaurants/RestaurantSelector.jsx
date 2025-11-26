@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import {
   HiPlus,
   HiOutlineArrowRight,
@@ -21,6 +22,7 @@ export default function RestaurantSelector() {
     setLoading,
     loading: selectionLoading,
   } = useRestaurantSelection();
+  const setRestaurantId = useAppStore((s) => s.setRestaurantId);
   const { user, loading: authLoading } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -32,10 +34,10 @@ export default function RestaurantSelector() {
     try {
       setLoading(true);
       
-      // If user is staff, redirect directly to their restaurant
       if (user?.role === 'staff' && user?.restaurantId) {
         setSelectedRestaurantId(user.restaurantId);
-        navigate(`/${user.restaurantId}/dashboard`, { replace: true });
+        setRestaurantId(user.restaurantId);
+        navigate(`/restaurant/dashboard`, { replace: true });
         return;
       }
       
@@ -51,22 +53,24 @@ export default function RestaurantSelector() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      // If user is staff, redirect directly to their restaurant
+      
       if (user.role === 'staff' && user.restaurantId) {
         setSelectedRestaurantId(user.restaurantId);
-        navigate(`/${user.restaurantId}/dashboard`, { replace: true });
+        setRestaurantId(user.restaurantId);
+        navigate(`/restaurant/dashboard`, { replace: true });
         return;
       }
       fetchUserRestaurants();
     } else if (!authLoading && !user) {
-      // Only redirect to signin if auth is done loading and still no user
+      
       navigate("/signin", { replace: true });
-    } // eslint-disable-next-line react-hooks/exhaustive-deps
+    } 
   }, [user, authLoading]);
 
   const handleSelectRestaurant = (restaurantId) => {
     setSelectedRestaurantId(restaurantId);
-    navigate(`/${restaurantId}/dashboard`);
+    setRestaurantId(restaurantId);
+    navigate(`/restaurant/dashboard`);
   };
 
   const handleCreateRestaurant = async (e) => {
@@ -81,7 +85,8 @@ export default function RestaurantSelector() {
       const newRestaurant = await createRestaurant({ name: newRestaurantName , description: newRestaurantDescription });
       success(`Restaurant "${newRestaurant.name}" created!`); 
       setSelectedRestaurantId(newRestaurant.id);
-      navigate(`/${newRestaurant.id}/dashboard`);
+      setRestaurantId(newRestaurant.id);
+      navigate(`/restaurant/dashboard`);
     } catch (error) {
       console.error("Error creating restaurant:", error);
       error("Failed to create restaurant", "error");

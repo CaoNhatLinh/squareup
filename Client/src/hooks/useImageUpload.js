@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { uploadCompressedImageFile } from '../api/upload'
+import { useState } from "react";
+import { uploadCompressedImageFile } from '@/api/upload'
 
 export function useImageUpload() {
   const [uploading, setUploading] = useState(false)

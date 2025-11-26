@@ -1,16 +1,13 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 
 export const createSession = async (payload) => {
   const res = await apiClient.post('/checkout/create-session', payload);
   return res.data;
 };
 
-export const createCheckoutSession = async (restaurantId, items, guestUuid = null) => {
-  const response = await apiClient.post("/checkout/create-session", {
-    restaurantId,
-    items,
-    guestUuid,
-  });
+export const createCheckoutSession = async (restaurantId, items, guestUuid = null, options = {}) => {
+  const payload = { restaurantId, items, guestUuid, ...options };
+  const response = await apiClient.post("/checkout/create-session", payload);
   return response.data;
 };
 

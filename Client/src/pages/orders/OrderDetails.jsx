@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { getOrderById, updateOrderStatus } from "@/api/orders";
 import {
   HiArrowCircleLeft,
@@ -18,7 +19,8 @@ import { StatusBadge } from "@/utils/uiUtils";
 
 export default function OrderDetails() {
   const navigate = useNavigate();
-  const { orderId, restaurantId } = useParams();
+  const { orderId } = useParams();
+  const storedRestaurantId = useAppStore(s => s.restaurantId);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,7 +51,9 @@ export default function OrderDetails() {
   };
 
   const handleStatusChange = async (newStatus) => {
-    if (!restaurantId) {
+    const targetRestaurantId = storedRestaurantId || order?.restaurantId;
+
+    if (!targetRestaurantId) {
       console.error("Restaurant ID not available");
       return;
     }
@@ -61,7 +65,7 @@ export default function OrderDetails() {
 
     try {
       setUpdating(true);
-      await updateOrderStatus(restaurantId, orderId, newStatus);
+      await updateOrderStatus(targetRestaurantId, orderId, newStatus);
       setOrder((prev) => ({ ...prev, status: newStatus }));
     } catch (err) {
       console.error("Error updating order status:", err);
@@ -70,11 +74,12 @@ export default function OrderDetails() {
       setUpdating(false);
     }
   };
-  
+
   const handleCancelOrder = async () => {
+    const targetRestaurantId = storedRestaurantId || order?.restaurantId;
     try {
       setUpdating(true);
-      await updateOrderStatus(restaurantId, orderId, 'cancelled', cancelReason, cancelNote);
+      await updateOrderStatus(targetRestaurantId, orderId, 'cancelled', cancelReason, cancelNote);
       setOrder((prev) => ({ ...prev, status: 'cancelled', cancelReason, cancelNote }));
       setShowCancelDialog(false);
     } catch (err) {
@@ -163,11 +168,10 @@ export default function OrderDetails() {
                 <button
                   onClick={() => handleStatusChange("cancelled")}
                   disabled={updating}
-                  className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors shadow-md ${
-                    updating
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-400"
-                  }`}
+                  className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors shadow-md ${updating
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300 border border-gray-400"
+                    }`}
                 >
                   <HiX className="w-5 h-5" />
                   {updating ? "Updating..." : "Reject/Cancel"}
@@ -178,11 +182,10 @@ export default function OrderDetails() {
                     handleStatusChange(getNextStatus(order.status))
                   }
                   disabled={updating || !getNextStatus(order.status)}
-                  className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md ${
-                    updating || !getNextStatus(order.status)
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-red-600 text-white hover:bg-red-700 cursor-pointer shadow-red-300"
-                  }`}
+                  className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md ${updating || !getNextStatus(order.status)
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-red-600 text-white hover:bg-red-700 cursor-pointer shadow-red-300"
+                    }`}
                 >
                   <HiCheck size={18} />
                   {updating ? "Updating..." : getStatusButtonText(order.status)}
@@ -292,13 +295,13 @@ export default function OrderDetails() {
                               {itemDiscountData.discountPercentage}% OFF
                             </span>
                           </div>
-                          
+
                         </div>
                       );
                     })()}
-                        <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 mt-1">
                       <span className="font-semibold">{item.quantity}x</span> @
-                      ${(function() {
+                      ${(function () {
                         const basePrice = item.price || 0;
                         const optsArray = normalizeSelectedOptions(item.selectedOptions);
                         const optionsTotal = optsArray.reduce((sum, opt) => sum + (opt.price || 0), 0) || 0;
@@ -335,7 +338,7 @@ export default function OrderDetails() {
                 </div>
 
                 <div className="sm:col-span-2">
-                    {normalizeSelectedOptions(item.selectedOptions).length > 0 && (
+                  {normalizeSelectedOptions(item.selectedOptions).length > 0 && (
                     <div className="space-y-1">
                       {normalizeSelectedOptions(item.selectedOptions).map((opt, idx) => (
                         <p
@@ -511,7 +514,7 @@ export default function OrderDetails() {
             <p className="text-sm text-slate-600 mb-4">
               This action cannot be undone. Please provide a reason for cancellation.
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">

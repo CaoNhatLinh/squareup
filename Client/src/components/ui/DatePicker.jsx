@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from "react";
 import { HiCalendar, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
-import Input from './Input';
+import Input from '@/components/ui/Input';
 
 const DatePicker = ({
   value,

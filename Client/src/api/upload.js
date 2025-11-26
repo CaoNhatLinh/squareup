@@ -1,4 +1,4 @@
-import * as apiClient from './apiClient'
+import * as apiClient from '@/api/apiClient'
 import imageCompression from 'browser-image-compression';
 
 export const uploadImage = async (base64Image) => {

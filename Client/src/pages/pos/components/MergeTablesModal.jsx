@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { mergeTables } from "@/api/tables";
+import useAppStore from '@/store/useAppStore';
 import { useToast } from "@/hooks/useToast";
 import {
   Dialog,
@@ -9,18 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button, Label, Input, Checkbox, Dropdown } from "@/components/ui";
 
 export default function MergeTablesModal({
   open,
   onOpenChange,
   tables,
-  restaurantId,
   onSuccess,
 }) {
+  const restaurantId = useAppStore(s => s.restaurantId);
   const { success: showSuccess, error: showError } = useToast();
   const [selectedTables, setSelectedTables] = useState([]);
   const [targetTableId, setTargetTableId] = useState("");
@@ -53,11 +51,16 @@ export default function MergeTablesModal({
 
     setIsSubmitting(true);
     try {
+      const expectedMap = {};
+      for (const id of [...selectedTables, targetTableId]) {
+        const found = tables.find(t => t.id === id);
+        expectedMap[id] = found?.updatedAt || 0;
+      }
       await mergeTables(restaurantId, {
         sourceTableIds: selectedTables,
         targetTableId,
         newTableName: newTableName.trim() || undefined,
-      });
+      }, { expectedUpdatedAt: expectedMap });
 
       showSuccess("Tables merged successfully");
       setSelectedTables([]);
@@ -75,7 +78,7 @@ export default function MergeTablesModal({
 
   const availableTables = tables.filter((t) => t.status !== "deleted");
   const targetTable = availableTables.find((t) => t.id === targetTableId);
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -88,7 +91,6 @@ export default function MergeTablesModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Select tables to merge */}
           <div>
             <Label className="text-base font-semibold mb-3 block">
               Select Tables to Merge (Source)
@@ -112,32 +114,19 @@ export default function MergeTablesModal({
               ))}
             </div>
           </div>
-
-          {/* Select target table */}
           <div>
             <Label htmlFor="targetTable" className="text-base font-semibold">
               Target Table (Keep This Table)
             </Label>
-            <select
+            <Dropdown
               id="targetTable"
-              className="w-full mt-2 p-2 border rounded-md"
               value={targetTableId}
-              onChange={(e) => setTargetTableId(e.target.value)}
-            >
-              <option value="">Select target table...</option>
-              {availableTables.map((table) => (
-                <option
-                  key={table.id}
-                  value={table.id}
-                  disabled={selectedTables.includes(table.id)}
-                >
-                  {table.name} ({table.items?.length || 0} items)
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setTargetTableId(v)}
+              placeholder="Select target table..."
+              options={availableTables.filter(t => !selectedTables.includes(t.id)).map(t => ({ value: t.id, label: `${t.name} (${t.items?.length || 0} items)` }))}
+            />
           </div>
 
-          {/* New table name (optional) */}
           <div>
             <Label htmlFor="newTableName">
               New Table Name (Optional)

@@ -1,21 +1,8 @@
-import React from 'react';
-import Pagination from './Pagination';
-import LoadingSpinner from './LoadingSpinner';
-import { HiOutlineInbox, HiChevronUp, HiChevronDown } from 'react-icons/hi'; // add missing sort icons
+import Pagination from '@/components/ui/Pagination';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { HiOutlineInbox, HiChevronUp, HiChevronDown } from 'react-icons/hi'; 
 
-/**
- * Reusable Table component
- * Props:
- * - columns: [{ key, title, render, className, align, sortable }]
- * - data: []
- * - loading: boolean
- * - rowKey: string or function
- * - onRowClick
- * - pagination: { page, limit, total }
- * - onPageChange(page), onLimitChange(limit)
- * - emptyMessage
- * - sortBy, sortDir, onSortChange (cho sorting)
- */
+
 export default function Table({
   columns = [],
   data = [],

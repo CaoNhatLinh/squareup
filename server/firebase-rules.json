@@ -1,7 +1,8 @@
 {
   "rules": {
     "restaurants": {
-      ".indexOn": ["name", "createdAt"],
+      ".indexOn": ["name", "createdAt", "slug"],
+      ".read": "query.orderByChild == 'slug' && query.equalTo != null",
       "$restaurantId": {
         ".read": true,
         ".write": true,
@@ -14,6 +15,11 @@
             ".read": true,
             ".write": true
           }
+        },
+        "tables": {
+          ".read": true,
+          ".write": "auth != null",
+          ".indexOn": ["isActive", "tableNumber", "status"]
         }
       }
     },
@@ -23,6 +29,9 @@
         ".read": true,
         ".write": true
       }
+    },
+    "pendingOrders": {
+      ".indexOn": ["createdAt"]
     },
     "items": {
       "$restaurantId": {

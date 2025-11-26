@@ -1,4 +1,4 @@
-import * as client from './apiClient'
+import * as client from '@/api/apiClient'
 export async function fetchSpecialClosures(restaurantId) {
   const res = await client.get(`/restaurants/${restaurantId}/special-closures`)
   return res.data

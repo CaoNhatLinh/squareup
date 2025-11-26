@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "firebase/auth";
 import { auth } from "@/firebase";
@@ -13,7 +13,7 @@ import {
   HiOutlineSparkles,
 } from "react-icons/hi";
 
-export default function ProfileMenu() {
+export default function ProfileMenu({ collapsed = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { user, loading: authLoading } = useAuth();
@@ -75,39 +75,44 @@ export default function ProfileMenu() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 group"
+        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 group`}
+        title={collapsed ? (user?.displayName || user?.email || 'User') : undefined}
       >
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+          className={`rounded-full flex items-center justify-center flex-shrink-0 ${
             isGuestUser
-              ? "bg-purple-600 ring-2 ring-purple-200"
+              ? 'bg-purple-600 ring-2 ring-purple-200'
               : user?.isAdmin
-              ? "bg-yellow-600 ring-2 ring-yellow-200"
-              : "bg-blue-600"
-          }`}
+              ? 'bg-yellow-600 ring-2 ring-yellow-200'
+              : 'bg-blue-600'
+          } ${collapsed ? 'w-10 h-10' : 'w-10 h-10'}`}
         >
           <span className="text-white font-bold text-sm">
             {user?.displayName?.charAt(0)?.toUpperCase() ||
               user?.email?.charAt(0)?.toUpperCase() ||
-              "U"}
+              'U'}
           </span>
         </div>
-        <div className="flex-1 min-w-0 text-left">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.displayName || "User"}
-            </p>
-            {user?.isAdmin && (
-              <HiOutlineShieldCheck className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-            )}
+        {!collapsed && (
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.displayName || 'User'}
+              </p>
+              {user?.isAdmin && (
+                <HiOutlineShieldCheck className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+              )}
+            </div>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
-          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-        </div>
-        <HiChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
+        )}
+        {!collapsed && (
+          <HiChevronDown
+            className={`w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${
+              isOpen ? 'rotate-180' : ''
+            }`}
+          />
+        )}
       </button>
       {isOpen && (
         <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">

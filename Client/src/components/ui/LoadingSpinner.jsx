@@ -1,5 +1,3 @@
-import React from 'react';
-
 const LoadingSpinner = ({ size = 'medium', color = 'indigo', className = '' }) => {
   const sizeStyles = {
     small: 'w-4 h-4 border-2',

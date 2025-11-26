@@ -1,14 +1,11 @@
-import React from 'react';
-
-// === ĐÃ GỘP: INVOICE_TYPES (Giải quyết lỗi biên dịch) ===
 const INVOICE_TYPES = {
     REGULAR: 'regular',
     VAT: 'vat',
     TEMPORARY: 'temporary',
 };
-// =========================================================
 
-// Utility to display currency cleanly
+
+
 const formatCurrency = (amount) => {
     return `$${Number(amount ?? 0).toFixed(2)}`;
 };
@@ -22,6 +19,9 @@ export default function InvoiceTemplate({
     orderNumber,
     date,
     customerInfo,
+    orderType,
+    seatNumber,
+    deliveryAddress,
     items,
     subtotal,
     discount,
@@ -58,10 +58,13 @@ export default function InvoiceTemplate({
         <p className="text-xs">No: {orderNumber || `ORD-${Date.now()}`}</p>
         <p className="text-xs">{date ? new Date(date).toLocaleString('en-US') : new Date().toLocaleString('en-US')}</p>
       </div>
-      {(customerInfo?.name || customerInfo?.phone) && (
+      {(customerInfo?.name || customerInfo?.phone || orderType) && (
         <div className="mb-3 text-xs">
           <p>Customer: {customerInfo.name || "Walk-in Guest"}</p>
           {customerInfo.phone && <p>Phone: {customerInfo.phone}</p>}
+          {orderType && <p>Order Type: {orderType}</p>}
+          {seatNumber && <p>Seat: {seatNumber}</p>}
+          {deliveryAddress && <p>Address: {deliveryAddress.line1 || ''} {deliveryAddress.city || ''} {deliveryAddress.postalCode || ''}</p>}
           {isVAT && customerInfo.taxId && <p>Customer Tax ID: {customerInfo.taxId}</p>}
           {isVAT && customerInfo.address && <p>Address: {customerInfo.address}</p>}
         </div>

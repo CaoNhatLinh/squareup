@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { normalizeOptions } from "../../../utils/normalizeOptions";
+import { useEffect, useMemo, useState } from "react";
+import { normalizeOptions } from "@/utils/normalizeOptions";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -23,11 +23,14 @@ export default function ProductModal({ item, modifiers, onClose, onAddToCart }) 
   );
 
   useEffect(() => {
+    
+    
     const defaults = itemModifiers
       .map((modifier) => {
         const opts = normalizeOptions(modifier.options);
         const defaultOption = opts.find((opt) => opt.isDefault);
-        return defaultOption || opts[0];
+        
+        return defaultOption || null;
       })
       .filter(Boolean);
     setSelectedOptions(defaults);
@@ -46,8 +49,13 @@ export default function ProductModal({ item, modifiers, onClose, onAddToCart }) 
     return (basePrice + modifierTotal) * Number(quantity ?? 0);
   };
 
+  const missingRequiredModifiers = itemModifiers
+    .filter((m) => (m.isRequired || m.required))
+    .filter((m) => !selectedOptions.some((opt) => opt.modifierId === m.id));
+
   const handleAdd = () => {
     if (isSoldOut) return;
+    if (missingRequiredModifiers.length > 0) return; 
     onAddToCart(item, selectedOptions, quantity, specialInstruction);
     onClose();
   };
@@ -57,134 +65,176 @@ export default function ProductModal({ item, modifiers, onClose, onAddToCart }) 
       isOpen={true}
       onClose={onClose}
       size="large"
-      title={item.name}
+      title=""
       footer={
-        <Button
-          onClick={handleAdd}
-          disabled={isSoldOut}
-          variant={isSoldOut ? "ghost" : "primary"}
-          fullWidth
-          size="large"
-        >
-          {isSoldOut ? 'OUT OF STOCK' : `Add to cart - $${Number(calculateTotal() ?? 0).toFixed(2)}`}
-        </Button>
-      }
-    >
-      <div className="space-y-6 max-h-[60vh] overflow-y-auto">
-        {/* Header Image */}
-        {item.image && (
-          <div className="relative -mx-6 -mt-6 mb-6">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-64 object-cover"
-            />
-            {isSoldOut && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <Badge variant="danger" size="large">OUT OF STOCK</Badge>
+        <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-t">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm text-gray-600">Total</div>
+              <div className="text-2xl font-bold text-gray-900">
+                ${Number(calculateTotal() ?? 0).toFixed(2)}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Description and Price */}
-        {item.description && (
-          <p className="text-gray-600">{item.description}</p>
-        )}
-
-        <div className="flex items-center gap-2">
-          {item.hasDiscount ? (
-            <>
-              <span className="text-2xl font-bold text-red-600">
-                ${Number(item?.discountedPrice ?? item?.price ?? 0).toFixed(2)}
-              </span>
-              <span className="text-lg text-gray-400 line-through">
-                ${Number(item?.originalPrice ?? item?.price ?? 0).toFixed(2)}
-              </span>
-              <Badge variant="danger">{item.discountPercent}% OFF</Badge>
-            </>
-          ) : (
-            <span className="text-2xl font-bold text-red-600">
-              ${Number(item?.price ?? 0).toFixed(2)}
-            </span>
-          )}
-        </div>
-
-        {/* Modifiers */}
-        {itemModifiers.map((modifier) => (
-          <div key={modifier.id}>
-            <h3 className="font-semibold text-gray-900 mb-3">
-              {modifier.name}
-              {modifier.isRequired && (
-                <span className="text-red-600 ml-1">*</span>
-              )}
-            </h3>
-            <div className="space-y-2">
-              {modifier.options?.map((option) => {
-                const isSelected = selectedOptions.some(
-                  (opt) => opt.modifierId === modifier.id && opt.id === option.id
-                );
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleOptionSelect(modifier.id, option)}
-                    className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
-                      isSelected
-                        ? "border-red-600 bg-red-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="font-medium text-gray-900">
-                      {option.name}
-                    </span>
-                    <span className="text-gray-600">
-                      {option.price > 0 ? `+$${Number(option.price ?? 0).toFixed(2)}` : ""}
-                    </span>
-                  </button>
-                );
-              })}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  </svg>
+                </button>
+                <span className="text-lg font-semibold text-gray-900 w-8 text-center">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-
-        {/* Special Instructions */}
-        <div>
-          <Input
-            as="textarea"
-            label="Special Instructions"
+          <Button
+            onClick={handleAdd}
+            disabled={isSoldOut || missingRequiredModifiers.length > 0}
+            variant={isSoldOut ? "ghost" : "primary"}
+            fullWidth
+            size="large"
+            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13h10m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z" />
+              </svg>
+              {isSoldOut ? 'OUT OF STOCK' : 'Add to Cart'}
+              <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+            </div>
+          </Button>
+        </div>
+      }
+    >
+      <div className="max-h-[70vh] overflow-y-auto">
+        <div className="relative -mx-6 -mt-6 mb-6">
+          {item.image ? (
+            <div className="relative h-80">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              {isSoldOut && (
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                  <Badge variant="danger" size="large" className="text-xl px-6 py-3">OUT OF STOCK</Badge>
+                </div>
+              )}
+              <div className="absolute bottom-6 left-6 right-6">
+                <h1 className="text-3xl font-bold text-white mb-2">{item.name}</h1>
+                {item.description && (
+                  <p className="text-white/90 text-lg">{item.description}</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="h-48 bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🍕</div>
+                <h1 className="text-2xl font-bold text-gray-900">{item.name}</h1>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            {item.hasDiscount ? (
+              <>
+                <span className="text-3xl font-bold text-red-600">
+                  ${Number(item?.discountedPrice ?? item?.price ?? 0).toFixed(2)}
+                </span>
+                <span className="text-xl text-gray-400 line-through">
+                  ${Number(item?.originalPrice ?? item?.price ?? 0).toFixed(2)}
+                </span>
+                <Badge variant="danger" className="text-sm px-3 py-1">{item.discountPercent}% OFF</Badge>
+              </>
+            ) : (
+              <span className="text-3xl font-bold text-red-600">
+                ${Number(item?.price ?? 0).toFixed(2)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="space-y-6">
+          {itemModifiers.map((modifier) => (
+            <div key={modifier.id} className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-900 mb-4 text-lg">
+                {modifier.name}
+                {(modifier.isRequired || modifier.required) && (
+                  <span className="text-red-600 ml-1">*</span>
+                )}
+              </h3>
+              <div className="grid gap-3">
+                {modifier.options?.map((option) => {
+                  const isSelected = selectedOptions.some(
+                    (opt) => opt.modifierId === modifier.id && opt.id === option.id
+                  );
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionSelect(modifier.id, option)}
+                      className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-200 ${
+                        isSelected
+                          ? "border-orange-500 bg-orange-50 shadow-md"
+                          : "border-gray-200 hover:border-orange-300 hover:bg-white hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          isSelected ? "border-orange-500 bg-orange-500" : "border-gray-300"
+                        }`}>
+                          {isSelected && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                        <span className={`font-medium ${isSelected ? "text-orange-900" : "text-gray-900"}`}>
+                          {option.name}
+                        </span>
+                      </div>
+                      {option.price > 0 && (
+                        <span className={`font-semibold ${isSelected ? "text-orange-700" : "text-gray-600"}`}>
+                          +${Number(option.price ?? 0).toFixed(2)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {(modifier.isRequired || modifier.required) && !selectedOptions.some((o) => o.modifierId === modifier.id) && (
+                <div className="text-sm text-red-600 mt-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  Please select an option for <strong>{modifier.name}</strong>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Special Instructions
+          </label>
+          <textarea
             placeholder="e.g., No onions, extra spicy, allergies, etc."
             value={specialInstruction}
             onChange={(e) => setSpecialInstruction(e.target.value)}
             rows={3}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
           />
-        </div>
-
-        {/* Quantity */}
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-3">Quantity</h3>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="secondary"
-              size="large"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-              </svg>
-            </Button>
-            <span className="text-2xl font-bold text-gray-900 w-16 text-center">
-              {quantity}
-            </span>
-            <Button
-              variant="secondary"
-              size="large"
-              onClick={() => setQuantity(quantity + 1)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </Button>
-          </div>
         </div>
       </div>
     </Modal>

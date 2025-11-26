@@ -2,12 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermission } from '@/hooks/usePermission';
 
-/**
- * Component to protect routes based on permissions
- * @param {string} resource - The resource to check (e.g., 'items', 'categories')
- * @param {string} action - The action to check (e.g., 'read', 'create')
- * @param {React.ReactNode} children - The component to render if permission is granted
- */
+
 export default function ProtectedRoute({ 
   resource, 
   action = 'read', 

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useParams, useLoaderData } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLoaderData } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import {
   HiPlus,
   HiOutlineTag,
@@ -7,18 +8,16 @@ import {
   HiOutlinePlusCircle,
 } from "react-icons/hi2";
 import PageHeader from '@/components/common/PageHeader';
-import { Input, Button, Checkbox } from '@/components/ui';
+import { Input, Button, Checkbox,LoadingSpinner ,Table} from '@/components/ui';
 
 import { useToast } from "@/hooks/useToast";
 
 import { deleteItem, fetchItems, createItem } from "@/api/items.js";
-import Table from '@/components/ui/Table';
 import SearchBar from "@/components/common/SearchBar";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import ActionMenu from "@/components/common/ActionMenu";
-
 export default function ItemLibrary() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const loaderData = useLoaderData();
   const navigate = useNavigate();
   const { success, error } = useToast();
@@ -30,7 +29,7 @@ export default function ItemLibrary() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [total, setTotal] = useState(0);
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (loaderData) {
       const categoriesArray = loaderData.categories || [];
@@ -40,6 +39,7 @@ export default function ItemLibrary() {
 
   useEffect(() => {
     const loadItems = async () => {
+      setLoading(true);
       try {
         const data = await fetchItems(restaurantId, { page, limit, q: searchQuery });
         const itemsList = data.items || [];
@@ -54,6 +54,9 @@ export default function ItemLibrary() {
         setTotal((data.meta && data.meta.total) || 0);
       } catch (err) {
         console.error('Failed to load items:', err);
+      }
+      finally {
+        setLoading(false);
       }
     };
     loadItems();
@@ -70,9 +73,9 @@ export default function ItemLibrary() {
     return item.categoryNames.join(", ");
   };
 
-  // Quick create removed for now
+  
 
-  // header select handled via Table header checkbox in future
+  
 
   const handleSelectItem = (itemId) => {
     if (selectedItems.includes(itemId)) {
@@ -115,7 +118,7 @@ export default function ItemLibrary() {
   };
 
   const openEditItem = (itemId) => {
-    navigate(`/${restaurantId}/items/${itemId}/edit`);
+    navigate(`/restaurant/items/${itemId}/edit`);
   };
 
   const handleQuickCreate = async () => {
@@ -136,7 +139,7 @@ export default function ItemLibrary() {
       error('Failed to quick create item');
     }
   };
-  
+ 
   return (
     <div className="p-8 pb-24 bg-gray-50 min-h-screen">
       <PageHeader
@@ -146,7 +149,7 @@ export default function ItemLibrary() {
         SearchBarComponent={SearchBar}
         searchBarProps={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search items...', className: 'w-72' }}
         actionLabel={<><HiPlus className="w-5 h-5" /> Create New Item</>}
-        actionLink={`/${restaurantId}/items/new`}
+        actionLink={`/restaurant/items/new`}
         rightChildren={<div className="flex items-center gap-2"><button onClick={() => setShowQuickCreate(s => !s)} className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"><HiOutlinePlusCircle className="w-4 h-4" /> Quick Create</button></div>}
       />
 
@@ -182,10 +185,10 @@ export default function ItemLibrary() {
             { key: 'category', title: 'Category', render: (r) => (<span className="text-gray-700 italic">{getCategoryNames(r)}</span>) },
             { key: 'availability', title: 'Availability', render: () => (<span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">Available</span>) },
             { key: 'price', title: 'Price', align: 'right', render: (r) => `$${r.price?.toFixed(2) || '0.00'}` },
-            { key: 'actions', title: 'Actions', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={itemMenus[r.id]} onToggle={(open) => setItemMenus({ ...itemMenus, [r.id]: open })} editPath={`/${restaurantId}/items/${r.id}/edit`} onDelete={() => handleDeleteItem(r.id)} itemName={r.name} /></div>) },
+            { key: 'actions', title: 'Actions', render: (r) => (<div className="flex justify-end"><ActionMenu isOpen={itemMenus[r.id]} onToggle={(open) => setItemMenus({ ...itemMenus, [r.id]: open })} editPath={`/restaurant/items/${r.id}/edit`} onDelete={() => handleDeleteItem(r.id)} itemName={r.name} /></div>) },
           ]}
           data={items}
-          loading={false}
+          loading={loading}
           rowKey={'id'}
           onRowClick={(r) => openEditItem(r.id)}
           pagination={{ page, limit, total }}

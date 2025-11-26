@@ -1,4 +1,4 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 export const fetchCustomers = async (restaurantId, params = {}) => {
   const queryParams = new URLSearchParams();
   if (params.limit) queryParams.append('limit', params.limit);

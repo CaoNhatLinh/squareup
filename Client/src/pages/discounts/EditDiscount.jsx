@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import { useToast } from '@/hooks/useToast';
 import { fetchDiscount, updateDiscount } from '@/api/discounts';
 import { fetchCategories } from '@/api/categories';
@@ -10,7 +11,8 @@ import { Button, Input, Dropdown, Checkbox, LoadingSpinner } from '@/components/
 import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function EditDiscount() {
   const navigate = useNavigate();
-  const { discountId, restaurantId } = useParams();
+  const { discountId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const { success, error } = useToast();
   const [loading, setLoading] = useState(true);
   
@@ -58,7 +60,7 @@ export default function EditDiscount() {
   const [showDiscountTypeModal, setShowDiscountTypeModal] = useState(false);
   const [showPurchaseRuleModal, setShowPurchaseRuleModal] = useState(false);
   const [showItemCategorySelector, setShowItemCategorySelector] = useState(false);
-  const [selectorMode, setSelectorMode] = useState('purchase'); // 'purchase' or 'discount'
+  const [selectorMode, setSelectorMode] = useState('purchase'); 
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function EditDiscount() {
   }, [restaurantId, discountId, error]);
 
   const handleClose = () => {
-    navigate(`/${restaurantId}/discounts`);
+    navigate(`/restaurant/discounts`);
   };
 
   const handleSave = async () => {
@@ -97,7 +99,7 @@ export default function EditDiscount() {
     try {
       await updateDiscount(restaurantId, discountId, formData);
       success(`Discount "${formData.name}" updated successfully!`);
-      navigate(`/${restaurantId}/discounts`);
+      navigate(`/restaurant/discounts`);
     } catch (err) {
       console.error('Failed to update discount:', err);
       error('Failed to update discount: ' + err.message);

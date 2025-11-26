@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 
 import {
   updateCategory,
@@ -21,7 +22,8 @@ import { Input, Button, Checkbox, LoadingSpinner } from '@/components/ui';
 
 export default function EditCategory() {
   const navigate = useNavigate();
-  const { categoryId, restaurantId } = useParams();
+  const { categoryId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const { uploadImage, uploading } = useImageUpload();
   const [formData, setFormData] = useState({
     name: "",
@@ -87,12 +89,12 @@ export default function EditCategory() {
       .catch((err) => {
         console.error("Error loading category:", err);
         alert("Failed to load category");
-        navigate(`/${restaurantId}/categories`);
+        navigate(`/restaurant/categories`);
       });
   }, [restaurantId, categoryId, navigate]);
 
   const handleClose = () => {
-    navigate(`/${restaurantId}/categories`);
+    navigate(`/restaurant/categories`);
   };
 
   const handleParentSelect = (category) => {
@@ -159,7 +161,7 @@ export default function EditCategory() {
         itemIds: selectedItems.map((item) => item.id),
       });
 
-      navigate(`/${restaurantId}/categories`);
+      navigate(`/restaurant/categories`);
     } catch (err) {
       console.error("Failed to update category:", err);
       alert("Failed to update category: " + err.message);

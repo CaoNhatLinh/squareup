@@ -1,6 +1,7 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import  { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { getRestaurantReviews } from "@/api/reviews";
 import Pagination from '@/components/ui/Pagination';
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
@@ -11,7 +12,9 @@ import ReviewsList from "@/components/reviews/ReviewsList";
 import ItemsAnalysis from "@/components/reviews/ItemsAnalysis";
 import { LoadingSpinner } from '@/components/ui';
 export default function Reviews() {
-  const { restaurantId } = useParams();
+  const params = useParams();
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const restaurantId = params?.restaurantId || storeRestaurantId;
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

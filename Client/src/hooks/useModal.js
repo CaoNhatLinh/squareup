@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from "react";
 
 export default function useModal(initial = false) {
   const [open, setOpen] = useState(initial);

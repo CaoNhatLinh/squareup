@@ -1,8 +1,6 @@
-import * as client from './apiClient'
+import * as client from '@/api/apiClient'
 
-/**
- * Fetch all transactions for a restaurant
- */
+
 export async function fetchTransactions(restaurantId, params = {}) {
   const queryParams = new URLSearchParams();
   if (params.limit) queryParams.append('limit', params.limit);
@@ -21,25 +19,19 @@ export async function fetchTransactions(restaurantId, params = {}) {
   return { transactions: res.data || [], meta: res.meta || {}, has_more: res.has_more };
 }
 
-/**
- * Fetch single transaction details
- */
+
 export async function fetchTransactionDetails(restaurantId, paymentIntentId) {
   const res = await client.get(`/transactions/${restaurantId}/${paymentIntentId}`);
   return res.data;
 }
 
-/**
- * Fetch transaction statistics
- */
+
 export async function fetchTransactionStats(restaurantId) {
   const res = await client.get(`/transactions/${restaurantId}/stats`);
   return res.data;
 }
 
-/**
- * Refund a transaction
- */
+
 export async function refundTransaction(restaurantId, paymentIntentId, data = {}) {
   const res = await client.post(`/transactions/${restaurantId}/${paymentIntentId}/refund`, data);
   return res.data;

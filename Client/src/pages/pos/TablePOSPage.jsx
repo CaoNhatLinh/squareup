@@ -1,25 +1,34 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { fetchCategories } from "@/api/categories";
 import { fetchItems } from "@/api/items";
 import { fetchModifiers } from "@/api/modifers";
 import { createOrder } from "@/api/orders";
-import { calculateDiscounts } from "@/api/checkoutClient";
+import useCalculateDiscounts from '@/hooks/useCalculateDiscounts';
 import { mergeOrAddCartItem } from "@/utils/cartUtils";
 import { useToast } from "@/hooks/useToast";
-import POSHeader from "./components/POSHeader";
-import CategoryTabs from "./components/CategoryTabs";
-import ProductGrid from "./components/ProductGrid";
-import Cart from "./components/Cart";
-import PaymentModal from "./components/PaymentModal";
+import POSHeader from "@/pages/pos/components/POSHeader";
+import CategoryTabs from "@/pages/pos/components/CategoryTabs";
+import ProductGrid from "@/pages/pos/components/ProductGrid";
+import Cart from "@/pages/pos/components/Cart";
+import PaymentModal from "@/pages/pos/components/PaymentModal";
 import { printInvoice, printKitchenOrder } from "@/utils/printUtils";
-import { Button } from "@/components/ui";
-import { Printer, ArrowLeft } from "lucide-react";
-import { getTableById, updateTable, createTable, clearTable } from "@/api/tables";
+import { Button, Input } from "@/components/ui";
+import BillSplitModal from "@/pages/pos/components/BillSplitModal";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { HiPrinter, HiArrowLeft } from 'react-icons/hi2';
+import {
+  getTableById,
+  updateTable,
+  createTable,
+  clearTable,
+} from "@/api/tables";
 
 export default function TablePOSPage() {
-  const { restaurantId, tableId } = useParams();
+  const { tableId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
   const { restaurant, loading: restaurantLoading } = useRestaurant();
   const { success: showSuccess, error: showError } = useToast();
@@ -42,6 +51,8 @@ export default function TablePOSPage() {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isBillSplitOpen, setIsBillSplitOpen] = useState(false);
+  const [pendingSplitPayments, setPendingSplitPayments] = useState(null);
   const [printInvoiceOnCheckout, setPrintInvoiceOnCheckout] = useState(true);
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -50,10 +61,29 @@ export default function TablePOSPage() {
   });
   const [orderNotes, setOrderNotes] = useState("");
   const [tableName, setTableName] = useState("");
+  const [tableUpdatedAt, setTableUpdatedAt] = useState(null);
   const [isSavingTable, setIsSavingTable] = useState(false);
-  const isNewTable = tableId === "new";
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const handleClearConfirm = async () => {
+    if (!tableId || isNewTable) return;
+    try {
+      const res = await clearTable(restaurantId, tableId, {
+        expectedUpdatedAt: tableUpdatedAt,
+      });
+      setCart([]);
+        setCustomerInfo({ name: '', phone: '', email: '' });
+      setTableUpdatedAt(res?.updatedAt || Date.now());
+      showSuccess("Table cleared successfully");
+    } catch (err) {
+      console.error("Failed to clear table:", err);
+      showError(err.response?.data?.error || "Failed to clear table");
+    } finally {
+      setIsClearDialogOpen(false);
+    }
+  };
+  const isNewTable = !tableId || tableId === "new";
 
-  // Load POS data
+  
   const loadPOSData = useCallback(async () => {
     setLoading(true);
     try {
@@ -87,31 +117,37 @@ export default function TablePOSPage() {
     }
   }, [restaurantId, showError, query]);
 
-  // Load table data if editing existing table
+  
   const loadTableData = useCallback(async () => {
     if (isNewTable || !tableId) return;
 
     try {
       const tableData = await getTableById(restaurantId, tableId);
       setTableName(tableData.name || "");
+
       
-      // Load existing items into cart
       if (tableData.items && tableData.items.length > 0) {
-        const cartItems = tableData.items.map(item => ({
+        const cartItems = tableData.items.map((item) => ({
           id: `${item.itemId}-${Date.now()}-${Math.random()}`,
           itemId: item.itemId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          selectedModifiers: item.selectedModifiers || item.selectedOptions || [],
+          selectedModifiers:
+            item.selectedModifiers || item.selectedOptions || [],
           specialInstruction: item.notes || "",
-          modifierTotal: (item.selectedModifiers || item.selectedOptions || []).reduce(
-            (sum, opt) => sum + (opt.price || 0),
-            0
-          ),
+          modifierTotal: (
+            item.selectedModifiers ||
+            item.selectedOptions ||
+            []
+          ).reduce((sum, opt) => sum + (opt.price || 0), 0),
         }));
         setCart(cartItems);
       }
+      if (tableData.customerInfo) {
+        setCustomerInfo(tableData.customerInfo || { name: "", phone: "", email: "" });
+      }
+      setTableUpdatedAt(tableData.updatedAt || null);
     } catch (error) {
       console.error("Failed to load table:", error);
       showError("Failed to load table data");
@@ -130,58 +166,24 @@ export default function TablePOSPage() {
     }
   }, [restaurantId, loadTableData]);
 
-  // Calculate discounts
-  useEffect(() => {
-    (async () => {
-      setDiscountLoading(true);
-      if (!restaurantId || cart.length === 0) {
-        setDiscountResult({
-          totalDiscount: 0,
-          appliedDiscounts: [],
-          itemDiscounts: {},
-          discountBreakdown: [],
-        });
-        setDiscountLoading(false);
-        return;
-      }
-      try {
-        const cartItems = cart.map((c) => ({
-          itemId: c.itemId,
-          name: c.name,
-          price: c.price,
-          quantity: c.quantity,
-          totalPrice:
-            (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) *
-            Number(c.quantity ?? 0),
-          groupKey: c.id,
-          selectedOptions: c.selectedModifiers || [],
-        }));
-        const res = await calculateDiscounts(restaurantId, cartItems, {
-          couponCode,
-          loyaltyCard,
-        });
-        setDiscountResult(
-          res || {
-            totalDiscount: 0,
-            appliedDiscounts: [],
-            itemDiscounts: {},
-            discountBreakdown: [],
-          }
-        );
-      } catch (err) {
-        console.error("Discount calculation error:", err);
-        setDiscountResult({
-          totalDiscount: 0,
-          appliedDiscounts: [],
-          itemDiscounts: {},
-          discountBreakdown: [],
-        });
-      }
-      setDiscountLoading(false);
-    })();
-  }, [cart, restaurantId, couponCode, loyaltyCard]);
+  const cartItemsToCalc = cart.map((c) => ({
+    itemId: c.itemId,
+    name: c.name,
+    price: c.price,
+    quantity: c.quantity,
+    totalPrice: (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) * Number(c.quantity ?? 0),
+    groupKey: c.id,
+    selectedOptions: c.selectedModifiers || [],
+  }));
 
-  // Cart operations
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const { loading: hookLoading, discountResult: hookResult } = useCalculateDiscounts(restaurantId || storeRestaurantId, cartItemsToCalc, { couponCode, loyaltyCard });
+  useEffect(() => {
+    setDiscountLoading(hookLoading);
+    setDiscountResult(hookResult);
+  }, [hookLoading, hookResult]);
+
+  
   const addToCart = (
     item,
     selectedOptions = [],
@@ -243,7 +245,7 @@ export default function TablePOSPage() {
     return { subtotal, totalDiscount, taxAmount, total, taxRate };
   };
 
-  // Save table
+  
   const handleSaveTable = async () => {
     if (!tableName.trim()) {
       showError("Please enter a table name");
@@ -262,17 +264,23 @@ export default function TablePOSPage() {
           selectedModifiers: item.selectedModifiers,
           notes: item.specialInstruction,
         })),
+        customerInfo: customerInfo || { name: '', phone: '', email: '' },
+        notes: orderNotes || '',
       };
-
+      console.log("isNewTable",isNewTable);
       if (isNewTable) {
-        await createTable(restaurantId, tableData);
+        const created = await createTable(restaurantId, tableData);
+        setTableUpdatedAt(created?.updatedAt || Date.now());
         showSuccess("Table created successfully");
       } else {
-        await updateTable(restaurantId, tableId, tableData);
+        const updated = await updateTable(restaurantId, tableId, tableData, {
+          expectedUpdatedAt: tableUpdatedAt,
+        });
+        setTableUpdatedAt(updated?.updatedAt || Date.now());
         showSuccess("Table saved successfully");
       }
 
-      navigate(`/${restaurantId}/pos`);
+      navigate(`/pos`);
     } catch (error) {
       console.error("Failed to save table:", error);
       showError(error.response?.data?.error || "Failed to save table");
@@ -281,7 +289,7 @@ export default function TablePOSPage() {
     }
   };
 
-  // Print kitchen order
+  
   const handlePrintKitchenOrder = () => {
     if (cart.length === 0) {
       showError("No items to print");
@@ -301,7 +309,7 @@ export default function TablePOSPage() {
     }
   };
 
-  // Checkout
+  
   const handleCheckout = () => {
     if (cart.length === 0) {
       showError("Cart is empty");
@@ -366,7 +374,7 @@ export default function TablePOSPage() {
       const created = await createOrder(restaurantId, orderData);
       showSuccess("Order completed successfully!");
 
-      // Print invoice if enabled
+      
       if (isFullyPaid && printInvoiceOnCheckout) {
         try {
           const { subtotal, totalDiscount, taxAmount, total, taxRate } =
@@ -388,13 +396,15 @@ export default function TablePOSPage() {
         }
       }
 
-      // Clear the table
+      
       if (!isNewTable) {
-        await clearTable(restaurantId, tableId);
+        await clearTable(restaurantId, tableId, {
+          expectedUpdatedAt: tableUpdatedAt,
+        });
       }
 
-      // Navigate back to table list
-      navigate(`/${restaurantId}/pos`);
+      
+      navigate(`/pos`);
     } catch (error) {
       console.error("Failed to complete payment:", error);
       showError("Failed to complete payment");
@@ -417,53 +427,56 @@ export default function TablePOSPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/pos")}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button variant="ghost" size="small" onClick={() => navigate("/pos")}> 
+              <HiArrowLeft className="h-4 w-4 mr-2" />
               Back to Tables
             </Button>
+            <Button
+              variant="destructive"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsClearDialogOpen(true);
+              }}
+              disabled={isNewTable || cart.length === 0}
+            >
+              Clear Table
+            </Button>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Table Name:</label>
-              <input
-                type="text"
+              <Input
+                label="Table Name"
                 value={tableName}
                 onChange={(e) => setTableName(e.target.value)}
                 placeholder="Enter table name..."
-                className="px-3 py-1 border rounded-md min-w-[200px]"
+                className="min-w-[200px]"
+                fullWidth={false}
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="small"
               onClick={handlePrintKitchenOrder}
               disabled={cart.length === 0}
             >
-              <Printer className="h-4 w-4 mr-2" />
+              <HiPrinter className="h-4 w-4 mr-2" />
               Print Kitchen Order
             </Button>
             <Button
               onClick={handleSaveTable}
               disabled={isSavingTable || !tableName.trim()}
-              size="sm"
+              size="small"
             >
               {isSavingTable ? "Saving..." : "Save Table"}
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Products Section */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <POSHeader
             query={query}
@@ -473,11 +486,13 @@ export default function TablePOSPage() {
 
           <CategoryTabs
             categories={categories}
+            items={items}
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
 
           <ProductGrid
+            categories={categories}
             items={items}
             modifiers={modifiers}
             selectedCategory={selectedCategory}
@@ -486,14 +501,15 @@ export default function TablePOSPage() {
             discountResult={discountResult}
           />
         </div>
-
-        {/* Cart Section */}
         <div className="w-96 bg-white border-l flex flex-col">
           <Cart
             cart={cart}
             onUpdateQuantity={updateCartItemQuantity}
             onRemove={removeFromCart}
             onClear={clearCart}
+            total={getCartSummary().total}
+            taxAmount={getCartSummary().taxAmount}
+            taxRate={getCartSummary().taxRate}
             getCartSummary={getCartSummary}
             discountResult={discountResult}
             discountLoading={discountLoading}
@@ -502,13 +518,23 @@ export default function TablePOSPage() {
             loyaltyCard={loyaltyCard}
             onLoyaltyCardChange={setLoyaltyCard}
             onCheckout={handleCheckout}
+            onSplitBill={() => setIsBillSplitOpen(true)}
+            customerInfo={customerInfo}
+            onCustomerInfoChange={setCustomerInfo}
             printInvoiceOnCheckout={printInvoiceOnCheckout}
             onPrintInvoiceChange={setPrintInvoiceOnCheckout}
           />
         </div>
       </div>
-
-      {/* Payment Modal */}
+      <ConfirmDialog
+        open={isClearDialogOpen}
+        title="Clear Table"
+        message="Are you sure you want to clear this table? This will remove all items from the table."
+        onConfirm={handleClearConfirm}
+        onCancel={() => setIsClearDialogOpen(false)}
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
+      />
       <PaymentModal
         open={isPaymentModalOpen}
         onOpenChange={setIsPaymentModalOpen}
@@ -516,16 +542,30 @@ export default function TablePOSPage() {
         cart={cart}
         onComplete={handleCompletePayment}
         isProcessing={isCreatingOrder}
-        customerName={customerInfo.name || 'Guest'}
+        customerName={customerInfo.name || "Guest"}
         customerInfo={customerInfo}
         orderNotes={orderNotes}
         onOrderNotesChange={setOrderNotes}
         onClose={() => setIsPaymentModalOpen(false)}
-        initialSplitPayments={null}
+        initialSplitPayments={pendingSplitPayments}
         printOnCheckout={printInvoiceOnCheckout}
         setPrintOnCheckout={setPrintInvoiceOnCheckout}
-        restaurantId={restaurantId}
+        hideOrderTypeSelection={true}
       />
+      {isBillSplitOpen && (
+        <BillSplitModal
+          cart={cart}
+          total={getCartSummary().total}
+          onClose={() => setIsBillSplitOpen(false)}
+          onSplit={(splits) => {
+            setPendingSplitPayments(
+              (splits || []).map((s, i) => ({ id: `split_${Date.now()}_${i}`, method: 'cash', amount: Number(s.amount || 0), meta: { person: s.person }, status: 'pending', paymentDetails: null }))
+            );
+            setIsBillSplitOpen(false);
+            setIsPaymentModalOpen(true);
+          }}
+        />
+      )}
     </div>
   );
 }

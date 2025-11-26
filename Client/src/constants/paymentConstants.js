@@ -1,4 +1,4 @@
-// Payment method constants
+
 export const PAYMENT_METHODS = {
   CASH: 'cash',
   CARD: 'card',
@@ -23,7 +23,7 @@ export const PAYMENT_METHOD_ICONS = {
   [PAYMENT_METHODS.SPLIT]: '✂️'
 };
 
-// Discount types
+
 export const DISCOUNT_TYPES = {
   PERCENTAGE: 'percentage',
   FIXED_AMOUNT: 'fixed_amount',
@@ -33,14 +33,14 @@ export const DISCOUNT_TYPES = {
   LOYALTY: 'loyalty'
 };
 
-// Invoice types
+
 export const INVOICE_TYPES = {
   REGULAR: 'regular',
   VAT: 'vat',
   TEMPORARY: 'temporary'
 };
 
-// Kitchen/Bar categories
+
 export const KITCHEN_CATEGORIES = ['food', 'appetizer', 'main', 'dessert', 'sides'];
 export const BAR_CATEGORIES = ['drinks', 'beverages', 'cocktails', 'beer', 'wine'];
 

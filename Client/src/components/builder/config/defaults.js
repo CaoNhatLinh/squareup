@@ -1,0 +1,28 @@
+export const PALETTE_DEFAULT = {
+  primary: "#F97316",
+  onPrimary: "#ffffff",
+  secondary: "#76a5f0ff",
+  onSecondary: "#ffffff",
+  background: "#ffffff",
+  surface: "#f8fafc",
+  text: "#111827",
+  muted: "#6b7280",
+};
+
+export const DEFAULT_GLOBAL_STYLES = {
+  palette: { ...PALETTE_DEFAULT },
+  colors: {
+    background: PALETTE_DEFAULT.background,
+    primary: PALETTE_DEFAULT.primary,
+    onPrimary: PALETTE_DEFAULT.onPrimary,
+    secondary: PALETTE_DEFAULT.secondary,
+    onSecondary: PALETTE_DEFAULT.onSecondary,
+    text: PALETTE_DEFAULT.text,
+    surface: PALETTE_DEFAULT.surface,
+    muted: PALETTE_DEFAULT.muted,
+  },
+  typography: {
+    headingFont: "Inter, sans-serif",
+    bodyFont: "Inter, sans-serif",
+  },
+};

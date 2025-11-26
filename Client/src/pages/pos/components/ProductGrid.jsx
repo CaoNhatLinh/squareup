@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMemo } from "react";
-import ProductCard from "./ProductCard";
-import ProductModal from "./ProductModal";
+import ProductCard from "@/pages/pos/components/ProductCard";
+import ProductModal from "@/pages/pos/components/ProductModal";
 
 export default function ProductGrid({
-  categories,
-  items,
+  categories = [],
+  items = {},
   selectedCategory,
   query = '',
   onAddToCart,
@@ -15,11 +15,10 @@ export default function ProductGrid({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredItems = useMemo(() => {
-    const itemsArray = Object.values(items);
+    const itemsArray = Object.values(items || {});
     const searchQuery = (query || '').toLowerCase().trim();
     if (selectedCategory === "all" && !searchQuery) return itemsArray;
-
-    const category = categories.find((cat) => cat.id === selectedCategory);
+    const category = Array.isArray(categories) ? categories.find((cat) => cat.id === selectedCategory) : null;
     if (!category) return [];
 
     const categoryItemIds = Array.isArray(category.itemIds)
@@ -58,12 +57,11 @@ export default function ProductGrid({
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-gray-500">
-          <p className="text-lg">Không có món ăn nào</p>
+          <p className="text-lg">No items found</p>
         </div>
       </div>
     );
   }
-
   return (
     <>
       <div className="flex-1 overflow-y-auto p-6">

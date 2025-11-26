@@ -1,7 +1,8 @@
-import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
-import { useMemo } from 'react';
+import { useMemo } from "react";import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
+
 import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui";
+import Badge from '@/components/ui/Badge';
 
 export default function Cart({
   cart = [],
@@ -36,7 +37,7 @@ export default function Cart({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-900">Order</h2>
           {cart.length > 0 && (
-            <button onClick={onClear} className="text-sm text-red-600 hover:text-red-700 font-medium">Clear all</button>
+            <Button onClick={onClear} variant="ghost" size="small" className="text-sm text-red-600 hover:text-red-700 font-medium">Clear all</Button>
           )}
         </div>
 
@@ -78,14 +79,21 @@ export default function Cart({
                       )}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">-</button>
+                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">-</Button>
                           <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                          <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">+</button>
+                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">+</Button>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold text-gray-900">{'$' + Number(((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0))).toFixed(2)}</div>
-                          {discountResult?.itemDiscounts?.[item.id] && <div className="text-xs text-green-600">{' - $' + Number(discountResult.itemDiscounts[item.id].discountAmount ?? 0).toFixed(2)}</div>}
-                          <button onClick={() => onRemove(item.id)} className="text-xs text-red-600 hover:text-red-700">Remove</button>
+                              <div className="text-sm font-bold text-gray-900">{'$' + Number(((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0))).toFixed(2)}</div>
+                              {discountResult?.itemDiscounts?.[item.id] && (
+                                <div className="text-xs text-green-600 mt-1 flex items-center gap-2">
+                                  <span>{' - $' + Number(discountResult.itemDiscounts[item.id].discountAmount ?? 0).toFixed(2)}</span>
+                                  {discountResult?.itemDiscounts?.[item.id]?.discountPercentage !== undefined && (
+                                    <Badge variant="outline">{`${discountResult.itemDiscounts[item.id].discountPercentage}% OFF`}</Badge>
+                                  )}
+                                </div>
+                              )}
+                          <Button variant="link" onClick={() => onRemove(item.id)} className="text-xs text-red-600 hover:text-red-700">Remove</Button>
                         </div>
                       </div>
                     </div>
@@ -100,14 +108,32 @@ export default function Cart({
       <div className="border-t border-gray-200 p-4 bg-white">
         <div className="space-y-3">
           <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Subtotal:</span><span className="text-lg font-bold text-gray-900">{'$' + Number(subtotal).toFixed(2)}</span></div>
-          {discountResult?.totalDiscount > 0 && <div className="flex items-center justify-between text-green-700"><span className="text-sm font-medium">Discount</span><span className="text-sm">{'-$' + Number(discountResult.totalDiscount).toFixed(2)}</span></div>}
+          {discountResult?.totalDiscount > 0 && (
+            <div className="flex items-start justify-between text-green-700">
+              <div className="flex-1">
+                <div className="text-sm font-medium">Discount</div>
+                {Array.isArray(discountResult.discountBreakdown) && discountResult.discountBreakdown.length > 0 && (
+                  <div className="mt-1 text-xs text-green-700">
+                    {discountResult.discountBreakdown.map((d) => (
+                      <div key={d.discountId} className="flex items-center gap-2">
+                        <span className="font-medium">{d.discountName}</span>
+                        <span className="text-xs">({d.discountType === 'percentage' ? `${d.discountValue}%` : `$${d.discountValue}` })</span>
+                        <span className="text-xs text-green-700">- ${Number(d.discountAmount || 0).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="text-sm">{'-$' + Number(discountResult.totalDiscount).toFixed(2)}</div>
+            </div>
+          )}
           {taxAmount > 0 && <div className="flex items-center justify-between text-gray-700"><span className="text-sm font-medium">Tax {taxRate > 0 ? `(${(taxRate*100).toFixed(2)}%)` : ''}</span><span className="text-sm">{'$' + Number(taxAmount).toFixed(2)}</span></div>}
           {discountLoading && <div className="flex items-center gap-2 text-sm text-gray-500"><div className="loader w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"></div><div>Applying discounts...</div></div>}
           <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Total:</span><span className="text-2xl font-bold text-red-600">{'$' + Number(total ?? 0).toFixed(2)}</span></div>
 
           <div className="flex items-center gap-2">
-            <button onClick={onSplitBill} disabled={cart.length === 0} className="bg-gray-100 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors">Split</button>
-            <button onClick={onCheckout} disabled={cart.length === 0 || discountLoading || isCreatingOrder} className="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">{isCreatingOrder ? 'Processing...' : 'Checkout'}</button>
+            <Button onClick={onSplitBill} disabled={cart.length === 0} variant="ghost">Split</Button>
+            <Button onClick={onCheckout} disabled={cart.length === 0 || discountLoading || isCreatingOrder} variant="primary" className="flex-1">{isCreatingOrder ? 'Processing...' : 'Checkout'}</Button>
           </div>
         </div>
       </div>

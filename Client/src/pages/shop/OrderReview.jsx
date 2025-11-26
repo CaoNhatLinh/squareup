@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";﻿
 import { useParams, useNavigate } from "react-router-dom";
+import { useShop } from "@/context/ShopContext";
 import { getOrderById } from "@/api/orders";
 import { addOrderReview } from "@/api/reviews";
 import { useGuestUser } from "@/context/GuestUserContext";
@@ -23,11 +24,10 @@ const StarRating = ({
         className="transition-transform hover:scale-110 focus:outline-none"
       >
         <svg
-          className={`${size} ${
-            star <= (hoveredRating || rating)
-              ? "text-yellow-400 fill-current"
-              : "text-gray-300"
-          }`}
+          className={`${size} ${star <= (hoveredRating || rating)
+            ? "text-yellow-400 fill-current"
+            : "text-gray-300"
+            }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -57,8 +57,9 @@ const getRatingText = (rating) => {
 };
 
 export default function OrderReview() {
-  const { restaurantId, orderId } = useParams();
+  const { orderId, slug } = useParams();
   const navigate = useNavigate();
+  const { restaurant } = useShop();
   const { guestUuid } = useGuestUser();
   const [order, setOrder] = useState(null);
   const [orderRating, setOrderRating] = useState(0);
@@ -138,7 +139,7 @@ export default function OrderReview() {
         itemReviews: reviewedItems.length > 0 ? reviewedItems : undefined,
       });
       alert("Thank you for your review!");
-      navigate(`/shop/${restaurantId}/order-history`);
+      navigate(`/${slug || restaurant?.slug || ""}/order/order-history`);
     } catch (err) {
       console.error("Failed to submit review:", err);
       setError("Failed to submit review. Please try again.");
@@ -178,7 +179,9 @@ export default function OrderReview() {
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate(`/shop/${restaurantId}/order-history`)}
+            onClick={() =>
+              navigate(`/${slug || restaurant?.slug || ""}/order/order-history`)
+            }
             className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
           >
             Back to Order History
@@ -197,7 +200,9 @@ export default function OrderReview() {
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
-            onClick={() => navigate(`/shop/${restaurantId}/order-history`)}
+            onClick={() =>
+              navigate(`/${slug || restaurant?.slug || ""}/order/order-history`)
+            }
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <svg
@@ -294,8 +299,7 @@ export default function OrderReview() {
               <p className="text-sm text-gray-500 mt-1">
                 Help others by rating each item{" "}
                 {reviewedItemsCount > 0 &&
-                  `(${reviewedItemsCount}/${
-                    Object.keys(itemReviews).length
+                  `(${reviewedItemsCount}/${Object.keys(itemReviews).length
                   } rated)`}
               </p>
             </div>
@@ -368,11 +372,10 @@ export default function OrderReview() {
         <button
           onClick={handleSubmitReview}
           disabled={submitting || orderRating === 0}
-          className={`w-full py-4 rounded-lg font-bold text-lg transition-colors ${
-            submitting || orderRating === 0
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-black text-white hover:bg-gray-800"
-          }`}
+          className={`w-full py-4 rounded-lg font-bold text-lg transition-colors ${submitting || orderRating === 0
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-black text-white hover:bg-gray-800"
+            }`}
         >
           {submitting ? "Submitting..." : "Submit Review"}
         </button>

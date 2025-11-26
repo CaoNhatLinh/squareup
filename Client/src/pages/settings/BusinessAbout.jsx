@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { upsertRestaurant } from "@/api/restaurants";
 import { uploadImage } from "@/api/upload";
@@ -26,7 +25,6 @@ import {
 import PageHeader from "@/components/common/PageHeader";
 
 export default function BusinessAbout() {
-  const { restaurantId } = useParams();
   const { restaurant, updateRestaurant } = useRestaurant();
   const [restaurantName, setRestaurantName] = useState("");
   const [description, setDescription] = useState("");
@@ -271,7 +269,7 @@ export default function BusinessAbout() {
         coverImage,
         featuredImage,
       };
-      await upsertRestaurant(restaurantId, updateData);
+      await upsertRestaurant(restaurant.id, updateData);
       setMessage("Restaurant information updated successfully!");
       setTimeout(() => setMessage(""), 4000);
       updateRestaurant(updateData);

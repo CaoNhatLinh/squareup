@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import { useMemo, useState } from "react";
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { setupStripeElements, processStripePayment } from '@/utils/stripeUtils';
 import { Button } from '@/components/ui';
+import useAppStore from '@/store/useAppStore';
 
 function InnerSplitCardModal({ split, onCancel, onPaid, restaurantId, pendingOrderId }) {
   const stripe = useStripe();
@@ -18,7 +19,6 @@ function InnerSplitCardModal({ split, onCancel, onPaid, restaurantId, pendingOrd
       if (!cardEl) throw new Error('Card not found');
       const { error, paymentMethod } = await stripe.createPaymentMethod({ type: 'card', card: cardEl });
       if (error) throw error;
-      // Prepare metadata; include pendingOrderId and splitId if present
       const metadata = { pendingOrderId: pendingOrderId || null, splitId: split?.id || null, restaurantId };
       const res = await processStripePayment(paymentMethod.id, Number(split.amount || 0), metadata);
       if (!res) throw new Error('Invalid response from payment');
@@ -68,7 +68,9 @@ function InnerSplitCardModal({ split, onCancel, onPaid, restaurantId, pendingOrd
 }
 
 export default function SplitCardModal(props) {
-  const { split, onPaid, onCancel, restaurantId, pendingOrderId } = props;
+  const { split, onPaid, onCancel, restaurantId: propRestaurantId, pendingOrderId } = props;
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const restaurantId = propRestaurantId || storeRestaurantId;
   const { stripePromise, elementsOptions } = useMemo(() => setupStripeElements(), []);
   return (
     <Elements stripe={stripePromise} options={elementsOptions}>

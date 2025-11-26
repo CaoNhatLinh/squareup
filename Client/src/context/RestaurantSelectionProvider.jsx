@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { RestaurantSelectionContext } from './RestaurantSelectionContext';
+import { useEffect, useState } from "react";
+import useAppStore from '@/store/useAppStore';
+import { RestaurantSelectionContext } from '@/context/RestaurantSelectionContext';
 
 export default function RestaurantSelectionProvider({ children }) {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(
@@ -14,6 +15,8 @@ export default function RestaurantSelectionProvider({ children }) {
     } else {
       localStorage.removeItem('selectedRestaurantId');
     }
+    
+    try { useAppStore.setState({ restaurantId: selectedRestaurantId }); } catch (err) { void err; }
   }, [selectedRestaurantId]);
 
   const value = {

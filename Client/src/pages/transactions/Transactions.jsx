@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import React from 'react';
-import { useParams ,useNavigate} from 'react-router-dom';
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import { fetchTransactions, fetchTransactionStats } from '@/api/transactions';
 import { useToast } from '@/hooks/useToast';
 import { formatDate } from '@/utils/dateUtils';
@@ -20,7 +20,7 @@ import PageHeader from '@/components/common/PageHeader';
 import Table from '@/components/ui/Table';
 
 export default function Transactions() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const { error: showError } = useToast();
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState(null);
@@ -66,7 +66,7 @@ export default function Transactions() {
     }
   }, [restaurantId]);
   const navigateToTransactionDetails = (transactionId) => {
-    navigate(`/${restaurantId}/transactions/${transactionId}`);
+    navigate(`/restaurant/transactions/${transactionId}`);
   }
 
   const handleFilterChange = (key, value) => {
@@ -165,71 +165,69 @@ export default function Transactions() {
         Icon={HiOutlineCreditCard}
       />
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1 inline-flex gap-1">
-          {filterButtons.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                activeFilter === filter.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50'
+        {filterButtons.map((filter) => (
+          <button
+            key={filter.id}
+            onClick={() => setActiveFilter(filter.id)}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeFilter === filter.id
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50'
               }`}
-            >
-              {filter.label}
-              <span
-                className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                  activeFilter === filter.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-slate-200 text-slate-600'
+          >
+            {filter.label}
+            <span
+              className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeFilter === filter.id
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-slate-200 text-slate-600'
                 }`}
-              >
-                {filter.count}
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Date From</label>
-              <input
-                type="date"
-                value={filters.dateFrom}
-                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Date To</label>
-              <input
-                type="date"
-                value={filters.dateTo}
-                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Customer Email</label>
-              <input
-                type="email"
-                value={filters.customerEmail}
-                onChange={(e) => handleFilterChange('customerEmail', e.target.value)}
-                placeholder="Search by email"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Transaction ID</label>
-              <input
-                type="text"
-                value={filters.transactionId}
-                onChange={(e) => handleFilterChange('transactionId', e.target.value)}
-                placeholder="Search by ID"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            >
+              {filter.count}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date From</label>
+            <input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date To</label>
+            <input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Customer Email</label>
+            <input
+              type="email"
+              value={filters.customerEmail}
+              onChange={(e) => handleFilterChange('customerEmail', e.target.value)}
+              placeholder="Search by email"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Transaction ID</label>
+            <input
+              type="text"
+              value={filters.transactionId}
+              onChange={(e) => handleFilterChange('transactionId', e.target.value)}
+              placeholder="Search by ID"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
+      </div>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center">
@@ -243,48 +241,48 @@ export default function Transactions() {
             <p className="text-slate-500 text-sm mt-1">Transactions will appear here once customers make payments</p>
           </div>
         ) : (
-          <React.Fragment>
-                <Table
-                  columns={[
-                    {
-                      key: 'amount',
-                      title: 'Amount',
-                      render: (r) => (
-                        <div>
-                          <div className="font-semibold text-slate-900">{formatAmount(r.amount, r.currency)}</div>
-                          <div className="text-xs text-slate-500">{r.currency}</div>
-                        </div>
-                      ),
-                    },
-                    {
-                      key: 'brand',
-                      title: 'Payment Method',
-                      render: (r) => (
-                        <div className="flex items-center gap-2">
-                          {getPaymentMethodIcon(r.brand)}
-                          <div>
-                            <div className="text-sm font-medium text-slate-900">•••• {r.last4 || '****'}</div>
-                            <div className="text-xs text-slate-500 capitalize">{r.brand || 'Card'}</div>
-                          </div>
-                        </div>
-                      ),
-                    },
-                    { key: 'description', title: 'Description', render: (r) => <div className="text-sm text-slate-900 max-w-xs truncate">{r.description || r.id}</div> },
-                    { key: 'customer_email', title: 'Customer', render: (r) => <div className="text-sm text-slate-900">{r.customer_email || '—'}</div> },
-                    { key: 'created', title: 'Date', render: (r) => <div className="text-sm text-slate-900">{formatDate(r.created)}</div>, sortable: true },
-                    { key: 'status', title: 'Status', render: (r) => getStatusBadge(r) },
-                  ]}
-                  data={transactions}
-                  rowKey={'id'}
-                  onRowClick={(r) => navigateToTransactionDetails(r.id)}
-                  pagination={{ page: pageNumber, limit, total: transactions.length }}
-                  onPageChange={(p) => {
-                    if (p > pageNumber) handleNextPage();
-                    else if (p < pageNumber) handlePrevPage();
-                  }}
-                  onLimitChange={(l) => { setLimit(l); setPageNumber(1); setPagination({ hasMore: false, startingAfter: null, endingBefore: null }); }}
-                />
-          </React.Fragment>
+          <Fragment>
+            <Table
+              columns={[
+                {
+                  key: 'amount',
+                  title: 'Amount',
+                  render: (r) => (
+                    <div>
+                      <div className="font-semibold text-slate-900">{formatAmount(r.amount, r.currency)}</div>
+                      <div className="text-xs text-slate-500">{r.currency}</div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'brand',
+                  title: 'Payment Method',
+                  render: (r) => (
+                    <div className="flex items-center gap-2">
+                      {getPaymentMethodIcon(r.brand)}
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">•••• {r.last4 || '****'}</div>
+                        <div className="text-xs text-slate-500 capitalize">{r.brand || 'Card'}</div>
+                      </div>
+                    </div>
+                  ),
+                },
+                { key: 'description', title: 'Description', render: (r) => <div className="text-sm text-slate-900 max-w-xs truncate">{r.description || r.id}</div> },
+                { key: 'customer_email', title: 'Customer', render: (r) => <div className="text-sm text-slate-900">{r.customer_email || '—'}</div> },
+                { key: 'created', title: 'Date', render: (r) => <div className="text-sm text-slate-900">{formatDate(r.created)}</div>, sortable: true },
+                { key: 'status', title: 'Status', render: (r) => getStatusBadge(r) },
+              ]}
+              data={transactions}
+              rowKey={'id'}
+              onRowClick={(r) => navigateToTransactionDetails(r.id)}
+              pagination={{ page: pageNumber, limit, total: transactions.length }}
+              onPageChange={(p) => {
+                if (p > pageNumber) handleNextPage();
+                else if (p < pageNumber) handlePrevPage();
+              }}
+              onLimitChange={(l) => { setLimit(l); setPageNumber(1); setPagination({ hasMore: false, startingAfter: null, endingBefore: null }); }}
+            />
+          </Fragment>
         )}
       </div>
     </div>

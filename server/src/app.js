@@ -48,7 +48,6 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api', reviewsRouter);
 app.use('/api/invitations', invitationsRouter);
 app.use('/api/stripe', stripeRouter);
-// Tables routes are mounted under /api/restaurants/:restaurantId/tables via restaurants router
 const rolesController = require('./controllers/rolesController');
 const verifyAdmin = require('./middleware/verifyAdmin');
 app.get('/api/roles/permissions-structure', verifyAdmin, rolesController.getPermissionsStructure);
@@ -93,4 +92,4 @@ app.get('/api/debug/token', async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-module.exports = app;
+module.exports = app; 

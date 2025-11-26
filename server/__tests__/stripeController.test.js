@@ -79,6 +79,8 @@ describe('Stripe Controller - createPaymentLink', () => {
       ],
       subtotal: 5.0,
       total: 5.0,
+      orderType: 'delivery',
+      deliveryAddress: { line1: '123 Main St', city: 'Town', postalCode: '99999' }
     };
 
     const response = await request(app)
@@ -89,40 +91,15 @@ describe('Stripe Controller - createPaymentLink', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.url).toBeTruthy();
     expect(response.body.data.pendingOrderId).toBeTruthy();
+    // ensure pending order has orderType and delivery address
+    const pendingId = response.body.data.pendingOrderId;
+    const pendingSnapshot = await require('firebase-admin').database().ref(`pendingOrders/${pendingId}`).get();
+    expect(pendingSnapshot.val().orderType).toBe('delivery');
+    expect(pendingSnapshot.val().deliveryAddress.line1).toBe('123 Main St');
   });
 });
 
-describe('Hold Orders endpoints', () => {
-  it('should create, list and delete a hold order', async () => {
-    // create hold
-    const payload = {
-      items: [{ itemId: 'i1', name: 'Fries', price: 2.5, quantity: 1 }],
-      customerInfo: { name: 'Bob', phone: '0123' },
-      holdName: 'Table 4 - Left'
-    };
-
-    const createRes = await request(app)
-      .post('/api/orders/restaurant/rest_1/hold')
-      .send(payload)
-      .expect(201);
-
-    expect(createRes.body.success).toBe(true);
-    const holdId = createRes.body.data.id;
-
-    const listRes = await request(app)
-      .get('/api/orders/restaurant/rest_1/holds')
-      .expect(200);
-
-    expect(Array.isArray(listRes.body.data)).toBe(true);
-    expect(listRes.body.data.length).toBeGreaterThan(0);
-
-    const deleteRes = await request(app)
-      .delete(`/api/orders/restaurant/rest_1/hold/${holdId}`)
-      .expect(200);
-
-    expect(deleteRes.body.success).toBe(true);
-  });
-});
+// Held orders endpoints deprecated: replaced with table-based storage
 
 describe('Stripe Controller - processPayment', () => {
   it('should process card payment and create order for pending order', async () => {
@@ -146,5 +123,13 @@ describe('Stripe Controller - processPayment', () => {
 
     expect(processRes.body.success).toBe(true);
     expect(processRes.body.data.status).toBe('succeeded');
+    // verify final order stored has orderType (null by default) and items
+    const restaurantsDb = require('firebase-admin').database();
+    const ordersSnap = await restaurantsDb.ref(`restaurants/rest_100/orders`).get();
+    const ordersVal = ordersSnap.val();
+    const createdOrder = Object.values(ordersVal).pop();
+    expect(createdOrder).toBeDefined();
+    expect(createdOrder.items).toBeDefined();
+    expect(createdOrder.orderType).toBeDefined();
   });
 });

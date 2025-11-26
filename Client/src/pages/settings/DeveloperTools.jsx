@@ -44,7 +44,7 @@ export default function DeveloperTools() {
         amount: 25.5,
         totalAmount: 25.5,
         currency: "USD",
-        guestUuid: null, // For testing guest orders
+        guestUuid: null, 
         items: [
           {
             itemId: "test-item-001",

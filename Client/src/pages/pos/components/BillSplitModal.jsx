@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function BillSplitModal({ cart, total, onClose, onSplit }) {
-  const [splitType, setSplitType] = useState("equal"); // equal, by-item, by-person
+  const [splitType, setSplitType] = useState("equal"); 
   const [numPeople, setNumPeople] = useState(2);
   const [itemAssignments, setItemAssignments] = useState({});
   const [personNames, setPersonNames] = useState(["Người 1", "Người 2"]);
@@ -55,7 +55,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">Tách hóa đơn</h2>
@@ -69,10 +68,7 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
             </button>
           </div>
         </div>
-
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Split Type Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Phương thức tách
@@ -104,8 +100,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
               </button>
             </div>
           </div>
-
-          {/* Number of People */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Số người
@@ -128,8 +122,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
               </button>
             </div>
           </div>
-
-          {/* Person Names */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Tên người (tùy chọn)
@@ -151,8 +143,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
               ))}
             </div>
           </div>
-
-          {/* Item Assignment (if by-item) */}
           {splitType === "by-item" && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -183,8 +173,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
               </div>
             </div>
           )}
-
-          {/* Preview */}
           <div className="bg-blue-50 rounded-lg p-4">
             <div className="text-sm font-medium text-blue-900 mb-2">Xem trước</div>
             {splitType === "equal" ? (
@@ -203,8 +191,6 @@ export default function BillSplitModal({ cart, total, onClose, onSplit }) {
             )}
           </div>
         </div>
-
-        {/* Footer */}
         <div className="border-t border-gray-200 p-6 bg-white">
           <div className="flex gap-3">
             <button

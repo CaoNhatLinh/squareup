@@ -1,4 +1,3 @@
-import React from "react";
 import { HiOutlineTrash } from "react-icons/hi2";
 
 export default function BulkActionBar({

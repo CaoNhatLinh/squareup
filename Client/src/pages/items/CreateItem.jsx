@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import { useState } from "react";
 import { useNavigate, useParams } from 'react-router-dom'
+import useAppStore from '@/store/useAppStore';
 import { createItem } from '@/api/items'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { useToast } from '@/hooks/useToast'
@@ -8,7 +9,8 @@ import { Input, Button, Dropdown, Checkbox } from '@/components/ui';
 import { useLoaderData } from 'react-router-dom'
 export default function CreateItem() {
   const navigate = useNavigate()
-  const { restaurantId } = useParams()
+  const { restaurantId: paramRestaurantId } = useParams()
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const { uploadImage, uploading } = useImageUpload()
   const { success, error } = useToast()
  const loaderData = useLoaderData();
@@ -28,9 +30,7 @@ export default function CreateItem() {
   const [categorySearch, setCategorySearch] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
 
-  const handleClose = () => {
-    navigate(`/${restaurantId}/items`)
-  }
+  const handleClose = () => navigate('/restaurant/items')
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0]
@@ -69,7 +69,7 @@ export default function CreateItem() {
       })
       
       success(`Item "${formData.name}" created successfully!`)
-      navigate(`/${restaurantId}/items`)
+      navigate('/restaurant/items')
     } catch (err) {
       console.error('Failed to create item:', err)
       error('Failed to create item: ' + err.message)

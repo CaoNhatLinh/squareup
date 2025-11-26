@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { fetchTransactionDetails, refundTransaction } from "@/api/transactions";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -18,7 +19,8 @@ import {
 } from "react-icons/hi2";
 
 export default function TransactionDetails() {
-  const { restaurantId, paymentIntentId } = useParams();
+  const {  paymentIntentId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) ;
   const { error: showError, success: showSuccess } = useToast();
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,8 @@ export default function TransactionDetails() {
 
   useEffect(() => {
     loadTransactionDetails();
+
+  
   }, [restaurantId, paymentIntentId]);
 
   const loadTransactionDetails = async () => {
@@ -36,7 +40,7 @@ export default function TransactionDetails() {
       setLoading(true);
       const data = await fetchTransactionDetails(restaurantId, paymentIntentId);
       setTransaction(data);
-      const refundableAmount = data.amount / 100 - data.refunded_amount;
+      const refundableAmount = data.amount - data.refunded_amount;
       setRefundAmount(refundableAmount.toFixed(2));
     } catch (err) {
       console.error("Error loading transaction:", err);
@@ -68,7 +72,7 @@ export default function TransactionDetails() {
       const refundData = {
         reason: refundReason,
       };
-      // Chỉ gửi amount nếu là partial refund hoặc nếu số tiền nhập khác tổng số tiền còn lại
+      
       if (parseFloat(refundAmount).toFixed(2) !== refundableAmount.toFixed(2)) {
         refundData.amount = parseFloat(refundAmount);
       }
@@ -139,7 +143,7 @@ export default function TransactionDetails() {
   };
 
   const formatAmount = (amount, currency) => {
-    // ✅ Xử lý giá trị NaN (ví dụ: phí hoặc net amount khi chưa tính toán)
+    
     if (isNaN(amount) || amount === null) return "—";
 
     return new Intl.NumberFormat("en-US", {
@@ -148,7 +152,7 @@ export default function TransactionDetails() {
     }).format(amount);
   };
 
-  // Tính số tiền có thể hoàn lại (dựa trên amount / 100)
+  
   const refundableAmount = transaction
     ? transaction.amount / 100 - transaction.refunded_amount
     : 0;
@@ -178,14 +182,14 @@ export default function TransactionDetails() {
     );
   }
 
-  // Lấy chi tiết order
+  
   const order = transaction.order || {};
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8">
         <Link
-          to={`/${restaurantId}/transactions`}
+          to={`/restaurant/transactions`}
           className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 mb-6 font-medium"
         >
           <HiOutlineArrowLeft className="w-5 h-5" />
@@ -217,10 +221,7 @@ export default function TransactionDetails() {
           )}
         </div>
       </div>
-
-      {/* Nội dung chính */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* CỘT 1: THÔNG TIN ĐƠN HÀNG VÀ TÀI CHÍNH */}
         <div className="lg:col-span-2 space-y-6">
           {transaction.order && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -228,8 +229,6 @@ export default function TransactionDetails() {
                 <HiArrowPath className="w-5 h-5 text-red-600" />
                 Order Details ({order.orderId || "N/A"})
               </h2>
-
-              {/* Customer Info */}
               <div className="mb-4 pb-4 border-b border-slate-200">
                 <p className="text-sm font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
                   <HiOutlineUser className="w-4 h-4 text-slate-500" />
@@ -238,15 +237,18 @@ export default function TransactionDetails() {
                 <p className="text-sm font-medium text-slate-700">
                   {transaction.customer_email}
                 </p>
-                {order.customerInfo?.address && (
+                {(order.deliveryAddress || order.customerInfo?.address) && (
                   <p className="text-sm text-slate-600 mt-1">
-                    {order.customerInfo.address.city},{" "}
-                    {order.customerInfo.address.state}
+                    {order.deliveryAddress?.city || order.customerInfo?.address?.city}, {order.deliveryAddress?.state || order.customerInfo?.address?.state}
                   </p>
                 )}
+                {order.orderType && (
+                  <p className="text-sm text-slate-600 mt-1">Order type: {order.orderType}</p>
+                )}
+                {order.seatNumber && (
+                  <p className="text-sm text-slate-600 mt-1">Seat: {order.seatNumber}</p>
+                )}
               </div>
-
-              {/* Item List */}
               <div className="space-y-4 mb-6">
                 {order.items?.map((item, idx) => (
                   <div
@@ -286,8 +288,6 @@ export default function TransactionDetails() {
                   </div>
                 ))}
               </div>
-
-              {/* Discount/Subtotal Breakdown */}
               <div className="border-y border-slate-200 py-3 mb-6 space-y-1.5">
                 <div className="flex justify-between items-center text-sm text-slate-600">
                   <span>Subtotal</span>
@@ -317,8 +317,6 @@ export default function TransactionDetails() {
                   </div>
                 )}
               </div>
-
-              {/* Final Total */}
               <div className="pt-2">
                 <div className="flex justify-between items-center">
                   <p className="text-lg font-extrabold text-slate-900">
@@ -329,8 +327,6 @@ export default function TransactionDetails() {
                   </p>
                 </div>
               </div>
-
-              {/* Cancellation Status */}
               {order.status === "cancelled" && (
                 <div className="mt-6 pt-4 border-t border-red-300 bg-red-50 p-4 rounded-xl">
                   <h3 className="text-sm font-bold text-red-900 mb-2 flex items-center gap-1">
@@ -419,10 +415,7 @@ export default function TransactionDetails() {
             </dl>
           </div>
         </div>
-
-        {/* CỘT 2: THÔNG TIN KHÁCH HÀNG & LỊCH SỬ */}
         <div className="space-y-6">
-          {/* Customer */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <HiOutlineUser className="w-5 h-5 text-red-600" />
@@ -471,8 +464,6 @@ export default function TransactionDetails() {
               )}
             </dl>
           </div>
-
-          {/* Activity / Events */}
           {transaction.events && transaction.events.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
@@ -501,8 +492,6 @@ export default function TransactionDetails() {
               </div>
             </div>
           )}
-
-          {/* Refunds History */}
           {transaction.refunds && transaction.refunds.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
@@ -552,8 +541,6 @@ export default function TransactionDetails() {
           )}
         </div>
       </div>
-
-      {/* REFUND DIALOG (MODAL) */}
       {showRefundDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 border border-red-200">

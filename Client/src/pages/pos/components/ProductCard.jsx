@@ -16,7 +16,6 @@ export default function ProductCard({ item, onClick, onQuickAdd }) {
           : "cursor-pointer border-gray-200 hover:border-red-400 hover:shadow-lg"
       }`}
     >
-      {/* Image */}
       <div className="relative h-32 bg-gray-100">
         {item.image ? (
           <img
@@ -43,30 +42,23 @@ export default function ProductCard({ item, onClick, onQuickAdd }) {
             </svg>
           </div>
         )}
-
-        {/* Discount Badge */}
         {hasDiscount && !isSoldOut && (
           <div className="absolute top-2 right-2">
             <Badge variant="danger">-{item.discountPercent}%</Badge>
           </div>
         )}
 
-        {/* Low Stock Badge */}
         {isLowStock && !isSoldOut && (
           <div className="absolute top-2 left-2">
             <Badge variant="warning">{item.stock} left</Badge>
           </div>
         )}
-
-        {/* Sold Out Badge */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <Badge variant="danger" size="large">OUT OF STOCK</Badge>
           </div>
         )}
       </div>
-
-      {/* Info */}
       <div className="p-3">
         <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
           {item.name}

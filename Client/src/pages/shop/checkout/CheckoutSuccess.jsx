@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
+import { Button } from '@/components/ui';
 import { getOrderBySession } from "@/api/orders";
 import { useShop } from "@/context/ShopContext.jsx";
 import { useToast } from "@/hooks/useToast";
@@ -7,8 +9,9 @@ import { HiCheckCircle, HiXCircle, HiOutlineDocumentDuplicate, HiOutlineShopping
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { restaurantId } = useParams();
-  const { clearCart } = useShop();
+  const { slug } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
+  const { clearCart, restaurant } = useShop();
   const { success, error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
@@ -46,7 +49,7 @@ export default function CheckoutSuccess() {
         }
       } catch (err) {
         console.error("Error fetching order:", err);
-        
+
         if (err.response?.status === 404 && retryCount < 10) {
           setTimeout(() => {
             setRetryCount(prev => prev + 1);
@@ -62,7 +65,7 @@ export default function CheckoutSuccess() {
 
     fetchOrder();
   }, [searchParams, clearCart, retryCount, restaurantId, success, showError]);
-  const trackUrl = `/track-order/${displayOrderId}`;
+  const trackUrl = `/${slug || restaurant?.slug || ''}/order/track-order/${displayOrderId}`;
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -90,12 +93,7 @@ export default function CheckoutSuccess() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-3">Payment Failed</h1>
           <p className="text-gray-600 mb-8">{error}</p>
-          <button
-            onClick={() => navigate(`/shop/${restaurantId}`)}
-            className="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-red-700 transition-colors shadow-md"
-          >
-            Back to Menu
-          </button>
+          <Button onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order`)} variant="primary" className="w-full px-6 py-3">Back to Menu</Button>
         </div>
       </div>
     );
@@ -107,7 +105,7 @@ export default function CheckoutSuccess() {
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <HiCheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        
+
         <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Order Confirmed!</h1>
         <p className="text-gray-600 mb-8 text-base">
           Your payment has been processed successfully. Your order is now being prepared.
@@ -133,39 +131,33 @@ export default function CheckoutSuccess() {
                 <HiOutlineDocumentDuplicate className="w-4 h-4" /> Copy ID
               </button>
             </div>
-            
+
             <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium">Total Amount:</span>
-                    <span className="font-extrabold text-2xl text-green-600">
-                    ${order.amount.toFixed(2)}
-                    </span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-gray-600 font-medium">Ordered From:</span>
-                    <span className="font-semibold text-gray-800">{order.restaurantName}</span>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 font-medium">Total Amount:</span>
+                <span className="font-extrabold text-2xl text-green-600">
+                  ${order.amount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Ordered From:</span>
+                <span className="font-semibold text-gray-800">{order.restaurantName}</span>
+              </div>
             </div>
           </div>
         )}
 
         <div className="space-y-3">
-          <a
-          href={trackUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-red-700 transition-colors shadow-md flex items-center justify-center gap-2"
-        >
-          <HiOutlineMagnifyingGlass className="w-6 h-6" />
-          Track Your Order
-        </a>
-          <button
-            onClick={() => navigate(`/shop/${restaurantId}`)}
-            className="w-full bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-300 transition-all shadow-md"
-          >
+          <a href={trackUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2">
+            <Button variant="primary" className="w-full px-6 py-3 flex items-center justify-center gap-2">
+              <HiOutlineMagnifyingGlass className="w-6 h-6" />
+              Track Your Order
+            </Button>
+          </a>
+          <Button onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order`)} variant="outline" className="w-full flex items-center justify-center gap-2">
             <HiOutlineShoppingBag className="inline-block w-6 h-6 mr-2 -mt-1" />
             Continue Shopping
-          </button>
+          </Button>
         </div>
       </div>
     </div>

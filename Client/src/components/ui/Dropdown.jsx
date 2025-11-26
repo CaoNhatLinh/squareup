@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from "react";
 import { HiChevronDown, HiCheck, HiSearch } from 'react-icons/hi';
-
 const Dropdown = ({
   options = [],
   value,

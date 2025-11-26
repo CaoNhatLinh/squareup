@@ -1,8 +1,6 @@
-// Cart helper utilities for POS
 
-/**
- * Generate a unique cart key for an item with modifiers
- */
+
+
 export const generateCartKey = (itemId, selectedOptions = [], specialInstruction = '') => {
   const optionsKey = selectedOptions
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -12,9 +10,7 @@ export const generateCartKey = (itemId, selectedOptions = [], specialInstruction
   return `${itemId}${optionsKey ? `::${optionsKey}` : ''}${instructionKey}`;
 };
 
-/**
- * Check if two items have the same modifiers and notes
- */
+
 export const isSameCartItem = (item1, item2) => {
   if (item1.itemId !== item2.itemId) return false;
   
@@ -32,28 +28,24 @@ export const isSameCartItem = (item1, item2) => {
   return optionsMatch && notesMatch;
 };
 
-/**
- * Merge cart item if duplicate exists, otherwise add new
- */
+
 export const mergeOrAddCartItem = (cart, newItem) => {
   const existingIndex = cart.findIndex(item => isSameCartItem(item, newItem));
   
   if (existingIndex >= 0) {
-    // Merge quantities
+    
     return cart.map((item, idx) => 
       idx === existingIndex 
         ? { ...item, quantity: item.quantity + newItem.quantity }
         : item
     );
   } else {
-    // Add as new item
+    
     return [...cart, { ...newItem, id: `${newItem.itemId}-${Date.now()}-${Math.random()}` }];
   }
 };
 
-/**
- * Categorize items for kitchen vs bar
- */
+
 export const categorizeItemsForPrint = (items, kitchenCategories = [], barCategories = []) => {
   const kitchen = [];
   const bar = [];

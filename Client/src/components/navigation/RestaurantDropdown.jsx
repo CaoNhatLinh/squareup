@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +13,7 @@ import {
 } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
 
-export default function RestaurantDropdown({ restaurantName }) {
+export default function RestaurantDropdown({ restaurantName, collapsed = false, logoUrl }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { setSelectedRestaurantId } = useRestaurantSelection();
@@ -41,26 +41,36 @@ export default function RestaurantDropdown({ restaurantName }) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full flex items-center justify-between font-bold text-lg text-gray-800 hover:bg-gray-100 px-4 py-3 rounded-xl transition-colors"
+        className={`w-full flex items-center justify-between font-bold text-lg text-gray-800 hover:bg-gray-100 px-4 py-3 rounded-xl transition-colors ${collapsed ? 'px-3 py-2' : ''}`}
         aria-expanded={isOpen}
         aria-controls="account-drawer"
+        title={collapsed ? restaurantName : undefined}
       >
         <div className="flex items-center gap-3">
-          <span>{restaurantName}</span>
+          <div className={`w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center text-sm font-semibold text-gray-800 ${collapsed ? 'w-8 h-8' : ''}`}>
+            {logoUrl ? (
+              <img src={logoUrl} alt="logo" className="w-8 h-8 object-contain rounded-md" />
+            ) : (
+              <span>{restaurantName?.split(' ').map(s => s[0]).slice(0,2).join('')}</span>
+            )}
+          </div>
+          {!collapsed && <span>{restaurantName}</span>}
         </div>
-        <svg
-          className="w-5 h-5 text-gray-500 transform rotate-90 transition-transform duration-200"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        {!collapsed && (
+          <svg
+            className="w-5 h-5 text-gray-500 transform rotate-90 transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        )}
       </button>
 
       {isOpen &&

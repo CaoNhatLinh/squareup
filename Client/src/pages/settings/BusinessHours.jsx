@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { updateBusinessHours } from "@/api/restaurants";
 import { DAY_LABELS } from "@/constants/scheduleConstants";
@@ -16,7 +15,6 @@ import { FaDoorOpen } from "react-icons/fa";
 import PageHeader from "@/components/common/PageHeader";
 
 export default function BusinessHours() {
-  const { restaurantId } = useParams();
   const { restaurant, updateRestaurant } = useRestaurant();
   const [hours, setHours] = useState({});
   const [saving, setSaving] = useState(false);
@@ -121,7 +119,7 @@ export default function BusinessHours() {
     setSaving(true);
     setMessage("");
     try {
-      await updateBusinessHours(restaurantId, hours);
+      await updateBusinessHours(restaurant.id, hours);
       updateRestaurant({ hours });
       setMessage("Business hours updated successfully!");
       setTimeout(() => setMessage(""), 4000);

@@ -1,4 +1,4 @@
-import * as client from './apiClient';
+import * as client from '@/api/apiClient';
 
 export const fetchActiveDiscounts = async (restaurantId) => {
   try {

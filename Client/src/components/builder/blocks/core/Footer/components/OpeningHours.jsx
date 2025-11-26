@@ -1,0 +1,99 @@
+const OpeningHours = ({ sortedHoursArray, resolvedBtnBg, bgColor, secondaryResolved, blockId }) => {
+  const isSecondaryBg = bgColor === secondaryResolved;
+
+  return (
+    <div
+      className="rounded-2xl p-6 space-y-3 shadow-lg"
+      style={{
+        backgroundColor: isSecondaryBg ? "#f9fafb" : "#f3f4f6",
+        border: `1px solid ${isSecondaryBg ? "#e5e7eb" : "#d1d5db"}`,
+      }}
+      data-control="opening-hours"
+      data-block-id={blockId}
+    >
+      {sortedHoursArray.map((hour, index) => {
+        const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+        const dayName = hour.day.charAt(0).toUpperCase() + hour.day.slice(1).toLowerCase();
+        const isToday = dayName === today;
+
+        let timeSlotsData = [];
+
+        try {
+          if (Array.isArray(hour.timeSlots)) {
+            timeSlotsData = hour.timeSlots.filter(slot => slot && typeof slot === 'object');
+          } else if (hour.timeSlots && typeof hour.timeSlots === 'object') {
+            if (Array.isArray(hour.timeSlots.timeSlots)) {
+              timeSlotsData = hour.timeSlots.timeSlots.filter(slot => slot && typeof slot === 'object');
+            } else if (hour.timeSlots.open || hour.timeSlots.close) {
+              timeSlotsData = [hour.timeSlots];
+            }
+          }
+
+          if (timeSlotsData.length === 0 && (hour.open || hour.close)) {
+            timeSlotsData = [{ open: hour.open, close: hour.close }];
+          }
+
+          if (timeSlotsData.length === 0) {
+            timeSlotsData = [{ open: "9:00 AM", close: "10:00 PM" }];
+          }
+        } catch (error) {
+          console.warn('Error processing timeSlots for', dayName, error);
+          timeSlotsData = [{ open: "9:00 AM", close: "10:00 PM" }];
+        }
+
+        let hourText = "9:00 AM - 10:00 PM";
+
+        try {
+          if (hour.closed || hour.isClosed) {
+            hourText = "Closed";
+          } else {
+            const timeStrings = timeSlotsData
+              .filter(slot => slot && typeof slot === 'object')
+              .map((slot) => {
+                const open = slot.open || slot.start || "9:00 AM";
+                const close = slot.close || slot.end || "10:00 PM";
+                return `${open} - ${close}`;
+              })
+              .filter(str => str && typeof str === 'string');
+
+            hourText = timeStrings.length > 0 ? timeStrings.join(", ") : "9:00 AM - 10:00 PM";
+          }
+        } catch (error) {
+          console.warn('Error constructing hourText for', dayName, error);
+          hourText = "9:00 AM - 10:00 PM";
+        }
+
+        return (
+          <div
+            key={index}
+            className={`flex justify-between items-center py-3 px-4 rounded-xl transition-all ${isToday ? "border-l-4 bg-orange-50" : "hover:bg-gray-100"}`}
+            style={{
+              backgroundColor: isToday ? `${resolvedBtnBg}10` : undefined,
+              borderLeftColor: isToday ? resolvedBtnBg : undefined,
+            }}
+          >
+            <span
+              className={`font-bold whitespace-nowrap ${isToday ? "text-orange-600" : "text-gray-700"}`}
+              style={{ color: isToday ? resolvedBtnBg : undefined }}
+            >
+              {dayName}
+              {isToday && (
+                <span className="ml-3 text-xs text-white px-2.5 py-1 rounded-full font-extrabold" style={{ backgroundColor: resolvedBtnBg }}>
+                  Today
+                </span>
+              )}
+            </span>
+            <span
+              className={`text-sm whitespace-nowrap ${hour.closed || hour.isClosed || isToday ? "font-extrabold" : "text-gray-600"}`}
+              style={{ color: (hour.closed || hour.isClosed || isToday) ? resolvedBtnBg : undefined }}
+            >
+              {hourText}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export default OpeningHours;

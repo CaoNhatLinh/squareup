@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { getTables, deleteTable } from "@/api/tables";
@@ -16,12 +16,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Plus, Users, Printer, Trash2 } from "lucide-react";
+} from "@/components/ui/DropdownMenu";
+import Badge from "@/components/ui/Badge";
+import {
+  HiDotsVertical,
+  HiPlus,
+  HiUser,
+  HiPrinter,
+  HiTrash,
+} from "react-icons/hi";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { printKitchenOrder } from "@/utils/printUtils";
-import MergeTablesModal from "./components/MergeTablesModal";
+import MergeTablesModal from "@/pages/pos/components/MergeTablesModal";
 
 export default function TableListPage() {
   const { restaurant, loading: restaurantLoading } = useRestaurant();
@@ -34,10 +40,10 @@ export default function TableListPage() {
   const [tableToDelete, setTableToDelete] = useState(null);
   const [mergeModalOpen, setMergeModalOpen] = useState(false);
 
-  // Load tables
+  
   const loadTables = async () => {
     if (!restaurant?.id) return;
-    
+
     setLoading(true);
     try {
       const data = await getTables(restaurant.id);
@@ -52,20 +58,20 @@ export default function TableListPage() {
 
   useEffect(() => {
     loadTables();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [restaurant?.id]);
 
-  // Handle create new table
+  
   const handleCreateTable = () => {
     navigate(`/pos/table/new`);
   };
 
-  // Handle open table
+  
   const handleOpenTable = (tableId) => {
     navigate(`/pos/table/${tableId}`);
   };
 
-  // Handle delete table
+  
   const handleDeleteClick = (table) => {
     setTableToDelete(table);
     setDeleteDialogOpen(true);
@@ -87,7 +93,7 @@ export default function TableListPage() {
     }
   };
 
-  // Handle print kitchen order
+  
   const handlePrintKitchenOrder = (table) => {
     if (!table.items || table.items.length === 0) {
       showError("No items to print");
@@ -100,14 +106,13 @@ export default function TableListPage() {
         items: table.items,
         restaurantName: restaurant.name,
       });
-      showSuccess("Kitchen order sent to printer");
+      showSuccess("Kitchen order sent to HiPrinter ");
     } catch (error) {
       console.error("Failed to print kitchen order:", error);
       showError("Failed to print kitchen order");
     }
   };
 
-  // Calculate table total
   const calculateTableTotal = (table) => {
     if (!table.items || table.items.length === 0) return 0;
 
@@ -120,15 +125,13 @@ export default function TableListPage() {
       return total + basePrice + modifiersPrice;
     }, 0);
   };
-
-  // Get table status badge
   const getStatusBadge = (table) => {
     const hasItems = table.items && table.items.length > 0;
-    
+
     if (!hasItems) {
       return <Badge variant="outline">Available</Badge>;
     }
-    
+
     return <Badge variant="default">Occupied</Badge>;
   };
 
@@ -145,7 +148,6 @@ export default function TableListPage() {
 
   return (
     <div className="container mx-auto p-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Tables</h1>
@@ -153,99 +155,97 @@ export default function TableListPage() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setMergeModalOpen(true)} variant="outline">
-            <Users className="h-4 w-4 mr-2" />
+            <HiUser className="h-4 w-4 mr-2" />
             Merge Tables
-          </Button>
-          <Button onClick={handleCreateTable}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Table
           </Button>
         </div>
       </div>
 
-      {/* Tables Grid */}
-      {tables.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No tables yet</p>
-          <Button onClick={handleCreateTable}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Your First Table
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {tables.map((table) => {
-            const total = calculateTableTotal(table);
-            const itemCount = table.items?.length || 0;
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <Card
+          className="flex flex-col items-center justify-center p-6 text-center border-dashed border-2 border-gray-300 hover:border-red-500 hover:text-red-600 transition-colors cursor-pointer"
+          onClick={handleCreateTable}
+        >
+          <div className="bg-gray-100 rounded-full p-3 mb-4">
+            <HiPlus className="h-8 w-8 text-gray-500" />
+          </div>
+          <CardTitle className="text-xl font-bold mb-1">New table</CardTitle>
+          <CardDescription>Add a new table</CardDescription>
+        </Card>
 
-            return (
-              <Card
-                key={table.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleOpenTable(table.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{table.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {getStatusBadge(table)}
-                      </CardDescription>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePrintKitchenOrder(table);
-                          }}
-                          disabled={itemCount === 0}
-                        >
-                          <Printer className="h-4 w-4 mr-2" />
-                          Print Kitchen Order
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(table);
-                          }}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Table
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+        {tables.map((table) => {
+          const total = calculateTableTotal(table);
+          const itemCount = table.items?.length || 0;
+
+          return (
+            <Card
+              key={table.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleOpenTable(table.id)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl">{table.name}</CardTitle>
+                    <CardDescription className="mt-1">
+                      {getStatusBadge(table)}
+                    </CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button variant="ghost" size="small">
+                        <HiDotsVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePrintKitchenOrder(table);
+                        }}
+                        disabled={itemCount === 0}
+                      >
+                        <HiPrinter className="h-4 w-4 mr-2" />
+                        Print Kitchen Order
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(table);
+                        }}
+                        className="text-red-600"
+                      >
+                        <HiTrash className="h-4 w-4 mr-2" />
+                        Delete Table
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Items:</span>
+                    <span className="font-medium">{itemCount}</span>
+                  </div>
+                  {itemCount > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Items:</span>
-                      <span className="font-medium">{itemCount}</span>
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-semibold">
+                        ${(total / 100).toFixed(2)}
+                      </span>
                     </div>
-                    {itemCount > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total:</span>
-                        <span className="font-semibold">
-                          ${(total / 100).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -255,13 +255,10 @@ export default function TableListPage() {
         confirmText="Delete"
         variant="destructive"
       />
-
-      {/* Merge Tables Modal */}
       <MergeTablesModal
         open={mergeModalOpen}
         onOpenChange={setMergeModalOpen}
         tables={tables}
-        restaurantId={restaurant?.id}
         onSuccess={loadTables}
       />
     </div>

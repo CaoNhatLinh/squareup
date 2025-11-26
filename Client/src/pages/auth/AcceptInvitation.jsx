@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getInvitation, acceptInvitation } from '@/api/staff';
 import { useToast } from '@/hooks/useToast';
@@ -65,7 +65,7 @@ export default function AcceptInvitation() {
     try {
       setSubmitting(true);
 
-      // Accept invitation and create account
+      
       await acceptInvitation({
         token,
         password: formData.password,

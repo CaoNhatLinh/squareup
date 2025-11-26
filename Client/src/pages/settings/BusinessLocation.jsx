@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { useAuth } from '@/hooks/useAuth';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { updateBusinessLocation } from '@/api/restaurants';

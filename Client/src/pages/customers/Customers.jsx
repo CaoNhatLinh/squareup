@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import * as customersApi from "@/api/customers";
 import {
   HiOutlineUser,
   HiOutlineDownload,
   HiOutlineExternalLink,
 } from "react-icons/hi";
-// Note: `fetchCustomersCSV` available from `customersApi` namespace; single import above used throughout.
 import PageHeader from "@/components/common/PageHeader";
 import SearchBar from "@/components/common/SearchBar";
 import { Input, Button, DatePicker, Avatar, Table } from "@/components/ui";
 export default function Customers() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,15 +24,12 @@ export default function Customers() {
   const [minSpent, setMinSpent] = useState("");
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
-  // applied filters
   const [appliedMinOrders, setAppliedMinOrders] = useState("");
   const [appliedMinSpent, setAppliedMinSpent] = useState("");
   const [appliedDateFrom, setAppliedDateFrom] = useState(null);
   const [appliedDateTo, setAppliedDateTo] = useState(null);
   const [sortBy, setSortBy] = useState("last_order_date");
   const [sortDir, setSortDir] = useState("desc");
-
-  // Debounce search query so we don't spam the API while user types
   useEffect(() => {
     const id = setTimeout(() => setDebouncedQ(q), 500);
     return () => clearTimeout(id);

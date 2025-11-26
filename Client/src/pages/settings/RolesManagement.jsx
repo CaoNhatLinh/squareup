@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import { getRoles, deleteRole } from '@/api/roles';
 import { useToast } from '@/hooks/useToast';
 import PageHeader from "@/components/common/PageHeader";
-import RoleList from '@/components/settings/RoleList';
 import Table from '@/components/ui/Table';
 import ListEmpty from '@/components/common/ListEmpty';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
@@ -12,7 +12,7 @@ import { HiPlus } from 'react-icons/hi';
 import { useEffect, useCallback } from 'react';
 
 export default function RolesManagement() {
-  const { restaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) ;
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [roles, setRoles] = useState([]);
@@ -65,7 +65,7 @@ export default function RolesManagement() {
   };
 
   const handleEdit = (role) => {
-    navigate(`/${restaurantId}/settings/roles/${role.id}/edit`);
+    navigate(`/restaurant/settings/roles/${role.id}/edit`);
   };
 
   if (loading) {
@@ -82,7 +82,7 @@ export default function RolesManagement() {
         title="Roles & Permissions"
         subtitle="Manage roles and their permissions for your restaurant staff"
         actionLabel={<><HiPlus className="w-4 h-4 mr-1" />Create Role</>}
-        onAction={() => navigate(`/${restaurantId}/settings/roles/create`)}
+        onAction={() => navigate(`/restaurant/settings/roles/create`)}
       />
 
       {roles.length === 0 ? (
@@ -90,7 +90,7 @@ export default function RolesManagement() {
           title="No roles"
           subtitle="Get started by creating a new role."
           actionLabel="Create Role"
-          onAction={() => navigate(`/${restaurantId}/settings/roles/create`)}
+          onAction={() => navigate(`/restaurant/settings/roles/create`)}
         />
       ) : (
         <Table

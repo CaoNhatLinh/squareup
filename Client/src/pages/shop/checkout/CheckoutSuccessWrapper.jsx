@@ -1,5 +1,5 @@
 import { ShopProvider } from "@/context/ShopProvider.jsx";
-import CheckoutSuccess from "./CheckoutSuccess";
+import CheckoutSuccess from "@/pages/shop/checkout/CheckoutSuccess";
 
 export default function CheckoutSuccessWrapper() {
   return (

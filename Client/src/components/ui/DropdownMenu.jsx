@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { Children, cloneElement, useEffect, useRef, useState } from "react";
 
 export const DropdownMenu = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,12 +22,12 @@ export const DropdownMenu = ({ children }) => {
 
   return (
     <div ref={dropdownRef} className="relative inline-block">
-      {React.Children.map(children, (child) => {
+      {Children.map(children, (child) => {
         if (child.type === DropdownMenuTrigger) {
-          return React.cloneElement(child, { isOpen, setIsOpen });
+          return cloneElement(child, { isOpen, setIsOpen });
         }
         if (child.type === DropdownMenuContent) {
-          return React.cloneElement(child, { isOpen, setIsOpen });
+          return cloneElement(child, { isOpen, setIsOpen });
         }
         return child;
       })}
@@ -43,7 +43,7 @@ export const DropdownMenuTrigger = ({ children, asChild, isOpen, setIsOpen, onCl
   };
 
   if (asChild) {
-    return React.cloneElement(children, {
+    return cloneElement(children, {
       onClick: handleClick,
     });
   }
@@ -70,9 +70,9 @@ export const DropdownMenuContent = ({ children, align = 'start', isOpen, setIsOp
       onClick={(e) => e.stopPropagation()}
     >
       <div className="py-1">
-        {React.Children.map(children, (child) => {
+        {Children.map(children, (child) => {
           if (child.type === DropdownMenuItem) {
-            return React.cloneElement(child, { setIsOpen });
+            return cloneElement(child, { setIsOpen });
           }
           return child;
         })}

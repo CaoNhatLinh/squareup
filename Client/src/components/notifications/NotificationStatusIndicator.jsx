@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { HiBell, HiBellSlash } from 'react-icons/hi2';
-import { getNotificationPermissionStatus, requestNotificationPermission } from '../../utils/desktopNotification';
-import { useToast } from '../../hooks/useToast';
+import { getNotificationPermissionStatus, requestNotificationPermission } from '@/utils/desktopNotification';
+import { useToast } from '@/hooks/useToast';
 export function NotificationStatusIndicator() {
   const [permission, setPermission] = useState(getNotificationPermissionStatus());
   const { success } = useToast();

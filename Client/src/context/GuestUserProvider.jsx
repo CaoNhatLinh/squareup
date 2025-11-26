@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { GuestUserContext } from "./GuestUserContext";
+import { useEffect, useState } from "react";
+import { GuestUserContext } from "@/context/GuestUserContext";
 import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from 'uuid';
 import { cleanupOldGuestUserData } from "@/utils/guestUserCleanup";
+import useAppStore from '@/store/useAppStore';
 
 const GUEST_UUID_PREFIX = "guest_uuid_";
 
 export function GuestUserProvider({ children }) {
-  const { restaurantId } = useParams();
+  const params = useParams();
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const restaurantId = params?.restaurantId || storeRestaurantId;
   const [guestUuid, setGuestUuid] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +26,7 @@ export function GuestUserProvider({ children }) {
       try {
         const storageKey = `${GUEST_UUID_PREFIX}${restaurantId}`;
         let existingUuid = localStorage.getItem(storageKey);
-        // If the stored value is the string 'undefined' or falsy, treat as missing
+        
         if (existingUuid === 'undefined' || existingUuid === 'null' || !existingUuid) {
           existingUuid = null;
         }

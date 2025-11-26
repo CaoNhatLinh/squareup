@@ -1,6 +1,7 @@
- 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from "react"; 
+
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import * as customersApi from '@/api/customers';
 import { HiArrowCircleLeft } from 'react-icons/hi';
 import Table from '@/components/ui/Table';
@@ -10,7 +11,8 @@ function useQuery() {
 }
 
 export default function CustomerOrders() {
-  const { restaurantId, customerEmail } = useParams();
+  const { customerEmail } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId);
   const params = useQuery();
   const email = params.get('email') || (customerEmail ? decodeURIComponent(customerEmail) : '');
   const navigate = useNavigate();
@@ -45,14 +47,14 @@ export default function CustomerOrders() {
   }, [restaurantId, email, sortBy, sortDir, page, limit]);
 
   const gotoOrder = (orderId) => {
-    navigate(`/${restaurantId}/orders/${orderId}`);
+    navigate(`/restaurant/orders/${orderId}`);
   };
 
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <button
-          onClick={() => navigate(`/${restaurantId}/customers`)}
+          onClick={() => navigate(`/restaurant/customers`)}
           className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors font-medium"
         >
           <HiArrowCircleLeft className="w-6 h-6" />

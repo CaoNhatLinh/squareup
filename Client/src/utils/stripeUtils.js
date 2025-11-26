@@ -59,9 +59,9 @@ export const processStripePayment = async (paymentMethodId, amount, metadata = {
 };
 
 export const generateQRCode = (paymentUrl) => {
-  // Simple QR code generation using a library like 'qrcode'
-  // You'd need to install: npm install qrcode
-  // For now, return placeholder or use external service
+  
+  
+  
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentUrl)}`;
 };
 
@@ -88,7 +88,7 @@ export const setupStripeElements = (opts = {}) => {
   const defaultAppearance = {
     theme: 'stripe',
     variables: {
-      colorPrimary: '#ef4444', // red-600
+      colorPrimary: '#ef4444', 
       colorBackground: '#ffffff',
       colorText: '#111827',
       fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',

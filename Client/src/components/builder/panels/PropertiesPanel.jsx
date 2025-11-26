@@ -1,0 +1,144 @@
+import { memo } from "react";
+import { BLOCK_TYPES } from "@/components/builder/blockTypes";
+import VariantSelector from "@/components/builder/VariantSelector";
+import { VARIANT_THUMBNAILS } from "@/components/builder/variantThumbnails.jsx";
+import SchemaRenderer from "@/components/builder/ui/SchemaRenderer";
+import { computeSchemaPanelOptions, applyNavPropsToLinks } from "@/components/builder/utils/schemaUtils";
+import SettingsGroup from "@/components/builder/ui/SettingsGroup";
+
+const PropertiesPanel = memo(function PropertiesPanel({
+  selectedBlock,
+  onChange,
+  headerConfig,
+  onHeaderChange,
+  footerConfig,
+  onFooterChange,
+  selectedSection,
+  globalStyles,
+  activeControl,
+  setActiveControl,
+  globalUseRealData,
+}) {
+  if (selectedSection === 'header') {
+    const headerType = BLOCK_TYPES.find((t) => t.type === 'HEADER');
+    
+    const handleHeaderChange = (updatedConfig) => {
+      const applied = applyNavPropsToLinks(updatedConfig, headerConfig);
+      onHeaderChange(applied);
+    };
+    
+    const headerOptions = computeSchemaPanelOptions({ schema: headerType?.schema || [], selectedBlock: { id: 'HEADER', props: headerConfig }, globalUseRealData, activeControl });
+    const headerExcludes = headerOptions.excludeFields;
+    headerExcludes.push('title');
+    return (
+      <SettingsGroup title="Header Settings" description="Global header configuration">
+        <SchemaRenderer
+          schema={headerType?.schema || []}
+          data={headerConfig}
+          onChange={handleHeaderChange}
+          globalStyles={globalStyles}
+          selectedSection={'header'}
+          setActiveControl={setActiveControl}
+          activeControl={activeControl}
+          excludeFields={headerExcludes}
+          block={{ id: 'HEADER', props: headerConfig, type: 'HEADER' }}
+        />
+      </SettingsGroup>
+    );
+  }
+
+  if (selectedSection === 'footer') {
+    const footerType = BLOCK_TYPES.find((t) => t.type === 'FOOTER');
+    const footerOptions = computeSchemaPanelOptions({ schema: footerType?.schema || [], selectedBlock: { id: 'FOOTER', props: footerConfig }, globalUseRealData, activeControl });
+    const footerExcludes = footerOptions.excludeFields;
+    return (
+      <SettingsGroup title="Footer Settings" description="Global footer configuration">
+        <VariantSelector
+          blockType="FOOTER"
+          currentVariant={footerConfig.variant || footerType?.defaultProps?.variant}
+          onChange={(variant) => onFooterChange({ ...footerConfig, variant })}
+        />
+        <SchemaRenderer
+          schema={footerType?.schema || []}
+          data={footerConfig}
+          onChange={onFooterChange}
+          globalStyles={globalStyles}
+          selectedSection={'footer'}
+          setActiveControl={setActiveControl}
+          activeControl={activeControl}
+          excludeFields={footerExcludes}
+          block={{ id: 'FOOTER', props: footerConfig, type: 'FOOTER' }}
+        />
+      </SettingsGroup>
+    );
+  }
+
+  if (!selectedBlock) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 p-4 text-center">
+        <p>Select a block, header, or footer to edit properties</p>
+      </div>
+    );
+  }
+
+  const blockType = BLOCK_TYPES.find((t) => t.type === selectedBlock.type);
+  const schema = blockType?.schema || [];
+
+  const handleBlockChange = (newData) => {
+    onChange({
+      ...selectedBlock,
+      props: newData
+    });
+  };
+
+  const blockOptions = computeSchemaPanelOptions({ schema, selectedBlock, globalUseRealData, activeControl });
+  const hasVariants = VARIANT_THUMBNAILS[selectedBlock.type] && Object.keys(VARIANT_THUMBNAILS[selectedBlock.type]).length > 0;
+
+  let variantField = null;
+  if (hasVariants) {
+    if (!blockOptions.excludeFields) blockOptions.excludeFields = [];
+    
+    const allFields = schema.flatMap(group => group.fields || [group]);
+    variantField = allFields.find(field =>
+      field.type === 'select' &&
+      field.options &&
+      field.options.length > 1 &&
+      Object.keys(VARIANT_THUMBNAILS[selectedBlock.type]).some(variant =>
+        field.options.some(opt => opt.value === variant)
+      )
+    );
+    if (variantField) {
+      blockOptions.excludeFields.push(variantField.name);
+    }
+  }
+
+  return (
+    <SettingsGroup title={blockType?.label} description={blockType?.description}>
+      {hasVariants && variantField ? (
+        <VariantSelector
+          blockType={selectedBlock.type}
+          currentVariant={selectedBlock.props[variantField.name] || blockType.defaultProps?.[variantField.name]}
+          onChange={(variant) => {
+            handleBlockChange({ ...selectedBlock.props, [variantField.name]: variant });
+          }}
+        />
+      ) : null}
+
+
+        <SchemaRenderer
+          schema={schema}
+          data={selectedBlock.props}
+          onChange={handleBlockChange}
+          globalStyles={globalStyles}
+          selectedBlock={selectedBlock}
+          selectedSection={'block'}
+          setActiveControl={setActiveControl}
+          activeControl={activeControl}
+          forceShowGroupElements={blockOptions.forceShowGroupElements}
+          excludeFields={blockOptions.excludeFields}
+        />
+    </SettingsGroup>
+  );
+});
+
+export default PropertiesPanel;

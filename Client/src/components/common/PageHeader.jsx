@@ -1,22 +1,21 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-// Reusable page header used across the app.
-// Props:
-// - title: string
-// - subtitle: string (optional)
-// - Icon: React component for the left icon (optional)
-// - iconClassName: tailwind classes for icon
-// - showBack: boolean (show back button)
-// - onBack: function callback (optional)
-// - backTo: string route to navigate to on back (optional)
-// - searchBarProps: object (optional) — props forwarded to SearchBar if provided as component
-// - actionLabel: string (optional) — primary action button label
-// - actionLink: string (optional) — route for primary action button
-// - onAction: function (optional) — click handler for action button
-// - actionClassName: string (optional) — extra classes for action button
-// - rightChildren: React node (optional) — render additional controls on the right
-// - className: extra classes for the container
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default function PageHeader({
   title,
@@ -52,7 +51,6 @@ export default function PageHeader({
             className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-50"
             aria-label="Back"
           >
-            {/* simple left chevron */}
             <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>

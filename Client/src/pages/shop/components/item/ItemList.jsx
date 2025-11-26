@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import ItemCard from "./ItemCard";
+import { useMemo } from "react";
+import ItemCard from "@/pages/shop/components/item/ItemCard";
 
 export default function ItemList({
   categories,

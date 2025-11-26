@@ -1,0 +1,40 @@
+import SchemaField from "@/components/builder/inputs/SchemaField";
+import ListEditor from "@/components/builder/inputs/ListEditor";
+import { getByPath, setByPath } from "@/utils/objectUtils";
+
+export default function FieldRenderer({ fields, data, onChange, globalStyles, excludeFields = [] }) {
+  return (
+    <div className="space-y-4 ">
+          {fields
+            .filter((field) => !excludeFields.includes(field.name))
+            .map((field) => {
+        const value = getByPath(data, field.name);
+          const handleChange = (val) => {
+            const newData = setByPath({ ...data }, field.name, val);
+            onChange(newData);
+          };
+
+        return (
+          <div key={field.name} className="space-y-1">
+            {field.type === 'list' ? (
+                <ListEditor
+                  value={value}
+                  itemSchema={field.itemSchema || []}
+                  field={field}
+                  onChange={handleChange}
+                  globalStyles={globalStyles}
+                />
+            ) : (
+              <SchemaField
+                field={field}
+                value={value}
+                onChange={handleChange}
+                globalStyles={globalStyles}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

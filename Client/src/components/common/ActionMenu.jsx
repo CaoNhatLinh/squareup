@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { HiPencilSquare, HiTrash } from "react-icons/hi2";
 import { HiDotsHorizontal } from "react-icons/hi";
@@ -46,7 +46,7 @@ export default function ActionMenu({
           
           <Link
             to={editPath}
-            className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors duration-150" // padding, font và hover mới
+            className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors duration-150" 
             onClick={() => onToggle(false)}
           >
             <HiPencilSquare className="w-4 h-4 flex-shrink-0 text-gray-500 hover:text-red-700" />
@@ -63,7 +63,7 @@ export default function ActionMenu({
               }
               onToggle(false);
             }}
-            className="flex items-center gap-3 w-full text-left px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-150 border-t border-gray-100" // padding, font và hover mới, border mỏng hơn
+            className="flex items-center gap-3 w-full text-left px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-150 border-t border-gray-100" 
           >
             <HiTrash className="w-4 h-4 flex-shrink-0 text-red-500" />
              Delete

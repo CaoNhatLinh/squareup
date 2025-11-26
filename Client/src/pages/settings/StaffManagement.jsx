@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { getStaffMembers, inviteStaff, removeStaff, updateStaffRole } from '@/api/staff';
+import { useEffect, useState } from "react";
+import { useRestaurant } from "@/hooks/useRestaurant";
+
+import { getStaffMembers, inviteStaff, deleteStaff, updateStaffRole } from '@/api/staff';
 import { getRoles } from '@/api/roles';
 import { useToast } from '@/hooks/useToast';
 import { HiPlus } from 'react-icons/hi';
@@ -15,7 +16,8 @@ import Dropdown from '@/components/ui/Dropdown';
 import Avatar from '@/components/ui/Avatar';
 
 export default function StaffManagement() {
-  const { restaurantId } = useParams();
+  const { restaurant } = useRestaurant();
+  const restaurantId = restaurant?.id;
   const { success, error } = useToast();
   const [staff, setStaff] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -46,7 +48,7 @@ export default function StaffManagement() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [restaurantId]);
   const handleInviteSubmit = async (form) => {
     if (!form.email || !form.roleId) {
@@ -71,7 +73,7 @@ export default function StaffManagement() {
     }
 
     try {
-      await removeStaff(restaurantId, staffId);
+      await deleteStaff(restaurantId, staffId);
       success('Staff member removed successfully');
       fetchData();
     } catch (err) {

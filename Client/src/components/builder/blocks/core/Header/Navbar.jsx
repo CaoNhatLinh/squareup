@@ -1,0 +1,39 @@
+import StyledText from '@/components/builder/atoms/StyledText';
+import { resolveColor } from '@/components/builder/utils/colorUtils';
+
+export default function Navbar({ links = [], navGap = 24, navigation = {}, globalStyles = {}, blockId, mobile = false }) {
+  return (
+    <nav data-control="nav-container" data-block-id={blockId} className={mobile ? 'flex md:hidden flex-col' : 'hidden md:flex items-center'} style={mobile ? {} : { gap: `${navGap}px` }}>
+      {links.map((link, i) => {
+        const color = link.color || navigation?.color || globalStyles?.colors?.text;
+        const fontSize = link.fontSize ?? navigation?.fontSize ?? 14;
+        const isBold = link.bold ?? navigation?.bold ?? false;
+        const fontWeight = isBold ? 700 : (link.fontWeight ?? navigation?.fontWeight ?? 600);
+        const fontFamily = link.fontFamily ?? globalStyles?.typography?.bodyFont;
+        const isItalic = link.italic ?? navigation?.italic ?? false;
+        const isUnderline = link.underline ?? navigation?.underline ?? false;
+        
+        const inlineStyle = {
+          fontStyle: isItalic ? 'italic' : 'normal',
+          textDecoration: isUnderline ? 'underline' : 'none'
+        };
+
+        const itemSpacingStyle = !mobile && link.spacing ? { marginRight: `${link.spacing}px` } : {};
+
+        return (
+          <a key={i} href={link.url} data-control={`nav-${i}`} data-block-id={blockId} className={`transition-opacity hover:opacity-70 ${mobile ? 'px-4 py-2 border-b last:border-b-0' : ''}`} style={{...itemSpacingStyle, color: resolveColor(color, globalStyles)}}>
+            <StyledText
+              tag="span"
+              dataControl={`nav-${i}`}
+              dataBlockId={blockId}
+              className="inline-block"
+              styleConfig={{ fontSize, fontWeight, fontFamily, inlineStyle }}
+            >
+              {link.label}
+            </StyledText>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}

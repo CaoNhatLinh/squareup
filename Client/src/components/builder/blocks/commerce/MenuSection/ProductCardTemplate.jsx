@@ -1,0 +1,325 @@
+import StyledButton from "@/components/builder/atoms/StyledButton";
+import StyledText from "@/components/builder/atoms/StyledText";
+import { HiPlus } from "react-icons/hi";
+import { resolveColor } from "@/components/builder/utils/colorUtils";
+
+export default function ProductCardTemplate({
+  item,
+  config = {},
+  globalStyles = {},
+  blockId,
+  previewMode,
+  isPublic = false,
+  index,
+}) {
+  const {
+    preset = "classic",
+    imageRatio = "square",
+    imageWidth = 100,
+    borderRadius = "md",
+    hoverEffect = "zoom",
+    showImage = true,
+    titleSize = "md",
+    titleColor = "text",
+    pricePosition = "bottom",
+    priceColor = "primary",
+    showBadge = true,
+    badgePosition = "top-right",
+    badgeColor = "red",
+    showDescription = true,
+    descriptionLines = 2,
+    buttonText = "Add",
+    overlayColor = "#000000",
+    overlayOpacity = 0.5,
+  } = config.cardConfig || config;
+
+  
+  const radiusMap = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-2xl",
+  };
+
+  const ratioMap = {
+    square: "aspect-square",
+    video: "aspect-video",
+    portrait: "aspect-[3/4]",
+    wide: "aspect-[2/1]",
+  };
+
+  const titleSizeMap = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+    xl: "text-xl",
+  };
+
+  
+  const computedRadiusClass = typeof borderRadius === "string" ? radiusMap[borderRadius] : "";
+  const computedRadiusStyle = typeof borderRadius === "number" ? { borderRadius: `${borderRadius}px` } : {};
+
+  const primaryColor = resolveColor(globalStyles.palette?.primary || "orange", globalStyles) || "#F97316";
+  const titleColorValue = resolveColor(titleColor, globalStyles) || "#111827";
+  const priceColorValue = resolveColor(priceColor, globalStyles) || primaryColor;
+  const badgeColorValue = resolveColor(badgeColor, globalStyles) || primaryColor;
+
+  const getCoverGradientStyle = () => {
+    let r = 0, g = 0, b = 0;
+    const hex = overlayColor || "#000000";
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) {
+      r = parseInt(result[1], 16);
+      g = parseInt(result[2], 16);
+      b = parseInt(result[3], 16);
+    }
+    const opacityVal = overlayOpacity ?? 0.5;
+    return {
+      background: `linear-gradient(180deg, rgba(${r},${g},${b}, 0) 40%, rgba(${r},${g},${b}, ${opacityVal}) 100%)`,
+    };
+  };
+
+  const hoverClass = hoverEffect === "zoom" ? "group-hover:scale-105" : "";
+  const liftClass = hoverEffect === "lift" ? "hover:-translate-y-1 hover:shadow-lg" : "";
+
+  const lineHeightRem = 1.25;
+  const descMinHeight = showDescription ? `${descriptionLines * lineHeightRem}rem` : `${1 * lineHeightRem}rem`;
+
+  
+  const hasDistinctSubtitle =
+    !!(item?.subtitle && item.subtitle.toString().trim()) &&
+    (!item?.name || item.subtitle.toString().trim() !== item.name.toString().trim());
+
+  const hasDiscount = item.hasDiscount || false;
+  const discountedPrice = item.discountedPrice || item.price;
+  const discountPercent = item.discountPercent || 0;
+
+  
+  const getButtonComponent = (classNameOverride = "", onClickOverride, styleOverride = {}) => {
+    const effectiveConfig = config.cardConfig || config;
+    const btnConfig = { ...(effectiveConfig.buttonConfig || {}) };
+
+    if (typeof btnConfig.show === "undefined") btnConfig.show = true;
+    if (!btnConfig.show) return null;
+
+    const bStyle = btnConfig.style || "filled";
+
+    const bColor = resolveColor(btnConfig.color || primaryColor, globalStyles) || primaryColor;
+    const bTextColor = resolveColor(
+      btnConfig.textColor || (bStyle === "text" ? primaryColor : "#ffffff"),
+      globalStyles
+    ) || "#ffffff";
+
+    const buttonLabel = btnConfig.label || (isPublic ? "Order" : buttonText);
+    const isCircle = btnConfig.isCircle !== undefined ? btnConfig.isCircle : false;
+    const buttonIcon = btnConfig.buttonIcon !== undefined ? btnConfig.buttonIcon : true;
+
+    const handleButtonClick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (onClickOverride) onClickOverride(e);
+      else if (isPublic) {
+        window.location.href = `/${window.location.pathname.split("/")[1]}/order`;
+      }
+    };
+
+    return (
+      <StyledButton
+        styleConfig={{
+          style: bStyle,
+          color: bColor,
+          textColor: bTextColor,
+          rounded: btnConfig.rounded,
+          radius: btnConfig.radius,
+          shadow: btnConfig.shadow,
+          size: btnConfig.size,
+        }}
+        className={classNameOverride}
+        style={styleOverride}
+        onClick={handleButtonClick}
+        dataControl={`card-button-${index}`}
+        dataBlockId={blockId}
+        isCircle={isCircle}
+        buttonIcon={buttonIcon}
+        icon={buttonIcon ? <HiPlus className={!isCircle && buttonLabel ? "mr-2" : ""} /> : null}
+      >
+        {!isCircle && buttonLabel}
+      </StyledButton>
+    );
+  };
+
+  
+  const renderContentBody = (pricePositionOverride = pricePosition) => (
+    <div className="p-4 flex flex-col h-full relative">
+      <div className="flex justify-between items-start mb-1">
+        <div className="flex flex-col">
+          <StyledText
+            tag="h3"
+            className={`font-bold leading-tight ${titleSizeMap[titleSize]}`}
+            styleConfig={{
+              color: titleColorValue,
+              fontFamily: globalStyles.typography?.headingFont,
+            }}
+          >
+            {item.name}
+          </StyledText>
+          {hasDistinctSubtitle && (
+            <StyledText
+              tag="span"
+              className="text-xs font-medium opacity-80 mt-0.5"
+              styleConfig={{ color: titleColorValue }}
+            >
+              {item.subtitle}
+            </StyledText>
+          )}
+        </div>
+
+        {pricePositionOverride === "next-to-title" && (
+          <div className="flex flex-col items-end">
+            {hasDiscount && (
+              <span className="text-xs text-gray-400 line-through">
+                ${(item.price || 0).toFixed(2)}
+              </span>
+            )}
+            <span className="font-bold" style={{ color: priceColorValue }}>
+              ${hasDiscount ? (discountedPrice || 0).toFixed(2) : (item.price || 0).toFixed(2)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {showDescription && (
+        <StyledText
+          tag="p"
+          className={`text-sm text-gray-500 mb-4 ${descriptionLines ? `line-clamp-${descriptionLines}` : ""}`}
+          styleConfig={{
+            fontFamily: globalStyles.typography?.bodyFont,
+            inlineStyle: { minHeight: descMinHeight },
+          }}
+        >
+          {item.description || "\u00A0"}
+        </StyledText>
+      )}
+
+      <div className="mt-auto flex items-center justify-between pt-2">
+        {pricePositionOverride === "bottom" ? (
+          <div className="flex flex-col">
+            {hasDiscount && (
+              <span className="text-xs text-gray-400 line-through">
+                ${(item.price || 0).toFixed(2)}
+              </span>
+            )}
+            <span className="font-bold text-lg" style={{ color: priceColorValue }}>
+              ${hasDiscount ? (discountedPrice || 0).toFixed(2) : (item.price || 0).toFixed(2)}
+            </span>
+          </div>
+        ) : (
+          <div />
+        )}
+
+        {getButtonComponent()}
+      </div>
+    </div>
+  );
+
+  
+  return (
+    <div
+      className={`group bg-white border border-gray-100 overflow-hidden transition-all duration-300 ${computedRadiusClass} ${liftClass}`}
+      style={computedRadiusStyle}
+      data-control="card-template"
+      data-block-id={blockId}
+    >
+      {preset === "classic" && (
+        <>
+          {showImage && item.image && (
+            <div
+              className={`relative overflow-hidden w-full ${ratioMap[imageRatio]} bg-gray-100`}
+              style={{ width: `${imageWidth}%` }}
+            >
+              <img src={item.image} alt={item.name} className={`w-full h-full object-cover transition-transform duration-500 ${hoverClass}`} loading="lazy" />
+              {showBadge && hasDiscount && (
+                <div className={`absolute ${badgePosition === "top-left" ? "top-2 left-2" : "top-2 right-2"} text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm z-10`} style={{ backgroundColor: badgeColorValue }}>
+                  {discountPercent}% OFF
+                </div>
+              )}
+            </div>
+          )}
+          <div className="p-4 flex flex-col flex-grow">
+            {renderContentBody()}
+          </div>
+        </>
+      )}
+      {preset === "image-left" && (
+        <div className="flex flex-col md:flex-row md:gap-4 h-full">
+          {showImage && item.image && (
+            <div
+              className={`relative w-full md:w-1/3 ${ratioMap[imageRatio]} bg-gray-100 overflow-hidden shrink-0`}
+              style={{ width: `${imageWidth}%` }}
+            >
+              <img src={item.image} alt={item.name} className={`w-full h-full object-cover ${hoverClass}`} loading="lazy" />
+              {showBadge && hasDiscount && (
+                <div className={`absolute ${badgePosition === "top-left" ? "top-2 left-2" : "top-2 right-2"} text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm z-10`} style={{ backgroundColor: badgeColorValue }}>
+                  {discountPercent}% OFF
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex-1">{renderContentBody("bottom")}</div>
+        </div>
+      )}
+      {preset === "compact" && (
+        <div className={`flex items-center gap-4 p-4 ${previewMode === "desktop" ? "text-base" : "text-sm"}`}>
+          {showImage && item.image && (
+            <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <StyledText tag="h3" className={`font-bold ${titleSizeMap[titleSize]} truncate`} styleConfig={{ color: titleColorValue }}>
+              {item.name}
+            </StyledText>
+            {showDescription && (
+              <p className="text-sm text-gray-500 line-clamp-1" style={{ minHeight: descMinHeight }}>
+                {item.description || "\u00A0"}
+              </p>
+            )}
+          </div>
+          <div className="text-right flex flex-col items-end justify-center shrink-0">
+            <div className="font-bold text-base" style={{ color: priceColorValue }}>
+              ${hasDiscount ? (discountedPrice || 0).toFixed(2) : (item.price || 0).toFixed(2)}
+            </div>
+            {getButtonComponent("mt-2", undefined, { width: undefined })}
+          </div>
+        </div>
+      )}
+      {preset === "cover" && (
+        <div className={`relative overflow-hidden w-full ${ratioMap[imageRatio]} bg-gray-100`} style={{ width: `${imageWidth}%` }}>
+          {showImage && item.image && (
+            <img src={item.image} alt={item.name} className={`w-full h-full object-cover ${hoverClass}`} loading="lazy" />
+          )}
+          {showBadge && hasDiscount && (
+            <div className={`absolute ${badgePosition === "top-left" ? "top-2 left-2" : "top-2 right-2"} text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm z-10`} style={{ backgroundColor: badgeColorValue }}>
+              {discountPercent}% OFF
+            </div>
+          )}
+          <div className={`absolute top-2 right-2 z-20 transition-opacity duration-300 ${isPublic ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+            {getButtonComponent("w-10 h-10 p-0 flex items-center justify-center", undefined, { width: undefined })}
+          </div>
+          <div className="absolute inset-0 flex flex-col justify-end p-4" style={getCoverGradientStyle()}>
+            <StyledText tag="h3" className="text-xl font-bold text-white">
+              {item.name}
+            </StyledText>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-white font-bold">
+                ${hasDiscount ? (discountedPrice || 0).toFixed(2) : (item.price || 0).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

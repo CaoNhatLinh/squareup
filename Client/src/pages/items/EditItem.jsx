@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { fetchItems, updateItem } from "@/api/items";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToast } from "@/hooks/useToast";
@@ -93,7 +94,8 @@ const renderFilterList = (
 
 export default function EditItem() {
   const navigate = useNavigate();
-  const { itemId, restaurantId } = useParams();
+  const { itemId, restaurantId: paramRestaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const { uploadImage, uploading } = useImageUpload();
   const { success, error } = useToast();
   const [formData, setFormData] = useState({
@@ -165,9 +167,7 @@ export default function EditItem() {
       .finally(() => setLoading(false));
   }, [restaurantId, itemId]);
 
-  const handleClose = () => {
-    navigate(`/${restaurantId}/items`);
-  };
+  const handleClose = () => navigate('/restaurant/items');
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
@@ -202,7 +202,7 @@ export default function EditItem() {
         modifierIds: selectedModifiers.map((m) => m.id),
       });
       success(`Item "${formData.name}" updated successfully!`);
-      navigate(`/${restaurantId}/items`);
+      navigate('/restaurant/items');
     } catch (err) {
       console.error("Failed to update item:", err);
       error("Failed to update item: " + err.message);

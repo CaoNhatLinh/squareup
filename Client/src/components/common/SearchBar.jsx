@@ -1,4 +1,3 @@
-import React from 'react';
 import { HiSearch } from 'react-icons/hi';
 
 export default function SearchBar({ value, onChange, placeholder = 'Search' }) {

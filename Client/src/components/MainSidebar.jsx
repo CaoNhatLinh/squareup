@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 
-
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useRestaurant } from '@/hooks/useRestaurant'
+import useAppStore from '@/store/useAppStore';
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermission'
 import MenuItem from '@/components/navigation/MenuItem'
@@ -14,10 +15,16 @@ import {
   HiArrowLeft,
   HiOutlineShieldCheck
 } from 'react-icons/hi'
-import { useEffect } from 'react'
+
+import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi'
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { restaurantId } = useParams()
+  const collapsed = useAppStore(s => s.sidebarCollapsed);
+  const setCollapsed = useAppStore(s => s.setSidebarCollapsed);
+  
+  
+  const effectiveCollapsed = collapsed;
+  const restaurantId = useAppStore(s => s.restaurantId);
   const location = useLocation()
   const navigate = useNavigate()
   const { restaurant, loading: restaurantLoading } = useRestaurant()
@@ -26,8 +33,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const isAdminPath = location.pathname.startsWith('/admin')
   const adminManagedRestaurantId = sessionStorage.getItem('adminManagingRestaurant')
-  const isAdminManagingRestaurant = user?.isAdmin && restaurantId &&
-    (isAdminPath || adminManagedRestaurantId === restaurantId)
+  
+  const isAdminManagingRestaurant = user?.isAdmin && adminManagedRestaurantId && adminManagedRestaurantId === restaurantId;
 
   useEffect(() => {
     if (adminManagedRestaurantId && adminManagedRestaurantId !== restaurantId) {
@@ -36,7 +43,8 @@ export default function Sidebar({ isOpen, onClose }) {
   }, [restaurantId, adminManagedRestaurantId])
 
   const menuItems = restaurantId ? getMenuItems(restaurantId, permissions, user?.role) : []
-  const isLoading = authLoading || (restaurantId && !['signin', 'signup', 'signout', 'admin', 'dashboard', 'restaurants', 'shop', 'track-order'].includes(restaurantId) && restaurantLoading)
+  const showRestaurantMenu = menuItems.length > 0 && (!isAdminPath || isAdminManagingRestaurant);
+  const isLoading = authLoading || (restaurantId && restaurantLoading)
 
   if (!authLoading && !user) {
     return null;
@@ -87,7 +95,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <aside className={`
         fixed inset-y-0 left-0 z-50
-        flex flex-col w-64 bg-white
+        flex flex-col ${effectiveCollapsed ? 'w-20' : 'w-64'} bg-white
         border-r border-gray-200 h-screen
         transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -97,7 +105,9 @@ export default function Sidebar({ isOpen, onClose }) {
           <div className="flex-shrink-0">
             <div className="px-4 py-4 border-b border-gray-200">
               <div className="flex items-center mb-4">
-              <RestaurantDropdown restaurantName={restaurant?.name || 'Select Restaurant'} />
+                <div className="flex items-center">
+                  <RestaurantDropdown restaurantName={restaurant?.name || 'Select Restaurant'} collapsed={effectiveCollapsed} logoUrl={restaurant?.logoUrl || restaurant?.logo} />
+                </div>
               </div>
             </div>
             <div className="px-4 py-4">
@@ -106,7 +116,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 <input
                   type="text"
                   placeholder="Search menu..."
-                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-colors duration-200"
+                  className={`w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-colors duration-200 ${collapsed ? 'opacity-0 pointer-events-none' : ''}`}
                 />
               </div>
             </div>
@@ -136,27 +146,35 @@ export default function Sidebar({ isOpen, onClose }) {
                     Admin Panel
                   </h3>
                 </div>
-                {adminMenuItems.map((item, idx) => (
-                  <MenuItem key={idx} item={item} level={0} />
-                ))}
+                    {adminMenuItems.map((item, idx) => (
+                      <MenuItem key={idx} item={item} level={0} collapsed={collapsed} />
+                    ))}
               </div>
             )}
-            {menuItems.length > 0 && (
-              <div className="px-3 mb-3">
+            {showRestaurantMenu && (
+              <div className={`px-3 mb-3 ${effectiveCollapsed ? 'hidden' : ''}`}>
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Restaurant Menu
                 </h3>
               </div>
             )}
-            {menuItems.map((item, idx) => (
-              <MenuItem key={idx} item={item} level={0} />
+            {showRestaurantMenu && menuItems.map((item, idx) => (
+              <MenuItem key={idx} item={item} level={0} collapsed={effectiveCollapsed} />
             ))}
           </nav>
 
           <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200 mt-auto">
-            <ProfileMenu />
+            <ProfileMenu collapsed={effectiveCollapsed} />
           </div>
         </div>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className={`absolute top-5 right-[-14px] z-50 p-1 rounded-full bg-white border shadow-sm text-gray-600 hover:bg-gray-50 ${collapsed ? '' : ''}`}
+          style={{ transform: 'translateX(50%)' }}
+        >
+          {collapsed ? <HiChevronDoubleRight className="w-5 h-5" /> : <HiChevronDoubleLeft className="w-5 h-5" />}
+        </button>
       </aside>
     </>
   )

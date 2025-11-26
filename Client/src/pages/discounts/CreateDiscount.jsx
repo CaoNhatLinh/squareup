@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
+import useAppStore from '@/store/useAppStore';
 import { useToast } from '@/hooks/useToast';
 import { createDiscount } from '@/api/discounts';
 import { fetchCategories } from '@/api/categories';
@@ -10,7 +11,8 @@ import { MdPercent } from "react-icons/md";
 import { DAYS_OF_WEEK } from '@/constants/scheduleConstants';
 export default function CreateDiscount() {
   const navigate = useNavigate();
-  const { restaurantId } = useParams();
+  const { restaurantId: paramRestaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const { success, error } = useToast();
   
   const [formData, setFormData] = useState({
@@ -73,7 +75,7 @@ export default function CreateDiscount() {
   }, [restaurantId]);
 
   const handleClose = () => {
-    navigate(`/${restaurantId}/discounts`);
+    navigate(`/restaurant/discounts`);
   };
 
   const handleSave = async () => {
@@ -91,7 +93,7 @@ export default function CreateDiscount() {
     try {
       await createDiscount(restaurantId, formData);
       success(`Discount "${formData.name}" created successfully!`);
-      navigate(`/${restaurantId}/discounts`);
+      navigate(`/restaurant/discounts`);
     } catch (err) {
       console.error('Failed to create discount:', err);
       error('Failed to create discount: ' + err.message);

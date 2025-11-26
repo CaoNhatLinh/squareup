@@ -41,10 +41,13 @@ export const printInvoice = (invoiceData, restaurant, invoiceType) => {
         <p>${invoiceData.date ? new Date(invoiceData.date).toLocaleString('en-US') : new Date().toLocaleString('en-US')}</p>
       </div>
 
-      ${invoiceData.customerInfo?.name || invoiceData.customerInfo?.phone ? `
+      ${invoiceData.customerInfo?.name || invoiceData.customerInfo?.phone || invoiceData.orderType ? `
         <div>
-          <p>Customer: ${invoiceData.customerInfo.name || 'Walk-in'}</p>
-          ${invoiceData.customerInfo.phone ? `<p>Phone: ${invoiceData.customerInfo.phone}</p>` : ''}
+          <p>Customer: ${invoiceData.customerInfo?.name || 'Walk-in'}</p>
+          ${invoiceData.customerInfo?.phone ? `<p>Phone: ${invoiceData.customerInfo.phone}</p>` : ''}
+          ${invoiceData.orderType ? `<p>Order Type: ${invoiceData.orderType}</p>` : ''}
+          ${invoiceData.seatNumber ? `<p>Seat: ${invoiceData.seatNumber}</p>` : ''}
+          ${invoiceData.deliveryAddress ? `<p>Delivery: ${invoiceData.deliveryAddress.line1 || ''} ${invoiceData.deliveryAddress.city || ''} ${invoiceData.deliveryAddress.postalCode || ''}</p>` : ''}
         </div>
       ` : ''}
 

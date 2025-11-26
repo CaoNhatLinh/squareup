@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Skeleton = ({ variant = 'text', width, height, className = '', count = 1, ...props }) => {
   const baseStyles = 'animate-pulse bg-gray-200 rounded';
 

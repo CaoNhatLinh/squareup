@@ -1,4 +1,4 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 export const getGuestOrderHistory = async (restaurantId, guestUuid) => {
   const response = await apiClient.get(`/restaurants/${restaurantId}/customers/guest/${guestUuid}/orders`);
   return response.data || [];

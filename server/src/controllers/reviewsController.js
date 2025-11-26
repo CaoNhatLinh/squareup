@@ -125,22 +125,37 @@ const getOrderReviews = async (req, res) => {
 
 const getRestaurantReviews = async (req, res) => {
   try {
-    const { restaurantId } = req.params;
+    const restaurantId = req.params?.restaurantId || req.query?.restaurantId;
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID is required" });
     }
+    console.log(restaurantId);
     const reviewsSnapshot = await db.ref(`restaurants/${restaurantId}/reviews`).get();
-    const reviewsData = reviewsSnapshot.val();
+    let reviewsData = reviewsSnapshot.val();
+
+    if (!reviewsData) {
+      try {
+        const rootReviewsSnapshot = await db.ref(`reviews`).get();
+        const rootReviews = rootReviewsSnapshot.val();
+        if (rootReviews) {
+          const filtered = Object.entries(rootReviews).filter(([, r]) => r.restaurantId === restaurantId);
+          if (filtered.length > 0) {
+            reviewsData = Object.fromEntries(filtered);
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback root /reviews check failed', err.message || err);
+      }
+    }
 
     if (!reviewsData) {
       return res.status(200).json({
         success: true,
-        reviews: [],
-        averageRating: 0,
-        totalReviews: 0,
+        data: [],
+        meta: { total: 0, limit, page, averageRating: 0, totalReviews: 0 },
       });
     }
 
@@ -192,9 +207,8 @@ const getItemReviews = async (req, res) => {
     if (!reviewsData) {
       return res.status(200).json({
         success: true,
-        reviews: [],
-        averageRating: 0,
-        totalReviews: 0,
+        data: [],
+        meta: { total: 0, limit, page, averageRating: 0, totalReviews: 0 },
       });
     }
 

@@ -1,6 +1,6 @@
 import { HiCash, HiRefresh } from "react-icons/hi";
 
-export default function POSHeader({ restaurantName, onRefresh, onSearch }) {
+export default function POSHeader({ restaurantName, onRefresh, onSearch, onQueryChange }) {
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -13,7 +13,10 @@ export default function POSHeader({ restaurantName, onRefresh, onSearch }) {
         <div className="flex items-center gap-3">
           <input
             type="text"
-            onChange={(e) => onSearch && onSearch(e.target.value)}
+            onChange={(e) => {
+              const handler = onSearch || onQueryChange;
+              handler && handler(e.target.value);
+            }}
             placeholder="Search items..."
             className="px-3 py-2 border rounded-lg text-sm"
           />

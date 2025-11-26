@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 
 import { createModifier } from "@/api/modifers";
 import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
@@ -8,7 +9,8 @@ import { Input, Button, Checkbox, RadioGroup } from '@/components/ui';
 
 export default function CreateModifier() {
   const navigate = useNavigate();
-  const { restaurantId } = useParams();
+  const { restaurantId: paramRestaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const [formData, setFormData] = useState({
     name: "",
     displayName: "",
@@ -19,7 +21,7 @@ export default function CreateModifier() {
   const [options, setOptions] = useState([]);
   const [draggingIndex, setDraggingIndex] = useState(null);
 
-  const handleClose = () => navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
+  const handleClose = () => navigate(`/restaurant/modifiers`);
 
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.displayName.trim()) {
@@ -50,7 +52,7 @@ export default function CreateModifier() {
         selectionType: formData.selectionType,
         required: formData.required,
       });
-      navigate(restaurantId ? `/${restaurantId}/modifiers` : '/modifiers');
+      navigate(`/restaurant/modifiers`);
     } catch (err) {
       console.error("Failed to create modifier:", err);
       alert("Failed to create modifier: " + (err.message || err));

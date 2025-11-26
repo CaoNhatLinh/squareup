@@ -1,4 +1,3 @@
-import React from 'react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 
 const Button = ({
@@ -13,6 +12,10 @@ const Button = ({
   type = 'button',
   onClick,
   className = '',
+  
+  btnStyle, 
+  btnTextColor, 
+  radius, 
   ...props
 }) => {
   const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -41,12 +44,23 @@ const Button = ({
 
   const widthStyles = fullWidth ? 'w-full' : '';
 
+  const outlineClass = btnStyle === 'outline' ? 'border' : '';
+
+  
+  const incomingStyle = props.style || {};
+  const mergedStyle = {
+    ...incomingStyle,
+    borderColor: btnStyle === 'outline' ? (btnTextColor || incomingStyle.color) : incomingStyle.borderColor,
+    borderRadius: radius ? `${radius}px` : incomingStyle.borderRadius,
+  };
+
   return (
     <button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyles} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant] || ''} ${sizeStyles[size] || ''} ${widthStyles} ${outlineClass} ${className}`}
+      style={mergedStyle}
       {...props}
     >
       {loading && (

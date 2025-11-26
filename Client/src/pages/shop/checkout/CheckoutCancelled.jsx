@@ -1,8 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useShop } from "@/context/ShopContext";
 import { HiOutlineArrowUturnLeft, HiXCircle } from "react-icons/hi2";
 export default function CheckoutCancelled() {
   const navigate = useNavigate();
-  const { restaurantId } = useParams();
+  const { restaurant } = useShop();
+  const { slug } = useParams();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-200">
@@ -18,7 +20,7 @@ export default function CheckoutCancelled() {
         </p>
         <div className="space-y-3">
           <button
-            onClick={() => navigate(`/shop/${restaurantId}`)}
+            onClick={() => navigate(`/${slug || restaurant?.slug || ''}/order`)}
             className="w-full bg-red-600 text-white px-6 py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition-colors shadow-md flex items-center justify-center gap-2"
           >
             <HiOutlineArrowUturnLeft className="w-6 h-6" />

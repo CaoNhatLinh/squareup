@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { getAllRestaurants, getAllUsers, setAdminRole, removeAdminRole } from '../../api/admin.js';
-import { useToast } from '../../hooks/useToast';
-import { useAuth } from '../../hooks/useAuth';
+import { getAllRestaurants, getAllUsers, setAdminRole, removeAdminRole } from '@/api/admin.js';
+import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import {
   HiOutlineOfficeBuilding,
   HiOutlineUsers,
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
 
   const handleManageRestaurant = (restaurantId) => {
     sessionStorage.setItem('adminManagingRestaurant', restaurantId);
-    navigate(`/${restaurantId}/dashboard`);
+    navigate(`/restaurant/dashboard`);
   };
 
   const stats = [

@@ -1,4 +1,4 @@
-import { auth } from '../firebase'
+import { auth } from '@/firebase'
 
 async function getIdToken() {
   if (!auth.currentUser) return null

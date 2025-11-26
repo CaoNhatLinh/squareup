@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "@/firebase"; 
 import { onAuthStateChanged } from "firebase/auth";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "@/context/AuthContext";
 import * as authApi from "@/api/auth";
 
 export function AuthProvider({ children }) {
@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
           const normalized = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
-            // keep `isAdmin` for existing logic but also expose `admin` for normalized server parity
+            
             isAdmin: sessionData.isAdmin || false,
             admin: !!sessionData.isAdmin,
             role: sessionData.role || 'user',
@@ -30,11 +30,11 @@ export function AuthProvider({ children }) {
           setUser({ ...firebaseUser, ...normalized });
         } catch (error) {
           console.error('Session creation failed:', error);
-          // Clear any stale cookies and set fallback user
+          
           try {
             await authApi.sessionLogout();
           } catch {
-            // ignore
+            
           }
           const normalized = {
             uid: firebaseUser?.uid,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { HiPencil, HiTrash } from 'react-icons/hi';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';

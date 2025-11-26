@@ -2,11 +2,7 @@ const admin = require('firebase-admin');
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const db = admin.database();
 
-/**
- * Create a Stripe Payment Link for bank transfer QR code generation
- * Used for POS bank transfer payments
- */
-// Helper: get or create product & price and reuse them
+
 const getOrCreatePriceForItem = async (restaurantId, groupKey, itemName, description, unitAmount) => {
   try {
     const path = `stripeProducts/${restaurantId}/${groupKey}/${Math.round(unitAmount * 100)}`;
@@ -37,24 +33,59 @@ const getOrCreatePriceForItem = async (restaurantId, groupKey, itemName, descrip
 
 const createPaymentLink = async (req, res) => {
   try {
-    // Request body should contain:
-    // { orderId, restaurantId, customerName, items: [{ name, unitPrice, quantity, selectedOptions, modifiers, groupKey }], subtotal, discounts, tax, total }
     const payload = req.body || {};
-    const { orderId, restaurantId, customerName, items, subtotal, discounts, tax, total } = payload;
+    const { orderId, restaurantId, customerName, items, subtotal, discounts, tax, total, returnUrl } = payload;
 
-    // Basic validation: if items absent, fallback to total amount as previously
+    // ... (existing validation code) ...
+
+    // (skipping to paymentLinks.create)
+
+    // (removed duplicate paymentLinks.create call)
+
     if ((!items || !Array.isArray(items) || items.length === 0) && (!total || Number(total) <= 0)) {
       return res.status(400).json({ error: 'Invalid request: provide items array or non-zero total' });
     }
 
+    // --- VALIDATION: Check if items and modifiers still exist ---
+    if (restaurantId && items && Array.isArray(items) && items.length > 0) {
+      const restSnap = await db.ref(`restaurants/${restaurantId}`).get();
+      if (restSnap.exists()) {
+        const restData = restSnap.val();
+        const dbItems = restData.items || {};
+        const dbModifiers = restData.modifiers || {};
+
+        for (const item of items) {
+          // Skip validation for sample items or items without itemId
+          if (!item.itemId || (item.id && item.id.startsWith('sample-'))) continue;
+
+          const dbItem = dbItems[item.itemId];
+          if (!dbItem) {
+            return res.status(400).json({ error: `Item '${item.name}' is no longer available. Please update your cart.` });
+          }
+
+          // Check modifiers
+          if (item.selectedOptions && Array.isArray(item.selectedOptions)) {
+            for (const option of item.selectedOptions) {
+              const modifier = dbModifiers[option.modifierId];
+              if (!modifier) {
+                return res.status(400).json({ error: `Modifier for '${item.name}' is no longer available. Please update your cart.` });
+              }
+              if (!modifier.options || !modifier.options[option.id]) {
+                return res.status(400).json({ error: `Option '${option.name}' for '${item.name}' is no longer available. Please update your cart.` });
+              }
+            }
+          }
+        }
+      }
+    }
+    // --- END VALIDATION ---
+
     let line_items = [];
 
     if (items && Array.isArray(items) && items.length > 0) {
-      // Create a product + price for each item and add to line_items
       for (const it of items) {
         try {
           const itemName = it.name || 'Item';
-          // Build a nice description including modifiers and options
           let description = '';
           if (it.selectedOptions && Array.isArray(it.selectedOptions) && it.selectedOptions.length > 0) {
             description += it.selectedOptions.map(o => o.name || o).join(', ');
@@ -64,18 +95,15 @@ const createPaymentLink = async (req, res) => {
             description = description ? `${description} | ${modStr}` : modStr;
           }
 
-          // Determine unit price (may already include discount)
           const unitPrice = Number(it.unitPrice ?? it.price ?? it.amount ?? 0);
           if (!unitPrice || unitPrice <= 0) {
-            continue; // skip zero-priced items
+            continue;
           }
 
-          // Determine effective unit price considering discounts
           let effectivePrice = unitPrice;
           if (it.discountAmount && Number(it.discountAmount) > 0) {
             effectivePrice = Math.max(0, unitPrice - Number(it.discountAmount));
           }
-          // Get or create price
           const { priceId } = await getOrCreatePriceForItem(restaurantId || 'global', it.groupKey || itemName, itemName, description, effectivePrice);
           line_items.push({ price: priceId, quantity: Math.max(1, Number(it.quantity || 1)) });
         } catch (errItem) {
@@ -84,7 +112,6 @@ const createPaymentLink = async (req, res) => {
       }
     }
 
-    // If no detailed items added but total is present, create a single price using total
     if (line_items.length === 0 && total && Number(total) > 0) {
       const product = await stripe.products.create({
         name: `Order ${orderId || 'POS-' + Date.now()}`,
@@ -98,7 +125,6 @@ const createPaymentLink = async (req, res) => {
       line_items.push({ price: price.id, quantity: 1 });
     }
 
-    // Create pending order in DB for reference by webhook or post-payment processing
     const pendingOrderId = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     let restaurantName = '';
     if (restaurantId) {
@@ -115,10 +141,12 @@ const createPaymentLink = async (req, res) => {
       totalAmount: total || subtotal,
       status: 'pending',
       createdAt: Date.now(),
+      orderType: payload.orderType || null,
+      deliveryAddress: payload.deliveryAddress || null,
+      seatNumber: payload.seatNumber || null,
     };
     await db.ref(`pendingOrders/${pendingOrderId}`).set(pendingOrderData);
 
-    // Prepare metadata summary (avoid large payloads)
     const metadata = {
       orderId: orderId || '',
       restaurantId: restaurantId || '',
@@ -133,9 +161,14 @@ const createPaymentLink = async (req, res) => {
     const paymentLink = await stripe.paymentLinks.create({
       line_items: line_items,
       metadata,
+      after_completion: {
+        type: 'redirect',
+        redirect: {
+          url: returnUrl ? `${returnUrl}?session_id={CHECKOUT_SESSION_ID}` : undefined,
+        },
+      },
     });
 
-    // Return the link and URL — frontend will generate QR image
     return res.status(200).json({ success: true, data: { id: paymentLink.id, url: paymentLink.url, qr_code: paymentLink.url, pendingOrderId } });
   } catch (error) {
     console.error('Error creating payment link:', error);
@@ -167,13 +200,13 @@ const processPayment = async (req, res) => {
 
     // Create a payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(amount * 100),
       currency: 'usd',
       payment_method: payment_method_id,
-      confirm: true, // Automatically confirm the payment
+      confirm: true,
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: 'never', // For POS, we don't want redirects
+        allow_redirects: 'never',
       },
       metadata: {
         source: 'pos',
@@ -183,7 +216,6 @@ const processPayment = async (req, res) => {
 
     // Check payment status
     if (paymentIntent.status === 'succeeded') {
-      // Optionally create order immediately if pendingOrderId is present in metadata
       const metadata = Object.assign({}, paymentIntent.metadata || {}, req.body?.metadata || {});
       const pendingOrderId = metadata.pendingOrderId || req.body?.pendingOrderId || null;
       const restaurantId = metadata.restaurantId || req.body?.restaurantId || null;
@@ -193,7 +225,6 @@ const processPayment = async (req, res) => {
           const pendingOrder = pendingSnapshot.val();
           if (pendingOrder) {
             const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
-            // Update payment intent metadata
             await stripe.paymentIntents.update(paymentIntent.id, {
               metadata: {
                 ...paymentIntent.metadata,
@@ -221,6 +252,9 @@ const processPayment = async (req, res) => {
               createdAt: now,
               updatedAt: now,
               statusHistory: { pending: pendingOrder.createdAt || now, paid: now },
+              orderType: pendingOrder.orderType || null,
+              deliveryAddress: pendingOrder.deliveryAddress || null,
+              seatNumber: pendingOrder.seatNumber || null,
             };
             await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
             await db.ref(`pendingOrders/${pendingOrderId}`).remove();
@@ -275,9 +309,6 @@ const processPayment = async (req, res) => {
   }
 };
 
-/**
- * Retrieve payment link details
- */
 const getPaymentLink = async (req, res) => {
   try {
     const { linkId } = req.params;
@@ -303,9 +334,7 @@ const getPaymentLink = async (req, res) => {
   }
 };
 
-/**
- * Retrieve payment intent details
- */
+
 const getPaymentIntent = async (req, res) => {
   try {
     const { paymentIntentId } = req.params;

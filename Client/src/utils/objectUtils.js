@@ -1,0 +1,78 @@
+export function getByPath(obj, path) {
+  if (!path) return undefined;
+  const parts = path.split(".");
+  let cur = obj;
+  for (let p of parts) {
+    if (cur == null) return undefined;
+    cur = cur[p];
+  }
+  return cur;
+}
+
+export const setByPath = (obj, path, value) => {
+  if (!path) return obj;
+  const keys = path.split(".");
+  
+  const update = (current, keys) => {
+    const [head, ...tail] = keys;
+    if (!head) return value;
+    
+    if (tail.length === 0) {
+      if (Array.isArray(current)) {
+        const newArray = [...current];
+        newArray[parseInt(head)] = value;
+        return newArray;
+      }
+      return { ...current, [head]: value };
+    }
+    
+    const next = current[head];
+    let updatedNext;
+    
+    if (Array.isArray(next)) {
+      updatedNext = update(next, tail);
+    } else {
+      updatedNext = update(next || {}, tail);
+    }
+    
+    if (Array.isArray(current)) {
+      const newArray = [...current];
+      newArray[parseInt(head)] = updatedNext;
+      return newArray;
+    }
+    
+    return {
+      ...current,
+      [head]: updatedNext
+    };
+  };
+
+  return update(obj, keys);
+};
+
+export const deepMerge = (target, source) => {
+  if (!source || typeof source !== "object") return target;
+  if (!target || typeof target !== "object") return source;
+
+  const output = { ...target };
+
+  Object.keys(source).forEach((key) => {
+    const targetValue = output[key];
+    const sourceValue = source[key];
+
+    if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+      output[key] = sourceValue; 
+    } else if (
+      typeof targetValue === "object" &&
+      typeof sourceValue === "object" &&
+      targetValue !== null &&
+      sourceValue !== null
+    ) {
+      output[key] = deepMerge(targetValue, sourceValue);
+    } else {
+      output[key] = sourceValue;
+    }
+  });
+
+  return output;
+};

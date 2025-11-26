@@ -1,26 +1,18 @@
-import * as apiClient from './apiClient';
+import * as apiClient from '@/api/apiClient';
 
-/**
- * Add review to an order (with optional item reviews)
- * @param {string} orderId - Order ID
- * @param {object} reviewData - { rating, feedback, guestUuid, itemReviews: [{ itemId, rating, feedback }] }
- */
+
 export const addOrderReview = async (orderId, reviewData) => {
   const response = await apiClient.post(`/orders/${orderId}/review`, reviewData);
   return response.data;
 };
 
-/**
- * Get reviews for a specific order
- */
+
 export const getOrderReviews = async (orderId) => {
   const response = await apiClient.get(`/orders/${orderId}/reviews`);
   return response.data || [];
 };
 
-/**
- * Get all reviews for a restaurant
- */
+
 export const getRestaurantReviews = async (restaurantId, params = {}) => {
   const query = new URLSearchParams();
   if (params.page) query.append('page', params.page);
@@ -30,9 +22,7 @@ export const getRestaurantReviews = async (restaurantId, params = {}) => {
   return { reviews: response.data || [], meta: response.meta || {}, averageRating: response.meta?.averageRating || 0, totalReviews: response.meta?.totalReviews || 0 };
 };
 
-/**
- * Get all reviews for a specific item
- */
+
 export const getItemReviews = async (restaurantId, itemId, params = {}) => {
   const query = new URLSearchParams();
   if (params.page) query.append('page', params.page);

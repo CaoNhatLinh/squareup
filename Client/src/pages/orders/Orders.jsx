@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getRestaurantOrders, updateOrderStatus } from "@/api/orders.js";
 import { useNavigate, useLoaderData, useParams } from "react-router-dom";
+import useAppStore from '@/store/useAppStore';
 import { BsEye } from "react-icons/bs";
 import { HiCheck } from "react-icons/hi2";
 import { HiRefresh } from "react-icons/hi";
@@ -12,7 +13,8 @@ import { formatDate } from "@/utils/dateUtils";
 
 export default function Orders() {
   useLoaderData();
-  const { restaurantId } = useParams();
+  const { restaurantId: paramRestaurantId } = useParams();
+  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const { isNewOrder, newOrderIds, markAllAsRead } = useOrderNotification();
 
   const [orders, setOrders] = useState([]);
@@ -83,7 +85,7 @@ export default function Orders() {
   }, [restaurantId]);
 
   const openOrderDetails = (orderId) => {
-    navigate(`/${restaurantId}/orders/${orderId}`);
+    navigate(`/restaurant/orders/${orderId}`);
   };
 
   const handleAcceptOrder = async (orderId, e) => {

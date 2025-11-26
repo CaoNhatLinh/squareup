@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const tablesController = require('../controllers/tablesController');
 const { verifyToken } = require('../middleware/verifyToken');
-const { attachUser } = require('../middleware/attachUser');
+const attachUser = require('../middleware/attachUser');
 const { verifyPermission } = require('../middleware/verifyPermission');
 
 // All routes require authentication

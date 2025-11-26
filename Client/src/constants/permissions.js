@@ -14,5 +14,5 @@ export const RESOURCES = [
 
 export const ACTIONS = ['create', 'read', 'update', 'delete'];
 
-// POS specific permissions
+
 export const POS_ACTIONS = ['access', 'process_sale', 'apply_discount', 'void_transaction'];
