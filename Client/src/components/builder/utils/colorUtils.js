@@ -4,9 +4,7 @@ export function resolveColor(value, globalStyles, fallback) {
 
   const palette = globalStyles?.palette || globalStyles?.colors || {};
   if (typeof value === 'string' && palette[value]) return palette[value];
-
   if (typeof value === 'string' && globalStyles?.colors && globalStyles.colors[value]) return globalStyles.colors[value];
-
   return fallback !== undefined ? fallback : value;
 }
 

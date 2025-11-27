@@ -9,6 +9,7 @@ import "swiper/css/pagination";
 import { resolveColor } from "@/components/builder/utils/colorUtils";
 import { getValidImageSrc } from "@/components/builder/utils/imageUtils";
 import StyledText from "@/components/builder/atoms/StyledText";
+import { useContainerQuery } from "@/components/builder/hooks/useContainerQuery";
 
 export default function Gallery({
   title,
@@ -32,6 +33,7 @@ export default function Gallery({
   globalStyles,
   blockId,
   onItemClick,
+  anchorId,
 }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeFilter, setActiveFilter] = useState(allLabel);
@@ -39,6 +41,7 @@ export default function Gallery({
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [focusedImageIndex, setFocusedImageIndex] = useState(-1);
   const autoPlayRef = useRef(null);
+  const { containerRef, isMobile, isTablet } = useContainerQuery();
 
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
@@ -53,10 +56,24 @@ export default function Gallery({
     ...processedFilters.filter((f) => f !== allLabel),
   ];
 
-  const gridCols = {
-    2: "grid-cols-1 md:grid-cols-2",
-    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+  const getGridCols = (cols) => {
+    if (isMobile) return 'grid-cols-1';
+    if (isTablet) return cols >= 2 ? 'grid-cols-2' : 'grid-cols-1';
+    // Desktop
+    if (cols === 2) return 'grid-cols-2';
+    if (cols === 3) return 'grid-cols-3';
+    if (cols === 4) return 'grid-cols-4';
+    return 'grid-cols-3';
+  };
+
+  const getMasonryCols = (cols) => {
+    if (isMobile) return 'columns-1';
+    if (isTablet) return cols >= 2 ? 'columns-2' : 'columns-1';
+    // Desktop
+    if (cols === 2) return 'columns-2';
+    if (cols === 3) return 'columns-3';
+    if (cols === 4) return 'columns-4';
+    return 'columns-3';
   };
 
   const gapClasses = {
@@ -69,6 +86,28 @@ export default function Gallery({
     small: "gap-2",
     medium: "gap-4",
     large: "gap-6",
+  };
+
+  const gapSpaceY = {
+    small: "space-y-2",
+    medium: "space-y-4",
+    large: "space-y-6",
+  };
+
+  const gapPx = {
+    small: 16,
+    medium: 24,
+    large: 32,
+  };
+
+  const getCarouselBreakpoints = (cols, gapSize) => {
+    const space = gapPx[gapSize];
+    return {
+      640: { slidesPerView: 1, spaceBetween: space },
+      768: { slidesPerView: Math.min(2, cols), spaceBetween: space },
+      1024: { slidesPerView: Math.min(3, cols), spaceBetween: space },
+      1280: { slidesPerView: cols, spaceBetween: space },
+    };
   };
 
   const filteredImages =
@@ -264,8 +303,10 @@ export default function Gallery({
 
   const renderPremiumGrid = () => (
     <section
+      ref={containerRef}
       className="py-24 px-4 md:px-8 relative overflow-hidden"
       style={{ backgroundColor: getColor(backgroundColor) }}
+      id={anchorId || "gallery"}
     >
       {showBadge && (
         <>
@@ -381,7 +422,7 @@ export default function Gallery({
         </div>
 
         <div
-          className={`grid place-items-center ${gridCols[columns]} ${gapClasses[gap]}`}
+          className={`grid place-items-center ${getGridCols(columns)} ${gapClasses[gap]}`}
           data-control="gallery-images"
           data-block-id={blockId}
         >
@@ -563,8 +604,10 @@ export default function Gallery({
 
   const renderElegantMasonry = () => (
     <section
+      ref={containerRef}
       className="py-20 px-4 md:px-8"
       style={{ backgroundColor: getColor(backgroundColor) }}
+      id={anchorId || "gallery"}
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -627,7 +670,7 @@ export default function Gallery({
         </div>
 
         <div
-          className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6"
+          className={`${getMasonryCols(columns)} ${gapClasses[gap]} ${gapSpaceY[gap]}`}
           data-control="gallery-images"
           data-block-id={blockId}
         >
@@ -719,8 +762,10 @@ export default function Gallery({
   const renderLuxuryCarousel = () => {
     return (
       <section
+        ref={containerRef}
         className="py-20 px-4 md:px-8"
         style={{ backgroundColor: getColor(backgroundColor) }}
+        id={anchorId || "gallery"}
       >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -802,20 +847,7 @@ export default function Gallery({
               }}
               speed={800}
               grabCursor={true}
-              breakpoints={{
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 24,
-                },
-                1024: {
-                  slidesPerView: 3,
-                  spaceBetween: 24,
-                },
-                1280: {
-                  slidesPerView: 4,
-                  spaceBetween: 24,
-                },
-              }}
+              breakpoints={getCarouselBreakpoints(columns, gap)}
               className="pb-12"
             >
               {filteredImages.map((img, index) => (
@@ -828,7 +860,7 @@ export default function Gallery({
                   >
                     <div className="aspect-square overflow-hidden">
                       <img
-                        src={img.url}
+                        src={img.url || "https://placehold.co/800x600?text=No+Image"}
                         alt={img.caption || `Gallery image ${index + 1}`}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -928,6 +960,205 @@ export default function Gallery({
       </section>
     );
   };
+  const renderModernShowcase = () => (
+    <section
+      ref={containerRef}
+      className="py-24 px-4 md:px-8"
+      style={{ backgroundColor: getColor(backgroundColor) }}
+      id={anchorId || "gallery"}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className={`flex ${isMobile ? 'flex-col items-start' : 'flex-row justify-between items-end'} mb-12 gap-6`}>
+          <div className="max-w-2xl">
+            {showBadge && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border"
+                style={{
+                  borderColor: getColor("primary"),
+                  color: getColor("primary"),
+                  backgroundColor: "transparent"
+                }}
+              >
+                Showcase
+              </div>
+            )}
+            {title && (
+              <StyledText
+                tag="h2"
+                className="text-5xl lg:text-7xl font-bold leading-none tracking-tight"
+                styleConfig={{
+                  fontFamily: globalStyles?.typography?.headingFont,
+                  color: getColor(textColor),
+                }}
+                data-control="gallery-title"
+                data-block-id={blockId}
+              >
+                {title}
+              </StyledText>
+            )}
+          </div>
+
+          {showFilters && filters.length > 1 && (
+            <div className="flex flex-wrap gap-2" data-control="gallery-navigation" data-block-id={blockId}>
+              {allFilters.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filter)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeFilter === filter
+                    ? "bg-black text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  style={activeFilter === filter ? { backgroundColor: getColor("primary"), color: getColor("onPrimary") } : {}}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={`grid ${getGridCols(columns)} gap-8`} data-control="gallery-images" data-block-id={blockId}>
+          {filteredImages.map((img, index) => (
+            <div
+              key={index}
+              className={`group relative cursor-pointer ${!isMobile && index % 3 === 0 ? "col-span-2 row-span-2" : ""}`}
+              onClick={() => handleItemClick(img, index)}
+              data-control={`gallery-image-${index}`}
+              data-block-id={blockId}
+            >
+              <div className="aspect-[4/3] w-full h-full overflow-hidden rounded-none">
+                <img
+                  src={getValidImageSrc(img.url)}
+                  alt={img.caption || `Gallery image ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0"
+                />
+              </div>
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
+
+              {showCaptions && img.caption && (
+                <div className="absolute bottom-0 left-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-white p-4 shadow-xl max-w-[calc(100%-2rem)]">
+                    <StyledText tag="p" className="text-black font-bold text-lg">
+                      {img.caption}
+                    </StyledText>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      {selectedImage && (
+        <div className="fixed inset-0 bg-white/95 z-50 flex items-center justify-center p-4" onClick={closeLightbox}>
+          <div className="relative max-w-6xl w-full h-full flex items-center justify-center">
+            <img
+              src={getValidImageSrc(selectedImage.url)}
+              alt={selectedImage.caption}
+              className="max-w-full max-h-full object-contain shadow-2xl"
+            />
+            <button onClick={closeLightbox} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+
+  const renderClassicPortfolio = () => (
+    <section
+      ref={containerRef}
+      className="py-20 px-4 md:px-8"
+      style={{ backgroundColor: getColor(backgroundColor) }}
+      id={anchorId || "gallery"}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          {title && (
+            <StyledText
+              tag="h2"
+              className="text-4xl lg:text-5xl font-serif italic mb-6"
+              styleConfig={{
+                fontFamily: globalStyles?.typography?.headingFont,
+                color: getColor(textColor),
+              }}
+              data-control="gallery-title"
+              data-block-id={blockId}
+            >
+              {title}
+            </StyledText>
+          )}
+          <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
+
+          {showFilters && filters.length > 1 && (
+            <div className="flex justify-center gap-8 mt-10" data-control="gallery-navigation" data-block-id={blockId}>
+              {allFilters.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filter)}
+                  className={`text-sm uppercase tracking-widest transition-colors duration-300 pb-2 border-b-2 ${activeFilter === filter
+                    ? "border-black text-black"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}
+                  style={activeFilter === filter ? { borderColor: getColor("primary"), color: getColor("primary") } : {}}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={`grid ${getGridCols(columns)} gap-12`} data-control="gallery-images" data-block-id={blockId}>
+          {filteredImages.map((img, index) => (
+            <div
+              key={index}
+              className="group cursor-pointer"
+              onClick={() => handleItemClick(img, index)}
+              data-control={`gallery-image-${index}`}
+              data-block-id={blockId}
+            >
+              <div className="aspect-[3/4] overflow-hidden bg-gray-100 mb-6 relative">
+                <img
+                  src={getValidImageSrc(img.url)}
+                  alt={img.caption || `Gallery image ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors duration-300"></div>
+              </div>
+
+              <div className="text-center">
+                {showCaptions && img.caption && (
+                  <StyledText tag="h3" className="text-xl font-medium mb-2" styleConfig={{ color: getColor(textColor) }}>
+                    {img.caption}
+                  </StyledText>
+                )}
+                <p className="text-sm text-gray-400 uppercase tracking-wider">{img.category || "Portfolio"}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {selectedImage && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-8" onClick={closeLightbox}>
+          <div className="relative max-w-5xl w-full">
+            <img
+              src={getValidImageSrc(selectedImage.url)}
+              alt={selectedImage.caption}
+              className="w-full h-auto shadow-xl"
+            />
+            <div className="mt-8 text-center">
+              <h3 className="text-2xl font-serif italic mb-2">{selectedImage.caption}</h3>
+              <p className="text-gray-500 uppercase tracking-widest text-sm">{selectedImage.category}</p>
+            </div>
+            <button onClick={closeLightbox} className="absolute -top-12 right-0 text-gray-400 hover:text-black transition-colors">
+              <span className="text-sm uppercase tracking-widest">Close</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+
   const renderCinematicSlider = () => {
     const nextSlide = () => {
       setCurrentSlide((prev) => (prev + 1) % filteredImages.length);
@@ -945,8 +1176,10 @@ export default function Gallery({
 
     return (
       <section
+        ref={containerRef}
         className="py-24 px-4 md:px-8 relative overflow-hidden"
         style={{ backgroundColor: "#0f0f0f" }}
+        id={anchorId || "gallery"}
       >
         <div className="absolute inset-0 opacity-20">
           <div
@@ -1048,15 +1281,16 @@ export default function Gallery({
               {filteredImages.map((img, index) => (
                 <div
                   key={index}
-                  className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentSlide
+                  className={`absolute inset-0 transition-all duration-1000 ease-in-out cursor-pointer ${index === currentSlide
                     ? "opacity-100 scale-100"
                     : "opacity-0 scale-95"
                     }`}
-                  data-control={`gallery-slide-${index}`}
+                  onClick={() => handleItemClick(img, index)}
+                  data-control={`gallery-image-${index}`}
                   data-block-id={blockId}
                 >
                   <img
-                    src={img.url}
+                    src={img.url || "https://placehold.co/800x600?text=No+Image"}
                     alt={img.caption || `Gallery image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
@@ -1232,6 +1466,10 @@ export default function Gallery({
       return renderLuxuryCarousel();
     case "cinematic-slider":
       return renderCinematicSlider();
+    case "modern-showcase":
+      return renderModernShowcase();
+    case "classic-portfolio":
+      return renderClassicPortfolio();
     case "premium-grid":
     default:
       return renderPremiumGrid();

@@ -28,85 +28,37 @@ export function ShopProvider({ children }) {
     }
   }, [cart]);
 
-  
   useEffect(() => {
-    if (cart.length === 0) {
-      
-      
-      
-      const sampleItems = [
-        {
-          id: 'sample-1',
-          name: 'Classic Burger',
-          price: 8.75,
-          image: null,
-          description: 'Juicy beef burger with cheese',
-          discount: null,
-          selectedOptions: [],
-          quantity: 2,
-          totalPrice: 17.5,
-          specialInstruction: '',
-          groupKey: 'sample-1_',
-          itemId: 'sample-1',
-          categoryId: null,
-        },
-        {
-          id: 'sample-2',
-          name: 'Crispy Fries',
-          price: 3.5,
-          image: null,
-          description: 'Crispy golden fries',
-          discount: null,
-          selectedOptions: [],
-          quantity: 1,
-          totalPrice: 3.5,
-          specialInstruction: '',
-          groupKey: 'sample-2_',
-          itemId: 'sample-2',
-          categoryId: null,
-        }
-      ];
-      
-      
-      setCart(sampleItems);
-    }
-  }, []);
-
-  
-  useEffect(() => {
-    
-    if (Object.keys(items).length === 0 && Object.keys(modifiers).length === 0) return;
+    if (Object.keys(items).length === 0 && Object.keys(modifiers).length === 0)
+      return;
 
     setCart((prevCart) => {
       const validCart = prevCart.filter((cartItem) => {
-        
-        if (cartItem.id.startsWith('sample-')) return true;
+        if (cartItem.id.startsWith("sample-")) return true;
 
         const item = items[cartItem.itemId];
 
-        
         if (!item) {
-          console.warn(`Removing item ${cartItem.name} from cart because it no longer exists.`);
+          console.warn(
+            `Removing item ${cartItem.name} from cart because it no longer exists.`
+          );
           return false;
         }
 
-        
-        
-        
-        
-
-        
         if (cartItem.selectedOptions && cartItem.selectedOptions.length > 0) {
-          const allModifiersValid = cartItem.selectedOptions.every(option => {
+          const allModifiersValid = cartItem.selectedOptions.every((option) => {
             const modifier = modifiers[option.modifierId];
             if (!modifier) {
-              console.warn(`Removing item ${cartItem.name} because modifier group ${option.modifierId} is missing.`);
+              console.warn(
+                `Removing item ${cartItem.name} because modifier group ${option.modifierId} is missing.`
+              );
               return false;
             }
 
-            
             if (!modifier.options || !modifier.options[option.id]) {
-              console.warn(`Removing item ${cartItem.name} because modifier option ${option.name} is missing.`);
+              console.warn(
+                `Removing item ${cartItem.name} because modifier option ${option.name} is missing.`
+              );
               return false;
             }
             return true;
@@ -118,7 +70,6 @@ export function ShopProvider({ children }) {
         return true;
       });
 
-      
       if (validCart.length !== prevCart.length) {
         return validCart;
       }
@@ -135,7 +86,13 @@ export function ShopProvider({ children }) {
   }, []);
 
   const addToCart = useCallback(
-    (item, selectedOptions = [], quantity = 1, specialInstruction = "", editingCartKey = null) => {
+    (
+      item,
+      selectedOptions = [],
+      quantity = 1,
+      specialInstruction = "",
+      editingCartKey = null
+    ) => {
       const groupKey = getCartItemGroupKey(item.id, selectedOptions);
       const basePrice = item.price || 0;
       const optionsPrice = selectedOptions.reduce(
@@ -205,24 +162,27 @@ export function ShopProvider({ children }) {
     );
   }, []);
 
-  const updateCartItemQuantity = useCallback((groupKey, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(groupKey);
-      return;
-    }
-    setCart((prevCart) =>
-      prevCart.map((item) => {
-        if (item.groupKey === groupKey) {
-          return {
-            ...item,
-            quantity: newQuantity,
-            totalPrice: item.price * newQuantity,
-          };
-        }
-        return item;
-      })
-    );
-  }, [removeFromCart]);
+  const updateCartItemQuantity = useCallback(
+    (groupKey, newQuantity) => {
+      if (newQuantity <= 0) {
+        removeFromCart(groupKey);
+        return;
+      }
+      setCart((prevCart) =>
+        prevCart.map((item) => {
+          if (item.groupKey === groupKey) {
+            return {
+              ...item,
+              quantity: newQuantity,
+              totalPrice: item.price * newQuantity,
+            };
+          }
+          return item;
+        })
+      );
+    },
+    [removeFromCart]
+  );
 
   const clearCart = useCallback(() => {
     setCart([]);

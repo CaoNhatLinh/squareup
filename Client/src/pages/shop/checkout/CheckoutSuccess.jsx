@@ -6,17 +6,21 @@ import { getOrderBySession } from "@/api/orders";
 import { useShop } from "@/context/ShopContext.jsx";
 import { useToast } from "@/hooks/useToast";
 import { HiCheckCircle, HiXCircle, HiOutlineDocumentDuplicate, HiOutlineShoppingBag, HiOutlineMagnifyingGlass } from "react-icons/hi2";
+import { findRestaurantBySlug } from "@/api/siteConfig";
+import { fetchRestaurantForShop } from "@/api/restaurants";
+
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { slug } = useParams();
-  const restaurantId = useAppStore(s => s.restaurantId);
-  const { clearCart, restaurant } = useShop();
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const { clearCart, restaurant, setRestaurant } = useShop();
   const { success, error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [restaurantId, setRestaurantId] = useState(storeRestaurantId);
 
   const displayOrderId = order?.id || '---';
 
@@ -29,9 +33,37 @@ export default function CheckoutSuccess() {
       return;
     }
 
-    const fetchOrder = async () => {
+    const initialize = async () => {
+      let currentRestaurantId = restaurantId;
+
+      // 1. Try to resolve restaurantId if missing
+      if (!currentRestaurantId) {
+        if (slug) {
+          try {
+            const res = await findRestaurantBySlug(slug);
+            currentRestaurantId = res?.restaurantId || res?.data?.restaurantId || res?.data?.id;
+          } catch (e) {
+            console.error("Failed to resolve slug", e);
+          }
+        }
+
+        // Fallback to localStorage if still missing
+        if (!currentRestaurantId) {
+          currentRestaurantId = localStorage.getItem("restaurantId");
+        }
+
+        if (currentRestaurantId) {
+          setRestaurantId(currentRestaurantId);
+        }
+      }
+
+      if (!currentRestaurantId) {
+        console.warn("No restaurantId found, proceeding with null might fail.");
+      }
+
+      // 2. Fetch Order
       try {
-        const response = await getOrderBySession(sessionId, restaurantId);
+        const response = await getOrderBySession(sessionId, currentRestaurantId);
         if (response.order) {
           setOrder(response.order);
           clearCart();
@@ -46,6 +78,16 @@ export default function CheckoutSuccess() {
             success("Order confirmed! Payment processed successfully.");
           }
           setLoading(false);
+
+          // 3. Fetch Restaurant Details if needed (to populate context for UI)
+          if (currentRestaurantId && !restaurant) {
+            try {
+              const restData = await fetchRestaurantForShop(currentRestaurantId);
+              setRestaurant(restData);
+            } catch (err) {
+              console.error("Failed to load restaurant details", err);
+            }
+          }
         }
       } catch (err) {
         console.error("Error fetching order:", err);
@@ -63,9 +105,11 @@ export default function CheckoutSuccess() {
       }
     };
 
-    fetchOrder();
-  }, [searchParams, clearCart, retryCount, restaurantId, success, showError]);
+    initialize();
+  }, [searchParams, slug, restaurantId, retryCount, clearCart, success, showError, restaurant, setRestaurant]);
+
   const trackUrl = `/${slug || restaurant?.slug || ''}/order/track-order/${displayOrderId}`;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

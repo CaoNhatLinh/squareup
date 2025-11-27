@@ -1,6 +1,7 @@
 import { BLOCK_TYPES } from '@/components/builder/blockTypes';
 import { ICON_MAP } from '@/components/builder/config/icons';
 import GlobalStylesPanel from '@/components/builder/panels/GlobalStylesPanel';
+import { Button, Input } from '@/components/ui';
 import {
   HiArrowNarrowLeft,
   HiArrowNarrowRight,
@@ -34,22 +35,20 @@ const BuilderToolbar = ({
       <div className="flex border-b flex-shrink-0 bg-white">
         <button
           onClick={() => setActiveTab("blocks")}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${
-            activeTab === "blocks"
-              ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
+          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "blocks"
+            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
+            : "text-gray-500 hover:bg-gray-50"
+            }`}
         >
           <HiSquaresPlus className="w-5 h-5" />
           Blocks
         </button>
         <button
           onClick={() => setActiveTab("styles")}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${
-            activeTab === "styles"
-              ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
+          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "styles"
+            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
+            : "text-gray-500 hover:bg-gray-50"
+            }`}
         >
           <HiPaintBrush className="w-5 h-5" />
           Styles
@@ -64,36 +63,30 @@ const BuilderToolbar = ({
                 Site Settings
               </h3>
               <div className="mb-3">
-                <label className="block text-sm font-medium mb-1">
-                  Custom Slug
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) =>
-                      setSlug(
-                        e.target.value
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, "")
-                      )
-                    }
-                    placeholder="my-restaurant"
-                    className={`flex-1 px-3 py-2 border rounded-md text-sm ${
-                      slugError ? "border-red-500" : ""
-                    }`}
-                  />
-                  <button
-                    onClick={handleGenerateSlug}
-                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
-                    title="Generate from restaurant name"
-                  >
-                    <HiBolt className="w-4 h-4" />
-                  </button>
-                </div>
-                {slugError && (
-                  <p className="text-red-500 text-xs mt-1">{slugError}</p>
-                )}
+                <Input
+                  label="Custom Slug"
+                  value={slug}
+                  onChange={(e) =>
+                    setSlug(
+                      e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9-]/g, "")
+                    )
+                  }
+                  placeholder="my-restaurant"
+                  error={slugError}
+                  rightElement={
+                    <Button
+                      onClick={handleGenerateSlug}
+                      variant="ghost"
+                      size="small"
+                      className="p-1 h-auto hover:bg-gray-100"
+                      title="Generate from restaurant name"
+                    >
+                      <HiBolt className="w-4 h-4 text-gray-500" />
+                    </Button>
+                  }
+                />
               </div>
             </div>
 
@@ -141,44 +134,55 @@ const BuilderToolbar = ({
             globalStyles={globalStyles}
             onChange={setGlobalStyles}
           />
-        ) }
+        )}
       </div>
 
       <div className="p-4 mt-auto border-t space-y-2 bg-gray-50 flex-shrink-0">
         <div className="flex gap-2 mb-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleUndo}
             disabled={!canUndo}
-            className="flex-1 px-3 py-2 bg-white border rounded hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+            className="flex-1"
+            size="small"
+            icon={HiArrowNarrowLeft}
           >
-            <HiArrowNarrowLeft className="w-4 h-4" /> <span>Undo</span>
-          </button>
-          <button
+            Undo
+          </Button>
+          <Button
+            variant="secondary"
             onClick={handleRedo}
             disabled={!canRedo}
-            className="flex-1 px-3 py-2 bg-white border rounded hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+            className="flex-1"
+            size="small"
+            icon={HiArrowNarrowRight}
+            iconPosition="right"
           >
-            <span>Redo</span> <HiArrowNarrowRight className="w-4 h-4" />
-          </button>
+            Redo
+          </Button>
         </div>
-        <button
+        <Button
+          variant="secondary"
           onClick={handleSaveDraft}
           disabled={saving}
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50 font-semibold text-sm"
+          loading={saving}
+          fullWidth
         >
           {saving ? "Saving..." : "Save Draft"}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
           onClick={handlePublish}
           disabled={saving}
-          className="w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 font-semibold shadow-md"
+          loading={saving}
+          fullWidth
+          className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-500"
         >
           {saving ? "Publishing..." : "Publish Live"}
-        </button>
+        </Button>
       </div>
     </div>
   );
 };
-
 
 export default BuilderToolbar;

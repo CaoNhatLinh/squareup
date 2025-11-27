@@ -161,7 +161,7 @@ export default function Categories() {
               ),
             },
             { key: 'type', title: 'Type', render: (r) => (isSubcategory(r) ? 'Subcategory' : 'Parent Category'), },
-            { key: 'item_count', title: 'Items Count', align: 'right', render: (r) => (Array.isArray(r.itemIds) ? r.itemIds.length : (r.itemIds ? Object.values(r.itemIds).length : 0)), },
+            { key: 'item_count', title: 'Items Count', render: (r) => (Array.isArray(r.itemIds) ? r.itemIds.length : (r.itemIds ? Object.values(r.itemIds).length : 0)), },
             { key: 'actions', title: 'Actions', render: (r) => (
                 <div className="flex justify-end">
                   <ActionMenu

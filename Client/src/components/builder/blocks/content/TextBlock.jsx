@@ -15,8 +15,6 @@ export default function TextBlock({ content, alignment = 'left', backgroundColor
     <div 
       className="w-full py-8 px-6"
       style={{ backgroundColor: resolvedBg }}
-      data-block-id={blockId}
-      data-control="container"
     >
       <div className={`max-w-4xl mx-auto prose ${alignmentClasses[alignment] || 'text-left'}`}>
         <StyledText

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { HiTrash } from "react-icons/hi";
 import SchemaField from "@/components/builder/inputs/SchemaField";
+import Button from "@/components/ui/Button";
 import {
   DndContext,
   closestCenter,
@@ -54,22 +55,26 @@ const SortableItem = ({
         </div>
         <div className="flex gap-1">
           {!fixedCount && (
-            <button
+            <Button
               {...listeners}
-              className="cursor-grab px-2 py-1 bg-white border rounded text-xs hover:bg-gray-100"
+              variant="secondary"
+              size="small"
+              className="cursor-grab px-2"
               title="Drag to reorder"
             >
               ✥
-            </button>
+            </Button>
           )}
           {!fixedCount && (
-            <button
+            <Button
               onClick={() => onRemove(index)}
-              className="px-2 py-1 bg-white border border-red-200 text-red-500 rounded text-xs hover:bg-red-50"
+              variant="destructive"
+              size="small"
+              className="px-2 bg-white border border-red-200 text-red-500 hover:bg-red-50"
               title="Remove"
             >
               <HiTrash />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -125,7 +130,6 @@ export default function ListEditor({
   const add = () => {
     if (fixedCount) return;
     const empty = {};
-    console.log('🧩 blockRef.current in ListEditor add():', blockRef.current);
     itemSchema.forEach((s) => {
       if (s.type === "boolean") empty[s.name] = false;
       else if (s.type === "number") empty[s.name] = 0;
@@ -180,12 +184,14 @@ export default function ListEditor({
 
       <div className="mt-3">
         {!fixedCount && (
-          <button
+          <Button
             onClick={add}
-            className="w-full px-3 py-2 bg-white border border-dashed border-gray-300 text-gray-600 rounded-md text-sm hover:border-orange-400 hover:text-orange-600 transition-colors"
+            variant="primary"
+            btnStyle="outline"
+            className="w-full border-dashed border-gray-300 text-gray-600 hover:border-orange-400 hover:text-orange-600"
           >
             + Add Item
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
+import Dropdown from "@/components/ui/Dropdown";
 import { CardPresetSelector } from "@/components/builder/VariantSelector";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToast } from "@/hooks/useToast";
@@ -31,27 +32,30 @@ function PaletteField({ value, onChange, globalStyles, listIndex, field }) {
     return "#000000";
   }, [value, globalStyles?.palette]);
 
+  const dropdownOptions = [
+    { label: "Custom (Hex)", value: "custom" },
+    ...paletteKeys.map((k) => ({
+      label: PALETTE_OPTIONS.find((p) => p.value === k)?.label || k,
+      value: k,
+    })),
+  ];
+
   return (
     <div className="flex items-center gap-2">
-      <select
-        value={selectValue}
-        onChange={(e) => {
-          const v = e.target.value;
-          if (v === "custom") {
-            onChange("#000000");
-          } else {
-            onChange(v);
-          }
-        }}
-        className="px-2 py-2 rounded border text-sm flex-1 min-w-[100px]"
-      >
-        <option value="custom">Custom (Hex)</option>
-        {paletteKeys.map((k) => (
-          <option key={k} value={k}>
-            {PALETTE_OPTIONS.find((p) => p.value === k)?.label || k}
-          </option>
-        ))}
-      </select>
+      <div className="flex-1 min-w-[100px]">
+        <Dropdown
+          value={selectValue}
+          onChange={(v) => {
+            if (v === "custom") {
+              onChange("#000000");
+            } else {
+              onChange(v);
+            }
+          }}
+          options={dropdownOptions}
+          size="small"
+        />
+      </div>
 
       <div className="relative group">
         <input
@@ -80,6 +84,7 @@ function PaletteField({ value, onChange, globalStyles, listIndex, field }) {
 function ImageField({ value, onChange, field, listIndex }) {
   const { uploadImage, uploading } = useImageUpload();
   const { success, error: showError } = useToast();
+  const inputRef = useRef(null);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -97,6 +102,10 @@ function ImageField({ value, onChange, field, listIndex }) {
     }
   };
 
+  const handleButtonClick = () => {
+    inputRef.current?.click();
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
@@ -108,28 +117,32 @@ function ImageField({ value, onChange, field, listIndex }) {
         />
       </div>
       <div className="flex items-center gap-2">
-        <label className="flex-1 cursor-pointer">
-          <Button variant="secondary" className="w-full" disabled={uploading}>
+        <div className="flex-1">
+          <Button
+            variant="secondary"
+            className="w-full"
+            disabled={uploading}
+            onClick={handleButtonClick}
+          >
             {uploading ? "Uploading..." : "Upload Image"}
           </Button>
           <input
+            ref={inputRef}
             type="file"
             accept="image/*"
             className="hidden"
             onChange={handleFileChange}
             disabled={uploading}
           />
-        </label>
-      </div>
-      {value && (
-        <div className="relative w-full h-32 bg-gray-100 rounded-md overflow-hidden border">
-          <img
-            src={getValidImageSrc(value)}
-            alt="Preview"
-            className="w-full h-full object-cover"
-          />
         </div>
-      )}
+      </div>
+      <div className="relative w-full h-32 bg-gray-100 rounded-md overflow-hidden border">
+        <img
+          src={getValidImageSrc(value)}
+          alt="Preview"
+          className="w-full h-full object-cover"
+        />
+      </div>
     </div>
   );
 }
@@ -188,30 +201,21 @@ export default function SchemaField({ field, value, onChange, globalStyles, list
             selectOptions.push({ label: category, value: category });
           }
         });
-        console.log('selectOptions:', selectOptions);
       }
       return (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-          <select
-            key={`select-${field.name}-${listIndex || 'default'}`}
-            value={value}
-            onChange={(e) =>
-              onChange(
-                selectOptions[0]?.value?.constructor === Number
-                  ? parseFloat(e.target.value)
-                  : e.target.value
-              )
-            }
-            className="w-full px-3 py-2 border rounded-md text-sm bg-white"
-          >
-            {selectOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Dropdown
+          key={`select-${field.name}-${listIndex || 'default'}`}
+          label={field.label}
+          value={value}
+          onChange={(val) =>
+            onChange(
+              selectOptions[0]?.value?.constructor === Number
+                ? parseFloat(val)
+                : val
+            )
+          }
+          options={selectOptions}
+        />
       );
     }
 

@@ -27,7 +27,7 @@ export default function Reviews() {
 
   const fetchReviews = useCallback(async () => {
     try {
-      setLoading(true); 
+      setLoading(true);
       const data = await getRestaurantReviews(restaurantId, { page, limit });
       setReviews(data.reviews || []);
       setTotal((data.meta && data.meta.total) || (data.totalReviews || 0));
@@ -59,7 +59,7 @@ export default function Reviews() {
 
     reviews.forEach((review) => {
       totalRating += review.rating;
-      ratingDistribution[review.rating]++; 
+      ratingDistribution[review.rating]++;
 
       if (review.itemReviews && Array.isArray(review.itemReviews)) {
         review.itemReviews.forEach((itemReview) => {
@@ -95,7 +95,7 @@ export default function Reviews() {
       ratingDistribution,
       itemStats,
     };
-  }, [reviews]); 
+  }, [reviews]);
 
   const filteredReviews = useMemo(() => {
     let filtered = [...reviews];
@@ -130,7 +130,7 @@ export default function Reviews() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="large" color="red" />
+        <LoadingSpinner size="xl" color="indigo" />
       </div>
     );
   }
@@ -162,22 +162,20 @@ export default function Reviews() {
           <div className="flex px-6">
             <button
               onClick={() => setView("reviews")}
-              className={`px-4 py-4 font-bold transition-colors ${
-                view === "reviews"
+              className={`px-4 py-4 font-bold transition-colors ${view === "reviews"
                   ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-red-600"
-              }`}
+                }`}
             >
               Order Reviews ({stats.totalReviews})
             </button>
 
             <button
               onClick={() => setView("items")}
-              className={`px-4 py-4 font-bold transition-colors ${
-                view === "items"
+              className={`px-4 py-4 font-bold transition-colors ${view === "items"
                   ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-red-600"
-              }`}
+                }`}
             >
               Item Analysis ({stats.itemStats.length})
             </button>

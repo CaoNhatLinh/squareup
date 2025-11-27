@@ -12,11 +12,7 @@ export const uploadImageFile = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await apiClient.post("/upload/image-file", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await apiClient.post("/upload/image-file", formData);
   return response.data;
 };
 
@@ -32,11 +28,7 @@ export const uploadCompressedImageFile = async (file) => {
     const formData = new FormData();
     formData.append("image", compressedFile);
 
-    const response = await apiClient.post("/upload/image-file", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await apiClient.post("/upload/image-file", formData);
     return response.data;
   } catch (error) {
     console.error("Error compressing image:", error);

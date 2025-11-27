@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { HiMenu } from "react-icons/hi";
 import { resolveColor } from "@/components/builder/utils/colorUtils";
 import StyledButton from "@/components/builder/atoms/StyledButton";
@@ -13,16 +13,36 @@ export default function HeaderPreview({
   blockId,
   globalUseRealData = false,
   onElementClick,
+  slug,
+  isPublic = false,
 }) {
   const { restaurant } = useShop();
+  const headerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(1200);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const isMobileView = containerWidth < 768;
+
   const cfg = config && typeof config === "object" ? config : {};
 
   const layout = (cfg.layout || cfg.variant || "standard").toString();
   const variant = ["logo-center", "center", "centered"].includes(layout)
     ? "centered"
     : ["minimal", "compact"].includes(layout)
-      ? "minimal"
-      : "standard";
+    ? "minimal"
+    : "standard";
 
   const sticky = cfg.isSticky ?? cfg.sticky ?? false;
 
@@ -57,10 +77,16 @@ export default function HeaderPreview({
     [cfg.navigation, cfg.links, cfg.navSpacing, cfg.navGap]
   );
 
+  // Determine the correct order URL based on context
+  const orderUrl =
+    isPublic && slug ? `/${slug}/order` : slug ? `/${slug}/order` : "/shop";
+
+  const showButton = cfg.showCtaButton ?? true;
+
   const ctaButton = {
-    show: true,
+    show: showButton,
     label: "Order Now",
-    url: "/order",
+    url: orderUrl,
     style: "filled",
     color: "primary",
     textColor: "onPrimary",
@@ -147,6 +173,7 @@ export default function HeaderPreview({
       globalStyles={globalStyles}
       blockId={blockId}
       mobile={mobile}
+      isMobileView={isMobileView}
     />
   );
 
@@ -183,12 +210,11 @@ export default function HeaderPreview({
     };
 
     const onClick = (e) => {
-      if (onElementClick) {
+      if (onElementClick && !isPublic) {
         e.stopPropagation();
         onElementClick("cta-button");
         return;
       }
-
       if (ctaButton.url) {
         window.location.href = ctaButton.url;
       }
@@ -206,26 +232,30 @@ export default function HeaderPreview({
           {ctaButton.label && <span>{ctaButton.label}</span>}
         </StyledButton>
 
-        {cfg.showSearch && (
-          <div className="hidden md:block w-56">
+        {cfg.showSearch && !isMobileView && (
+          <div className="w-56">
             <Input size="small" placeholder="Search" />
           </div>
         )}
 
-        <button
-          className="md:hidden p-2"
-          onClick={() => setMenuOpen((prev) => !prev)}
-        >
-          <HiMenu className="w-6 h-6" style={{ color: resolve(colors.text) }} />
-        </button>
+        {isMobileView && (
+          <button className="p-2" onClick={() => setMenuOpen((prev) => !prev)}>
+            <HiMenu
+              className="w-6 h-6"
+              style={{ color: resolve(colors.text) }}
+            />
+          </button>
+        )}
       </div>
     );
   };
 
   return (
     <header
-      className={`w-full bg-white border-b border-gray-100 z-40 transition-all duration-300 ${sticky ? "sticky top-0 shadow-sm" : "relative"
-        } ${paddingClasses[paddingY] || "py-4"}`}
+      ref={headerRef}
+      className={`w-full bg-white border-b border-gray-100 z-40 transition-all duration-300 ${
+        sticky ? "sticky top-0 shadow-sm" : "relative"
+      } ${paddingClasses[paddingY] || "py-4"}`}
       style={{
         backgroundColor: headerBgColor,
         backgroundImage: headerBgImage ? `url(${headerBgImage})` : undefined,
@@ -241,7 +271,7 @@ export default function HeaderPreview({
             <Logo />
             <div className="flex items-center gap-8">
               <NavLinks />
-              <div className="h-6 w-px bg-gray-200 hidden md:block"></div>
+              {!isMobileView && <div className="h-6 w-px bg-gray-200"></div>}
               <Actions />
             </div>
           </div>
@@ -252,14 +282,16 @@ export default function HeaderPreview({
             <div className="flex justify-start">
               <NavLinks />
 
-              <div className="md:hidden">
-                <button onClick={() => setMenuOpen((prev) => !prev)}>
-                  <HiMenu
-                    className="w-6 h-6"
-                    style={{ color: resolve(colors.text) }}
-                  />
-                </button>
-              </div>
+              {isMobileView && (
+                <div>
+                  <button onClick={() => setMenuOpen((prev) => !prev)}>
+                    <HiMenu
+                      className="w-6 h-6"
+                      style={{ color: resolve(colors.text) }}
+                    />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-center">
@@ -279,27 +311,29 @@ export default function HeaderPreview({
             <div className="flex items-center gap-4">
               <Actions />
 
-              <button
-                className="hidden md:inline-flex p-2 rounded-md hover:bg-gray-100"
-                onClick={() => setMenuOpen((prev) => !prev)}
-              >
-                <HiMenu
-                  className="w-7 h-7"
-                  style={{ color: resolve(colors.text) }}
-                />
-              </button>
+              {!isMobileView && (
+                <button
+                  className="inline-flex p-2 rounded-md hover:bg-gray-100"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                >
+                  <HiMenu
+                    className="w-7 h-7"
+                    style={{ color: resolve(colors.text) }}
+                  />
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {menuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-white border-t shadow-md z-50">
+        {menuOpen && isMobileView && (
+          <div className="absolute left-0 right-0 top-full bg-white border-t shadow-md z-50">
             <NavLinks mobile />
           </div>
         )}
 
-        {variant === "minimal" && menuOpen && (
-          <div className="hidden md:block absolute right-6 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        {variant === "minimal" && menuOpen && !isMobileView && (
+          <div className="absolute right-6 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div className="p-2">
               {displayLinks.map((link, i) => (
                 <a

@@ -5,7 +5,8 @@ const { calculateItemDiscounts } = require('../utils/itemDiscountCalculator');
 async function listItems(req, res) {
   const { restaurantId } = req.params;
   const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 25;
+  let limit = parseInt(req.query.limit, 10);
+  if (isNaN(limit)) limit = 25;
   const q = (req.query.q || '').toLowerCase().trim();
   const sortBy = req.query.sortBy || 'name';
   const sortDir = (req.query.sortDir || 'asc').toLowerCase();
@@ -44,9 +45,12 @@ async function listItems(req, res) {
       });
     }
     const total = list.length;
-    const startIndex = Math.max((page - 1) * limit, 0);
-    const endIndex = startIndex + limit;
-    const paged = list.slice(startIndex, endIndex);
+    let paged = list;
+    if (limit > 0) {
+      const startIndex = Math.max((page - 1) * limit, 0);
+      const endIndex = startIndex + limit;
+      paged = list.slice(startIndex, endIndex);
+    }
     return res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (err) {
     console.error(err);

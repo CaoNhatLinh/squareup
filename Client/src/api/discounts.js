@@ -65,3 +65,7 @@ export const deleteDiscount = async (restaurantId, discountId) => {
     throw error;
   }
 };
+
+export const fetchAllDiscounts = async (restaurantId) => {
+  return fetchDiscounts(restaurantId, { limit: 0 });
+};

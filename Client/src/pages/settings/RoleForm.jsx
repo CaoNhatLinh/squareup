@@ -31,7 +31,7 @@ export default function RoleForm() {
         const initialPermissions = {};
         (structure.resources || []).forEach(resource => {
           const perms = {};
-          (structure.permissions || ['create','read','update','delete']).forEach(p => {
+          (structure.permissions || ['create', 'read', 'update', 'delete']).forEach(p => {
             perms[p] = false;
           });
           initialPermissions[resource] = perms;
@@ -39,9 +39,9 @@ export default function RoleForm() {
         if (isEdit) {
           const data = await getRole(restaurantId, roleId);
           setFormData({
-            name: data.role.name || '',
-            description: data.role.description || '',
-            permissions: { ...initialPermissions, ...data.role.permissions },
+            name: data?.role?.name || '',
+            description: data?.role?.description || '',
+            permissions: { ...initialPermissions, ...(data?.role?.permissions || {}) },
           });
         } else {
           setFormData(prev => ({ ...prev, permissions: initialPermissions }));
@@ -186,17 +186,17 @@ export default function RoleForm() {
                         {permissionTypes.every(perm => formData.permissions[resource]?.[perm]) ? 'Deselect All' : 'Select All'}
                       </Button>
                     </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {permissionTypes.map((perm) => (
-                          <Checkbox
-                            key={perm}
-                            label={<span className="text-sm text-gray-700 capitalize">{perm}</span>}
-                            checked={formData.permissions[resource]?.[perm] || false}
-                            onChange={() => handlePermissionChange(resource, perm)}
-                            size="small"
-                          />
-                        ))}
-                      </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {permissionTypes.map((perm) => (
+                        <Checkbox
+                          key={perm}
+                          label={<span className="text-sm text-gray-700 capitalize">{perm}</span>}
+                          checked={formData.permissions[resource]?.[perm] || false}
+                          onChange={() => handlePermissionChange(resource, perm)}
+                          size="small"
+                        />
+                      ))}
+                    </div>
                   </Card>
                 ))}
               </div>

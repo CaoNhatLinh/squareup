@@ -31,3 +31,7 @@ export async function getModifier(restaurantId, modId) {
   const res = await client.get(`/restaurants/${restaurantId}/modifiers/${modId}`)
   return res.data;
 }
+
+export async function fetchAllModifiers(restaurantId) {
+  return fetchModifiers(restaurantId, { limit: 0 });
+}

@@ -2,7 +2,7 @@ import * as client from '@/api/apiClient'
 
 export async function verifySession() {
   const res = await client.get('/auth/verifySession');
-  
+
   return res.data;
 }
 
@@ -22,7 +22,7 @@ export async function sessionLogout() {
     return res.data;
   } catch (error) {
     console.error('sessionLogout failed:', error)
-    
+
     return { ok: false }
   }
 }

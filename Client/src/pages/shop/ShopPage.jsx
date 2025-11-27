@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-import useAppStore from '@/store/useAppStore';
+import useAppStore from "@/store/useAppStore";
 import { fetchRestaurantForShop } from "@/api/restaurants";
 import { fetchActiveDiscounts } from "@/api/discounts";
+import { findRestaurantBySlug } from "@/api/siteConfig";
 import { ShopProvider } from "@/context/ShopProvider.jsx";
 import { useShop } from "@/context/ShopContext.jsx";
 import {
@@ -19,7 +21,12 @@ import {
 } from "@/pages/shop/components";
 
 function ShopPageContent() {
-  const restaurantId = useAppStore(s => s.restaurantId);
+  const { slug } = useParams();
+  const storedRestaurantId = useAppStore((s) => s.restaurantId);
+  const [restaurantId, setRestaurantId] = useState(storedRestaurantId);
+
+
+
   const {
     restaurant,
     setRestaurant,
@@ -41,6 +48,53 @@ function ShopPageContent() {
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    let isMounted = true;
+
+
+    findRestaurantBySlug(slug)
+      .then((res) => {
+        if (!isMounted) return;
+
+
+        let id = res?.restaurantId;
+        if (!id && res?.data) {
+          id = res.data.restaurantId || res.data.id;
+        }
+
+        if (id) {
+
+          setRestaurantId(id);
+          if (useAppStore.getState().restaurantId !== id) {
+            useAppStore.getState().setRestaurantId(id);
+          }
+        } else {
+          console.error("No restaurantId found in response", res);
+          setError("Restaurant not found");
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error("Failed to resolve slug:", err);
+        setError("Failed to load restaurant");
+        setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
+
+  // Effect 2: Sync from store ONLY if no slug
+  useEffect(() => {
+    if (!slug && storedRestaurantId) {
+      setRestaurantId(storedRestaurantId);
+    }
+  }, [slug, storedRestaurantId]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,9 +121,11 @@ function ShopPageContent() {
 
   useEffect(() => {
     if (!restaurantId) {
-      console.warn("⚠️ restaurantId is missing from URL params");
-      setError("Restaurant ID không hợp lệ");
-      setLoading(false);
+      if (!slug && !loading) {
+        console.warn("⚠️ restaurantId is missing from URL params");
+        setError("Restaurant ID không hợp lệ");
+        setLoading(false);
+      }
       return;
     }
 
@@ -96,7 +152,7 @@ function ShopPageContent() {
           socialMedia: data.socialMedia,
           specialClosures: data.specialClosures,
           active: data.active,
-          slug: data.slug
+          slug: data.slug,
         });
         const cats = data.categories ? Object.values(data.categories) : [];
         setCategories(cats);
@@ -107,7 +163,7 @@ function ShopPageContent() {
           const data = await fetchActiveDiscounts(restaurantId);
           setActiveDiscounts(data.discounts || {});
         } catch (error) {
-          console.error('❌ Failed to load discounts:', error);
+          console.error("❌ Failed to load discounts:", error);
         }
       } catch (error) {
         console.error("Failed to load restaurant data:", error);
@@ -118,10 +174,29 @@ function ShopPageContent() {
     };
 
     fetchRestaurantData();
-  }, [restaurantId, setRestaurant, setCategories, setItems, setModifiers, setActiveDiscounts]);
+  }, [
+    restaurantId,
+    setRestaurant,
+    setCategories,
+    setItems,
+    setModifiers,
+    setActiveDiscounts,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleAddToCart = (item, selectedOptions = [], quantity = 1, specialInstruction = "", editingCartKey = null) => {
-    addToCart(item, selectedOptions, quantity, specialInstruction, editingCartKey);
+  const handleAddToCart = (
+    item,
+    selectedOptions = [],
+    quantity = 1,
+    specialInstruction = "",
+    editingCartKey = null
+  ) => {
+    addToCart(
+      item,
+      selectedOptions,
+      quantity,
+      specialInstruction,
+      editingCartKey
+    );
     setIsModalOpen(false);
     setSelectedItem(null);
   };
@@ -185,9 +260,12 @@ function ShopPageContent() {
       {restaurant.active === false && (
         <div className="bg-red-600 text-white text-center py-4 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-2">🏪 Restaurant Temporarily Closed</h2>
+            <h2 className="text-xl font-bold mb-2">
+              🏪 Restaurant Temporarily Closed
+            </h2>
             <p className="text-sm opacity-90">
-              This restaurant is currently inactive. Please check back later or contact the restaurant for more information.
+              This restaurant is currently inactive. Please check back later or
+              contact the restaurant for more information.
             </p>
           </div>
         </div>

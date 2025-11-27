@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import useAppStore from '@/store/useAppStore';
 import { useToast } from '@/hooks/useToast';
 import { fetchDiscount, updateDiscount } from '@/api/discounts';
-import { fetchCategories } from '@/api/categories';
-import { fetchItems } from '@/api/items';
+import { fetchAllCategories } from '@/api/categories';
+import { fetchAllItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { MdPercent } from "react-icons/md";
 import { Button, Input, Dropdown, Checkbox, LoadingSpinner } from '@/components/ui';
@@ -67,8 +67,8 @@ export default function EditDiscount() {
     if (restaurantId && discountId) {
       Promise.all([
         fetchDiscount(restaurantId, discountId),
-        fetchCategories(restaurantId),
-        fetchItems(restaurantId)
+        fetchAllCategories(restaurantId),
+        fetchAllItems(restaurantId)
       ]).then(([discountData, categoriesData, itemsData]) => {
         setFormData(discountData);
           setCategories(categoriesData?.categories || categoriesData || []);
@@ -81,7 +81,7 @@ export default function EditDiscount() {
   }, [restaurantId, discountId, error]);
 
   const handleClose = () => {
-    navigate(`/restaurant/discounts`);
+    navigate(-1);
   };
 
   const handleSave = async () => {

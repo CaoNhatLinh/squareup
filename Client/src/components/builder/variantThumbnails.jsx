@@ -296,99 +296,6 @@ export const VARIANT_THUMBNAILS = {
       </div>
     )
   },
-  GALLERY: {
-    'premium-grid': (
-      <div className="w-full h-16 bg-white rounded relative overflow-hidden flex flex-col p-1">
-        <div className="flex items-center gap-2 px-1">
-          <div className="w-20 h-3 bg-gray-200 rounded"></div>
-          <div className="w-12 h-3 bg-gray-100 rounded"></div>
-          <div className="w-14 h-3 bg-gray-100 rounded"></div>
-        </div>
-        <div className="flex mt-1 gap-2 px-1">
-          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-        </div>
-      </div>
-    ),
-    'elegant-masonry': (
-      <div className="w-full h-16 rounded border overflow-hidden flex items-center gap-2 px-2 bg-gradient-to-br from-gray-50 to-white">
-        <div className="w-16 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-        <div className="w-20 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-        <div className="w-18 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
-        <div className="w-16 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300 hidden md:block"></div>
-      </div>
-    ),
-    'luxury-carousel': (
-      <div className="w-full h-16 rounded border overflow-hidden flex items-center gap-2 px-2 bg-gradient-to-br from-amber-50 to-orange-50">
-        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200"></div>
-        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200"></div>
-        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200 hidden md:block"></div>
-        <div className="ml-2 text-amber-600 text-xs">‹ ›</div>
-      </div>
-    ),
-    'cinematic-slider': (
-      <div className="w-full h-16 rounded border overflow-hidden bg-black relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-pulse"></div>
-        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center">
-            <div className="w-0 h-0 border-l-2 border-white ml-0.5"></div>
-          </div>
-        </div>
-      </div>
-    )
-  },
-  PROMO_GRID: {
-    banner: (
-      <div className="w-full h-16 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200 flex items-center justify-center p-2">
-        <div className="text-center">
-          <div className="w-4/5 h-1 bg-orange-600 rounded mb-1"></div>
-          <div className="w-3/5 h-1 bg-orange-400 rounded mb-2"></div>
-          <div className="flex gap-1 justify-center">
-            <div className="w-2 h-2 bg-orange-500 rounded"></div>
-            <div className="w-2 h-2 bg-orange-500 rounded"></div>
-            <div className="w-2 h-2 bg-orange-500 rounded"></div>
-          </div>
-        </div>
-      </div>
-    ),
-    popup: (
-      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex items-center justify-center p-2 relative">
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded border border-orange-200 p-2 shadow-lg">
-          <div className="w-16 h-1 bg-orange-600 rounded mb-1"></div>
-          <div className="w-12 h-1 bg-orange-400 rounded mb-2"></div>
-          <div className="flex gap-1 justify-center">
-            <div className="w-1.5 h-1.5 bg-orange-500 rounded"></div>
-            <div className="w-1.5 h-1.5 bg-orange-500 rounded"></div>
-          </div>
-        </div>
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-      </div>
-    ),
-    inline: (
-      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex items-center justify-center p-2">
-        <div className="flex items-center gap-2">
-          <div className="w-12 h-6 bg-gradient-to-br from-orange-100 to-red-100 rounded border border-orange-200 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 bg-orange-500 rounded"></div>
-          </div>
-          <div className="text-xs text-gray-600">Special Offer</div>
-          <div className="w-8 h-3 bg-orange-500 rounded"></div>
-        </div>
-      </div>
-    ),
-    grid: (
-      <div className="w-full h-16 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200 grid grid-cols-2 gap-2 p-2">
-        <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded border border-orange-200 flex flex-col justify-center items-center p-1">
-          <div className="w-3 h-1 bg-orange-600 rounded mb-1"></div>
-          <div className="w-4 h-1 bg-orange-400 rounded"></div>
-        </div>
-        <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded border border-orange-200 flex flex-col justify-center items-center p-1">
-          <div className="w-3 h-1 bg-orange-600 rounded mb-1"></div>
-          <div className="w-4 h-1 bg-orange-400 rounded"></div>
-        </div>
-      </div>
-    )
-  },
   RESTAURANT_INFO: {
     card: (
       <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex flex-col p-2">
@@ -470,49 +377,187 @@ export const VARIANT_THUMBNAILS = {
       </div>
     )
   },
+  GALLERY: {
+    'premium-grid': (
+      <div className="w-full h-16 bg-white rounded relative overflow-hidden flex flex-col p-1">
+        <div className="flex items-center gap-2 px-1">
+          <div className="w-20 h-3 bg-gray-200 rounded"></div>
+          <div className="w-12 h-3 bg-gray-100 rounded"></div>
+          <div className="w-14 h-3 bg-gray-100 rounded"></div>
+        </div>
+        <div className="flex mt-1 gap-2 px-1">
+          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+          <div className="w-1/3 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+        </div>
+      </div>
+    ),
+    'elegant-masonry': (
+      <div className="w-full h-16 rounded border overflow-hidden flex items-center gap-2 px-2 bg-gradient-to-br from-gray-50 to-white">
+        <div className="w-16 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+        <div className="w-20 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+        <div className="w-18 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300"></div>
+        <div className="w-16 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded border border-gray-300 hidden md:block"></div>
+      </div>
+    ),
+    'luxury-carousel': (
+      <div className="w-full h-16 rounded border overflow-hidden flex items-center gap-2 px-2 bg-gradient-to-br from-amber-50 to-orange-50">
+        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200"></div>
+        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200"></div>
+        <div className="w-24 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded border-2 border-amber-200 hidden md:block"></div>
+        <div className="ml-2 text-amber-600 text-xs">‹ ›</div>
+      </div>
+    ),
+    'cinematic-slider': (
+      <div className="w-full h-16 rounded border overflow-hidden bg-black relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-pulse"></div>
+        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-0 h-0 border-l-2 border-white ml-0.5"></div>
+          </div>
+        </div>
+      </div>
+    ),
+    'modern-showcase': (
+      <div className="w-full h-16 bg-white rounded border overflow-hidden flex">
+        <div className="w-2/3 bg-gray-200 h-full"></div>
+        <div className="w-1/3 flex flex-col">
+          <div className="h-1/2 bg-gray-100 border-b border-white"></div>
+          <div className="h-1/2 bg-gray-100"></div>
+        </div>
+      </div>
+    ),
+    'classic-portfolio': (
+      <div className="w-full h-16 bg-white rounded border p-1 grid grid-cols-3 gap-1">
+        <div className="bg-gray-100 h-full"></div>
+        <div className="bg-gray-100 h-full"></div>
+        <div className="bg-gray-100 h-full"></div>
+      </div>
+    )
+  },
+  PROMO_GRID: {
+    banner: (
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="100" height="80" fill="#f3f4f6" rx="4" />
+        <rect x="5" y="25" width="90" height="30" fill="url(#grad1)" rx="4" />
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#FF6B35" stopOpacity="1" />
+            <stop offset="100%" stopColor="#FF9F43" stopOpacity="1" />
+          </linearGradient>
+        </defs>
+        <rect x="15" y="35" width="40" height="4" fill="white" rx="2" />
+        <rect x="15" y="42" width="25" height="3" fill="white" opacity="0.7" rx="1.5" />
+        <circle cx="80" cy="40" r="8" fill="white" opacity="0.2" />
+      </svg>
+    ),
+    popup: (
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="100" height="80" fill="#e5e7eb" rx="4" />
+        <rect width="100" height="80" fill="#000" opacity="0.1" rx="4" />
+        <rect x="25" y="15" width="50" height="50" fill="white" rx="4" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+        <path d="M25 19a4 4 0 0 1 4-4h42a4 4 0 0 1 4 4v16H25z" fill="#FF6B35" />
+        <circle cx="50" cy="25" r="6" fill="white" opacity="0.9" />
+        <rect x="35" y="40" width="30" height="3" fill="#333" rx="1.5" />
+        <rect x="30" y="46" width="40" height="2" fill="#9ca3af" rx="1" />
+        <rect x="30" y="50" width="40" height="2" fill="#9ca3af" rx="1" />
+        <rect x="40" y="56" width="20" height="5" fill="#FF6B35" rx="2.5" />
+      </svg>
+    ),
+    inline: (
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="100" height="80" fill="#fff" rx="4" />
+        <rect x="35" y="10" width="30" height="3" fill="#333" rx="1.5" />
+        <rect x="30" y="16" width="40" height="2" fill="#9ca3af" rx="1" />
+        <rect x="10" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <rect x="12" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1" />
+        <rect x="38" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <rect x="40" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1" />
+        <rect x="66" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <rect x="68" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1" />
+        <rect x="40" y="68" width="20" height="5" fill="#333" rx="2.5" />
+      </svg>
+    ),
+    grid: (
+      <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="100" height="80" fill="#f9fafb" rx="4" />
+        <rect x="10" y="10" width="38" height="28" fill="white" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <circle cx="29" cy="24" r="5" fill="#FF6B35" opacity="0.2" />
+        <rect x="52" y="10" width="38" height="28" fill="white" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <circle cx="71" cy="24" r="5" fill="#FF6B35" opacity="0.2" />
+        <rect x="10" y="42" width="38" height="28" fill="white" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <circle cx="29" cy="56" r="5" fill="#FF6B35" opacity="0.2" />
+        <rect x="52" y="42" width="38" height="28" fill="white" stroke="#e5e7eb" strokeWidth="1" rx="2" />
+        <circle cx="71" cy="56" r="5" fill="#FF6B35" opacity="0.2" />
+      </svg>
+    )
+  },
+  NEWSLETTER: {
+    centered: (
+      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex flex-col justify-center items-center p-2">
+        <div className="w-4/5 h-1 bg-gray-800 rounded mb-1"></div>
+        <div className="w-3/5 h-1 bg-gray-600 rounded mb-2"></div>
+        <div className="w-2/3 h-2 bg-gray-100 rounded border border-gray-200 mb-1"></div>
+        <div className="w-1/3 h-2 bg-blue-500 rounded"></div>
+      </div>
+    ),
+    inline: (
+      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex flex-col justify-center p-2">
+        <div className="w-full h-1 bg-gray-800 rounded mb-1"></div>
+        <div className="w-3/4 h-1 bg-gray-600 rounded mb-2"></div>
+        <div className="flex gap-1">
+          <div className="flex-1 h-2 bg-gray-100 rounded border border-gray-200"></div>
+          <div className="w-1/4 h-2 bg-blue-500 rounded"></div>
+        </div>
+      </div>
+    ),
+    card: (
+      <div className="w-full h-16 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-2">
+        <div className="w-3/4 bg-white rounded shadow-sm p-2 flex flex-col items-center">
+          <div className="w-full h-1 bg-gray-800 rounded mb-1"></div>
+          <div className="w-3/4 h-1 bg-gray-600 rounded mb-2"></div>
+          <div className="w-full h-2 bg-gray-100 rounded border border-gray-200 mb-1"></div>
+          <div className="w-full h-2 bg-blue-500 rounded"></div>
+        </div>
+      </div>
+    )
+  },
   ABOUT_US: {
-    'luxury-story': (
-      <div className="w-full h-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 flex overflow-hidden">
-        <div className="w-1/2 bg-gradient-to-br from-blue-100 to-purple-100 p-2 flex flex-col justify-center">
-          <div className="w-4/5 h-1 bg-blue-800 rounded mb-1"></div>
-          <div className="w-3/5 h-1 bg-blue-600 rounded mb-2"></div>
-          <div className="flex gap-1">
-            <div className="w-6 h-2 bg-blue-500 rounded"></div>
-            <div className="w-8 h-2 bg-gray-200 rounded"></div>
-          </div>
+    split: (
+      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex overflow-hidden">
+        <div className="w-1/2 p-2 flex flex-col justify-center">
+          <div className="w-full h-1 bg-gray-800 rounded mb-1"></div>
+          <div className="w-3/4 h-1 bg-gray-600 rounded mb-2"></div>
+          <div className="w-full h-0.5 bg-gray-400 rounded mb-0.5"></div>
+          <div className="w-5/6 h-0.5 bg-gray-400 rounded"></div>
         </div>
-        <div className="w-1/2 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-          <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className="absolute top-2 right-2 w-3 h-3 bg-blue-400 rounded-full"></div>
+        <div className="w-1/2 bg-gray-100 relative">
+          <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg>
+          </div>
         </div>
       </div>
     ),
-    'elegant-team': (
-      <div className="w-full h-16 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200 flex flex-col justify-center items-center p-2">
-        <div className="w-4/5 h-1 bg-indigo-800 rounded mb-1"></div>
-        <div className="w-3/5 h-1 bg-indigo-600 rounded mb-2"></div>
-        <div className="grid grid-cols-3 gap-1 mt-2">
-          <div className="h-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded border border-indigo-200"></div>
-          <div className="h-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded border border-indigo-200"></div>
-          <div className="h-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded border border-indigo-200"></div>
+    centered: (
+      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex flex-col items-center p-2">
+        <div className="w-1/2 h-1 bg-gray-800 rounded mb-1"></div>
+        <div className="w-1/3 h-1 bg-gray-600 rounded mb-2"></div>
+        <div className="w-3/4 h-0.5 bg-gray-400 rounded mb-0.5"></div>
+        <div className="w-2/3 h-0.5 bg-gray-400 rounded mb-2"></div>
+        <div className="flex gap-1">
+          <div className="w-4 h-4 bg-gray-100 rounded-full"></div>
+          <div className="w-4 h-4 bg-gray-100 rounded-full"></div>
+          <div className="w-4 h-4 bg-gray-100 rounded-full"></div>
         </div>
       </div>
     ),
-    'premium-stats': (
-      <div className="w-full h-16 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border-2 border-emerald-200 flex overflow-hidden">
-        <div className="w-2/5 bg-gradient-to-br from-emerald-100 to-teal-100 p-2 flex flex-col justify-center">
-          <div className="w-full h-1 bg-emerald-800 rounded mb-1"></div>
-          <div className="w-4/5 h-1 bg-emerald-600 rounded mb-2"></div>
-          <div className="flex gap-1">
-            <div className="w-5 h-2 bg-emerald-500 rounded"></div>
-            <div className="w-6 h-2 bg-white rounded"></div>
-          </div>
-        </div>
-        <div className="w-3/5 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-          <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-400 rounded-full"></div>
-          <div className="absolute bottom-3 left-3 w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-        </div>
+    minimal: (
+      <div className="w-full h-16 bg-white rounded-lg border border-gray-200 flex flex-col justify-center p-2">
+        <div className="w-1/3 h-1 bg-gray-800 rounded mb-1"></div>
+        <div className="w-1/4 h-1 bg-gray-600 rounded mb-2"></div>
+        <div className="w-full h-0.5 bg-gray-400 rounded mb-0.5"></div>
+        <div className="w-5/6 h-0.5 bg-gray-400 rounded mb-0.5"></div>
+        <div className="w-4/5 h-0.5 bg-gray-400 rounded"></div>
       </div>
     )
   }

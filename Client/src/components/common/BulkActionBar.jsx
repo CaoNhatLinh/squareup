@@ -1,4 +1,5 @@
 import { HiOutlineTrash } from "react-icons/hi2";
+import Button from "@/components/ui/Button";
 
 export default function BulkActionBar({
   selectedCount,
@@ -10,11 +11,10 @@ export default function BulkActionBar({
 
   return (
     <div
-      className={`${
-        position === "bottom"
-          ? "fixed bottom-0 left-0 md:left-[256px] right-0"
-          : "mb-4"
-      } bg-red-600 text-white shadow-2xl z-50 transition-transform duration-300 transform translate-y-0`}
+      className={`${position === "bottom"
+        ? "fixed bottom-0 left-0 md:left-[256px] right-0"
+        : "mb-4"
+        } bg-red-600 text-white shadow-2xl z-50 transition-transform duration-300 transform translate-y-0`}
     >
       <div className="max-w-full mx-auto px-6 py-4 flex items-center justify-between">
         <span className="text-base font-bold">
@@ -22,19 +22,24 @@ export default function BulkActionBar({
         </span>
 
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={onDelete}
-            className="px-5 py-2 text-sm font-semibold bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-md"
+            variant="secondary"
+            size="small"
+            icon={HiOutlineTrash}
+            className="text-red-600 hover:bg-gray-100"
           >
-            <HiOutlineTrash className="w-5 h-5" /> Delete Selected
-          </button>
+            Delete Selected
+          </Button>
 
-          <button
+          <Button
             onClick={onCancel}
-            className="px-5 py-2 text-sm font-medium bg-red-700 hover:bg-red-800 rounded-lg transition-colors" 
+            variant="primary"
+            size="small"
+            className="bg-red-700 hover:bg-red-800 border-none"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

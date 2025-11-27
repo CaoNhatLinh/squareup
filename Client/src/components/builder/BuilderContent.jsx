@@ -5,6 +5,7 @@ import PropertiesPanel from "@/components/builder/panels/PropertiesPanel";
 import BuilderToolbar from "@/components/builder/BuilderToolbar";
 import BuilderCanvas from "@/components/builder/BuilderCanvas";
 import { setByPath } from "@/utils/objectUtils";
+import { BuilderViewportProvider } from "@/context/BuilderViewportContext";
 
 const getGroupControlIds = () => {
   const groupIds = new Set();
@@ -88,35 +89,37 @@ function BuilderContent({
         setActiveDrawer={setActiveDrawer}
       />
 
-      <BuilderCanvas
-        restaurantId={restaurantId}
-        layout={layout}
-        selectedBlockId={selectedBlockId}
-        selectedSection={selectedSection}
-        setSelectedSection={setSelectedSection}
-        setSelectedBlockId={setSelectedBlockId}
-        activeControl={activeControl}
-        setActiveControl={setActiveControl}
-        headerConfig={headerConfig}
-        footerConfig={footerConfig}
-        componentStyles={componentStyles}
-        globalStyles={globalStyles}
-        slug={slug}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        useRealDataGlobal={useRealDataGlobal}
-        setUseRealDataGlobal={setUseRealDataGlobal}
-        setLayout={setLayout}
-        handleDragEnd={handleDragEnd}
-        handleAddBlock={handleAddBlock}
-        handleRemoveBlock={handleRemoveBlock}
-        handleMoveBlockUp={handleMoveBlockUp}
-        handleMoveBlockDown={handleMoveBlockDown}
-        handleDuplicateBlock={handleDuplicateBlock}
-        handleQuickSwapVariant={handleQuickSwapVariant}
-        sensors={sensors}
-        activeDrawer={activeDrawer}
-      />
+      <BuilderViewportProvider value={viewMode}>
+        <BuilderCanvas
+          restaurantId={restaurantId}
+          layout={layout}
+          selectedBlockId={selectedBlockId}
+          selectedSection={selectedSection}
+          setSelectedSection={setSelectedSection}
+          setSelectedBlockId={setSelectedBlockId}
+          activeControl={activeControl}
+          setActiveControl={setActiveControl}
+          headerConfig={headerConfig}
+          footerConfig={footerConfig}
+          componentStyles={componentStyles}
+          globalStyles={globalStyles}
+          slug={slug}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          useRealDataGlobal={useRealDataGlobal}
+          setUseRealDataGlobal={setUseRealDataGlobal}
+          setLayout={setLayout}
+          handleDragEnd={handleDragEnd}
+          handleAddBlock={handleAddBlock}
+          handleRemoveBlock={handleRemoveBlock}
+          handleMoveBlockUp={handleMoveBlockUp}
+          handleMoveBlockDown={handleMoveBlockDown}
+          handleDuplicateBlock={handleDuplicateBlock}
+          handleQuickSwapVariant={handleQuickSwapVariant}
+          sensors={sensors}
+          activeDrawer={activeDrawer}
+        />
+      </BuilderViewportProvider>
 
       <div className="w-80 bg-white border-l shadow-sm flex flex-col h-full overflow-hidden">
         <div className="p-3 border-b flex-shrink-0 bg-white">
@@ -127,12 +130,12 @@ function BuilderContent({
 
         <div className="flex-1 p-2 overflow-y-auto min-h-0">
           {activeControl &&
-          (() => {
-            const cid = activeControl.controlId || "";
-            const groupControls = getGroupControlIds();
-            const isGroup = groupControls.includes(cid);
-            return !isGroup;
-          })() ? (
+            (() => {
+              const cid = activeControl.controlId || "";
+              const groupControls = getGroupControlIds();
+              const isGroup = groupControls.includes(cid);
+              return !isGroup;
+            })() ? (
             <ControlToolkit
               activeControl={activeControl}
               block={
@@ -140,8 +143,8 @@ function BuilderContent({
                 (selectedSection === "header"
                   ? { id: "HEADER", props: headerConfig, type: "HEADER" }
                   : selectedSection === "footer"
-                  ? { id: "FOOTER", props: footerConfig, type: "FOOTER" }
-                  : null)
+                    ? { id: "FOOTER", props: footerConfig, type: "FOOTER" }
+                    : null)
               }
               globalStyles={globalStyles}
               onControlChange={(path, val) => {

@@ -16,7 +16,9 @@ import {
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import { DAY_LABELS } from "@/constants/scheduleConstants";
 import { HiDesktopComputer, HiTrash, HiX } from "react-icons/hi";
-import { HiDevicePhoneMobile } from "react-icons/hi2";
+import { HiDevicePhoneMobile, HiDeviceTablet } from "react-icons/hi2";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 
 const BuilderCanvas = ({
   restaurantId,
@@ -210,34 +212,51 @@ const BuilderCanvas = ({
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-200 relative">
       <div className="h-14 bg-white border-b flex items-center justify-between px-6 shadow-sm z-10 flex-shrink-0">
         <div className="flex items-center gap-4">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
+          <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+            <Button
               onClick={() => setViewMode("desktop")}
+              variant="ghost"
+              size="small"
               className={`p-2 rounded-md transition ${viewMode === "desktop"
                 ? "bg-white shadow text-orange-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 hover:text-gray-700 hover:bg-transparent"
                 }`}
+              title="Desktop View"
             >
               <HiDesktopComputer className="w-5 h-5" />
-            </button>
-            <button
+            </Button>
+            <Button
+              onClick={() => setViewMode("tablet")}
+              variant="ghost"
+              size="small"
+              className={`p-2 rounded-md transition ${viewMode === "tablet"
+                ? "bg-white shadow text-orange-600"
+                : "text-gray-500 hover:text-gray-700 hover:bg-transparent"
+                }`}
+              title="Tablet View"
+            >
+              <HiDeviceTablet className="w-5 h-5" />
+            </Button>
+            <Button
               onClick={() => setViewMode("mobile")}
+              variant="ghost"
+              size="small"
               className={`p-2 rounded-md transition ${viewMode === "mobile"
                 ? "bg-white shadow text-orange-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 hover:text-gray-700 hover:bg-transparent"
                 }`}
+              title="Mobile View"
             >
               <HiDevicePhoneMobile className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
           <span className="text-sm text-gray-500">
-            {viewMode === "desktop" ? "Desktop Preview" : "Mobile Preview"}
+            {viewMode === "desktop" ? "Desktop Preview" : viewMode === "tablet" ? "Tablet Preview" : "Mobile Preview"}
           </span>
 
-          <label className="flex items-center gap-2 text-sm font-medium ml-4">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
+          <div className="ml-4 flex items-center">
+            <Checkbox
+              label="Use Restaurant Data"
               checked={useRealDataGlobal}
               onChange={(e) => {
                 const val = e.target.checked;
@@ -250,14 +269,15 @@ const BuilderCanvas = ({
                 );
               }}
             />
-            Use Restaurant Data
-          </label>
+          </div>
         </div>
         <div className="text-sm font-medium text-gray-600">
           {slug ? (
-            <button
+            <Button
               onClick={() => window.open(`/${slug}`, "_blank")}
-              className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-md text-sm font-medium transition-colors"
+              variant="ghost"
+              size="small"
+              className="inline-flex items-center gap-2 bg-orange-100 hover:bg-orange-200 text-orange-700"
               title="View published site"
             >
               <svg
@@ -274,7 +294,7 @@ const BuilderCanvas = ({
                 />
               </svg>
               /{slug}
-            </button>
+            </Button>
           ) : (
             "No URL set"
           )}
@@ -286,14 +306,14 @@ const BuilderCanvas = ({
             ref={headerRef}
             className="absolute top-0 left-0 right-0 z-50 bg-white shadow-sm"
             style={{
-              width: viewMode === "mobile" ? "375px" : "100%",
-              marginLeft: viewMode === "mobile" ? "auto" : "0",
-              marginRight: viewMode === "mobile" ? "auto" : "0",
+              width: viewMode === "mobile" ? "375px" : viewMode === "tablet" ? "768px" : "100%",
+              marginLeft: viewMode !== "desktop" ? "auto" : "0",
+              marginRight: viewMode !== "desktop" ? "auto" : "0",
               borderRadius:
-                viewMode === "mobile" ? "30px 30px 0 0" : "8px 8px 0 0",
+                viewMode === "mobile" ? "30px 30px 0 0" : viewMode === "tablet" ? "20px 20px 0 0" : "8px 8px 0 0",
               borderWidth:
-                viewMode === "mobile" ? "8px 8px 0 8px" : "1px 1px 0 1px",
-              borderColor: viewMode === "mobile" ? "#1f2937" : "#d1d5db",
+                viewMode === "mobile" ? "8px 8px 0 8px" : viewMode === "tablet" ? "6px 6px 0 6px" : "1px 1px 0 1px",
+              borderColor: viewMode !== "desktop" ? "#1f2937" : "#d1d5db",
               borderStyle: "solid",
             }}
             onClick={() => {
@@ -310,6 +330,8 @@ const BuilderCanvas = ({
                 globalStyles={globalStyles}
                 blockId={"HEADER"}
                 globalUseRealData={useRealDataGlobal}
+                slug={slug}
+                isPublic={false}
                 onElementClick={(key) => {
                   setSelectedSection("header");
                   setSelectedBlockId(null);
@@ -323,13 +345,13 @@ const BuilderCanvas = ({
             style={{
               top: `${headerHeight}px`,
               bottom: "0px",
-              width: viewMode === "mobile" ? "375px" : "100%",
-              marginLeft: viewMode === "mobile" ? "auto" : "0",
-              marginRight: viewMode === "mobile" ? "auto" : "0",
+              width: viewMode === "mobile" ? "375px" : viewMode === "tablet" ? "768px" : "100%",
+              marginLeft: viewMode !== "desktop" ? "auto" : "0",
+              marginRight: viewMode !== "desktop" ? "auto" : "0",
               borderRadius: viewMode === "mobile" ? "0" : "0",
               borderWidth:
-                viewMode === "mobile" ? "0 8px 8px 8px" : "0 1px 1px 1px",
-              borderColor: viewMode === "mobile" ? "#1f2937" : "#d1d5db",
+                viewMode === "mobile" ? "0 8px 8px 8px" : viewMode === "tablet" ? "0 6px 6px 6px" : "0 1px 1px 1px",
+              borderColor: viewMode !== "desktop" ? "#1f2937" : "#d1d5db",
               borderStyle: "solid",
               transform: "translate(0)", // Creates containing block for fixed elements
               contain: "paint", // Optimization and containment

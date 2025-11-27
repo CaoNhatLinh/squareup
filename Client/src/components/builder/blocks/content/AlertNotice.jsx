@@ -35,7 +35,7 @@ export default function AlertNoticeBlock({ message, type = 'info', isActive = tr
   const Icon = styles.icon;
 
   return (
-    <div className={`w-full px-4 py-3 border-b ${styles.bg} ${styles.border}`} id={blockId} data-block-id={blockId} data-control="container">
+    <div className={`w-full px-4 py-3 border-b ${styles.bg} ${styles.border}`} id={blockId} >
       <div className="max-w-7xl mx-auto flex items-center gap-3">
         <Icon className="w-5 h-5" style={{ color: styles.textColor }} />
         <StyledText

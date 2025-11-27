@@ -6,13 +6,22 @@ const db = admin.database();
 
 const createCheckoutSession = async (req, res) => {
   try {
-    const { restaurantId, items, returnUrl, guestUuid, orderType, deliveryAddress } = req.body;
+    const {
+      restaurantId,
+      items,
+      returnUrl,
+      guestUuid,
+      orderType,
+      deliveryAddress,
+    } = req.body;
 
     if (!restaurantId || !items || items.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const restaurantSnapshot = await db.ref(`restaurants/${restaurantId}`).get();
+    const restaurantSnapshot = await db
+      .ref(`restaurants/${restaurantId}`)
+      .get();
     const restaurant = restaurantSnapshot.val();
 
     if (!restaurant) {
@@ -63,8 +72,17 @@ const createCheckoutSession = async (req, res) => {
     const pendingOrderId = `pending_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
-    if ((orderType === 'delivery') && !deliveryAddress && !req.body.customerInfo?.address) {
-      return res.status(400).json({ error: 'Delivery orders require a deliveryAddress or customerInfo.address' });
+    if (
+      orderType === "delivery" &&
+      !deliveryAddress &&
+      !req.body.customerInfo?.address
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Delivery orders require a deliveryAddress or customerInfo.address",
+        });
     }
 
     const pendingOrderData = {
@@ -82,52 +100,59 @@ const createCheckoutSession = async (req, res) => {
       status: "pending",
       createdAt: Date.now(),
       guestUuid: guestUuid || null,
-      orderType: orderType || 'delivery',
+      orderType: orderType || "delivery",
       deliveryAddress: deliveryAddress || null,
       seatNumber: req.body.seatNumber || null,
     };
 
-    // --- VALIDATION: Check if items and modifiers still exist ---
     if (items && Array.isArray(items) && items.length > 0) {
       const dbItems = restaurant.items || {};
       const dbModifiers = restaurant.modifiers || {};
 
       for (const item of items) {
-        // Skip validation for sample items or items without itemId
-        if (!item.itemId || (item.id && item.id.startsWith('sample-'))) continue;
-
+        if (!item.itemId || (item.id && item.id.startsWith("sample-")))
+          continue;
         const dbItem = dbItems[item.itemId];
         if (!dbItem) {
-          return res.status(400).json({ error: `Item '${item.name}' is no longer available. Please update your cart.` });
+          return res
+            .status(400)
+            .json({
+              error: `Item '${item.name}' is no longer available. Please update your cart.`,
+            });
         }
-
-        // Check modifiers
         if (item.selectedOptions && Array.isArray(item.selectedOptions)) {
           for (const option of item.selectedOptions) {
             const modifier = dbModifiers[option.modifierId];
             if (!modifier) {
-              return res.status(400).json({ error: `Modifier for '${item.name}' is no longer available. Please update your cart.` });
+              return res
+                .status(400)
+                .json({
+                  error: `Modifier for '${item.name}' is no longer available. Please update your cart.`,
+                });
             }
             if (!modifier.options || !modifier.options[option.id]) {
-              return res.status(400).json({ error: `Option '${option.name}' for '${item.name}' is no longer available. Please update your cart.` });
+              return res
+                .status(400)
+                .json({
+                  error: `Option '${option.name}' for '${item.name}' is no longer available. Please update your cart.`,
+                });
             }
           }
         }
       }
     }
-    // --- END VALIDATION ---
 
     await db.ref(`pendingOrders/${pendingOrderId}`).set(pendingOrderData);
-    const restaurantSlug = restaurant.slug || restaurantId; // Fallback to restaurantId if no slug
+    const restaurantSlug = restaurant.slug || restaurantId;
 
     let successUrlBase = returnUrl
       ? returnUrl.replace("checkout-return", "success")
       : `${req.headers.origin}/${restaurantSlug}/order/success`;
 
-    if (successUrlBase.includes('?')) {
-      successUrlBase += '&session_id={CHECKOUT_SESSION_ID}';
+    if (successUrlBase.includes("?")) {
+      successUrlBase += "&session_id={CHECKOUT_SESSION_ID}";
     } else {
-      successUrlBase += '?session_id={CHECKOUT_SESSION_ID}';
+      successUrlBase += "?session_id={CHECKOUT_SESSION_ID}";
     }
 
     const successUrl = successUrlBase;
@@ -153,7 +178,12 @@ const createCheckoutSession = async (req, res) => {
         },
       },
     });
-    res.status(200).json({ success: true, data: { sessionId: session.id, url: session.url } });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: { sessionId: session.id, url: session.url },
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -163,39 +193,74 @@ const createCheckoutSession = async (req, res) => {
 const createOrderFromPOS = async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    const { items, customerInfo, paymentMethod, orderType, seatNumber, deliveryAddress } = req.body;
-    if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const {
+      items,
+      customerInfo,
+      paymentMethod,
+      orderType,
+      seatNumber,
+      deliveryAddress,
+    } = req.body;
+    if (
+      !restaurantId ||
+      !items ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
-    const restaurantSnapshot = await db.ref(`restaurants/${restaurantId}`).get();
+    const restaurantSnapshot = await db
+      .ref(`restaurants/${restaurantId}`)
+      .get();
     const restaurant = restaurantSnapshot.val();
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant)
+      return res.status(404).json({ error: "Restaurant not found" });
 
-    const discountResult = await calculateCartDiscounts(restaurantId, items.map(i => ({ ...i, totalPrice: (i.price || 0) * (i.quantity || 1) })));
+    const discountResult = await calculateCartDiscounts(
+      restaurantId,
+      items.map((i) => ({
+        ...i,
+        totalPrice: (i.price || 0) * (i.quantity || 1),
+      }))
+    );
 
-    const subtotal = items.reduce((sum, i) => sum + ((i.price || 0) * (i.quantity || 1)), 0);
+    const subtotal = items.reduce(
+      (sum, i) => sum + (i.price || 0) * (i.quantity || 1),
+      0
+    );
     const totalDiscount = discountResult.totalDiscount || 0;
     const totalAmount = subtotal - totalDiscount;
 
     const orderId = db.ref(`restaurants/${restaurantId}/orders`).push().key;
-    const finalOrderType = orderType || 'dine_in';
-    if (finalOrderType === 'delivery' && !deliveryAddress && !customerInfo?.address) {
-      return res.status(400).json({ error: 'Delivery orders require a deliveryAddress or customerInfo.address' });
+    const finalOrderType = orderType || "dine_in";
+    if (
+      finalOrderType === "delivery" &&
+      !deliveryAddress &&
+      !customerInfo?.address
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Delivery orders require a deliveryAddress or customerInfo.address",
+        });
     }
     const orderData = {
       id: orderId,
       orderId,
       restaurantId,
-      restaurantName: restaurant.name || '',
-      status: (req.body.paymentStatus === 'paid') ? 'completed' : 'pending',
-      paymentStatus: req.body.paymentStatus || (paymentMethod === 'cash' ? 'paid' : 'pending'),
+      restaurantName: restaurant.name || "",
+      status: req.body.paymentStatus === "paid" ? "completed" : "pending",
+      paymentStatus:
+        req.body.paymentStatus ||
+        (paymentMethod === "cash" ? "paid" : "pending"),
       amount: totalAmount,
       totalAmount,
-      currency: 'USD',
-      items: items.map(i => ({
-        itemId: i.itemId || '',
-        groupKey: i.groupKey || '',
-        name: i.name || '',
+      currency: "USD",
+      items: items.map((i) => ({
+        itemId: i.itemId || "",
+        groupKey: i.groupKey || "",
+        name: i.name || "",
         image: i.image || null,
         price: i.price || 0,
         quantity: i.quantity || 1,
@@ -213,25 +278,31 @@ const createOrderFromPOS = async (req, res) => {
       updatedAt: Date.now(),
       customerInfo: customerInfo || null,
       orderType: finalOrderType,
-      seatNumber: finalOrderType === 'dine_in' ? seatNumber || null : null,
-      deliveryAddress: finalOrderType === 'delivery' ? deliveryAddress || customerInfo?.address || null : null,
+      seatNumber: finalOrderType === "dine_in" ? seatNumber || null : null,
+      deliveryAddress:
+        finalOrderType === "delivery"
+          ? deliveryAddress || customerInfo?.address || null
+          : null,
     };
-    await db.ref(`restaurants/${restaurantId}/orders/${orderId}`).set(orderData);
+    await db
+      .ref(`restaurants/${restaurantId}/orders/${orderId}`)
+      .set(orderData);
     return res.status(201).json({ success: true, data: orderData });
   } catch (error) {
-    console.error('createOrderFromPOS error:', error);
-    return res.status(500).json({ error: 'Server error' });
+    console.error("createOrderFromPOS error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 };
 const calculateCartDiscountsEndpoint = async (req, res) => {
   try {
     const { restaurantId, items } = req.body;
-    if (!restaurantId || !items) return res.status(400).json({ error: 'Missing required fields' });
+    if (!restaurantId || !items)
+      return res.status(400).json({ error: "Missing required fields" });
     const result = await calculateCartDiscounts(restaurantId, items);
     return res.json({ success: true, data: result });
   } catch (err) {
-    console.error('calculateCartDiscountsEndpoint error:', err);
-    return res.status(500).json({ error: 'Server error' });
+    console.error("calculateCartDiscountsEndpoint error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -301,8 +372,9 @@ const handleWebhook = async (req, res) => {
             customerEmail: session.customer_details?.email || null,
             customerName: session.customer_details?.name || null,
             guestUuid: pendingOrder.guestUuid || null,
-            orderType: pendingOrder.orderType || 'delivery',
-            deliveryAddress: pendingOrder.deliveryAddress || pendingOrder.customerInfo || null,
+            orderType: pendingOrder.orderType || "delivery",
+            deliveryAddress:
+              pendingOrder.deliveryAddress || pendingOrder.customerInfo || null,
             seatNumber: pendingOrder.seatNumber || null,
 
             items: pendingOrder.items.map((item) => ({
@@ -412,32 +484,40 @@ const getAllOrders = async (req, res) => {
     const { restaurantId } = req.params;
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
-    const q = (req.query.q || '').toLowerCase().trim();
-    const sortBy = req.query.sortBy || 'createdAt';
-    const sortDir = (req.query.sortDir || 'desc').toLowerCase();
+    const q = (req.query.q || "").toLowerCase().trim();
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortDir = (req.query.sortDir || "desc").toLowerCase();
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID is required" });
     }
 
-    const ordersSnapshot = await db.ref(`restaurants/${restaurantId}/orders`).get();
+    const ordersSnapshot = await db
+      .ref(`restaurants/${restaurantId}/orders`)
+      .get();
     const ordersData = ordersSnapshot.val();
 
     if (!ordersData) {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    let orders = Object.values(ordersData).sort((a, b) => b.createdAt - a.createdAt);
+    let orders = Object.values(ordersData).sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
     if (q) {
-      orders = orders.filter(o => (o.id || '').toLowerCase().includes(q) || (o.customerEmail || '').toLowerCase().includes(q));
+      orders = orders.filter(
+        (o) =>
+          (o.id || "").toLowerCase().includes(q) ||
+          (o.customerEmail || "").toLowerCase().includes(q)
+      );
     }
     if (sortBy) {
-      const dir = sortDir === 'asc' ? 1 : -1;
+      const dir = sortDir === "asc" ? 1 : -1;
       orders = orders.sort((a, b) => {
-        let va = a[sortBy] === undefined || a[sortBy] === null ? '' : a[sortBy];
-        let vb = b[sortBy] === undefined || b[sortBy] === null ? '' : b[sortBy];
-        if (typeof va === 'string') va = va.toLowerCase();
-        if (typeof vb === 'string') vb = vb.toLowerCase();
+        let va = a[sortBy] === undefined || a[sortBy] === null ? "" : a[sortBy];
+        let vb = b[sortBy] === undefined || b[sortBy] === null ? "" : b[sortBy];
+        if (typeof va === "string") va = va.toLowerCase();
+        if (typeof vb === "string") vb = vb.toLowerCase();
         if (va < vb) return -1 * dir;
         if (va > vb) return 1 * dir;
         return 0;
@@ -447,7 +527,9 @@ const getAllOrders = async (req, res) => {
     const startIndex = Math.max((page - 1) * limit, 0);
     const endIndex = startIndex + limit;
     const pagedOrders = orders.slice(startIndex, endIndex);
-    res.status(200).json({ success: true, data: pagedOrders, meta: { total, limit, page } });
+    res
+      .status(200)
+      .json({ success: true, data: pagedOrders, meta: { total, limit, page } });
   } catch (error) {
     console.error("Error getting orders:", error);
     res.status(500).json({ error: error.message });
@@ -480,7 +562,9 @@ const getAllOrdersAdmin = async (req, res) => {
     const startIndex = Math.max((page - 1) * limit, 0);
     const endIndex = startIndex + limit;
     const paged = orders.slice(startIndex, endIndex);
-    res.status(200).json({ success: true, data: paged, meta: { total, limit, page } });
+    res
+      .status(200)
+      .json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (error) {
     console.error("Error getting all orders:", error);
     res.status(500).json({ error: error.message });
@@ -539,7 +623,18 @@ const getSessionStatus = async (req, res) => {
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    res.status(200).json({ success: true, data: { sessionId: session.id, paymentStatus: session.payment_status, status: session.status, customerEmail: session.customer_details?.email, amountTotal: session.amount_total } });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: {
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+          status: session.status,
+          customerEmail: session.customer_details?.email,
+          amountTotal: session.amount_total,
+        },
+      });
   } catch (error) {
     console.error("Error getting session status:", error);
     res.status(500).json({ error: error.message });
@@ -612,11 +707,9 @@ const updateOrderStatus = async (req, res) => {
               reason: "requested_by_customer",
             });
 
-
             refundSuccess = true;
             refundId = refund.id;
           } else {
-
           }
         } else {
           console.log(

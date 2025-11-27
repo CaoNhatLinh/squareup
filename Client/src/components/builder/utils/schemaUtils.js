@@ -60,8 +60,8 @@ export function computeSchemaPanelOptions({ schema = [], selectedBlock = null, g
     if (blockType === 'HEADER' || blockType === 'FOOTER') {
       forceShowGroupElements = true;
     }
-  } catch {
-    
+  } catch (error) {
+    console.error("Error computing schema panel options", error);
   }
   return { excludeFields, forceShowGroupElements };
 }

@@ -8,8 +8,8 @@ export function generateNavLinks(layout) {
     })
     .map((block) => {
       const blockType = BLOCK_TYPES.find((bt) => bt.type === block.type);
-      const label = blockType ? blockType.label : block.type;
-      const url = `#${block.id}`;
+      const label = blockType.label;
+      const url = `#${blockType.type}`;
       return { label, url };
     });
 }

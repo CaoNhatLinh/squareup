@@ -41,7 +41,7 @@ export default function RestaurantDropdown({ restaurantName, collapsed = false, 
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`w-full flex items-center justify-between font-bold text-lg text-gray-800 hover:bg-gray-100 px-4 py-3 rounded-xl transition-colors ${collapsed ? 'px-3 py-2' : ''}`}
+        className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} font-bold text-lg text-gray-800 hover:bg-gray-100 px-4 py-3 rounded-xl transition-colors ${collapsed ? 'px-2 py-2' : ''}`}
         aria-expanded={isOpen}
         aria-controls="account-drawer"
         title={collapsed ? restaurantName : undefined}
@@ -51,7 +51,7 @@ export default function RestaurantDropdown({ restaurantName, collapsed = false, 
             {logoUrl ? (
               <img src={logoUrl} alt="logo" className="w-8 h-8 object-contain rounded-md" />
             ) : (
-              <span>{restaurantName?.split(' ').map(s => s[0]).slice(0,2).join('')}</span>
+              <span>{restaurantName?.split(' ').map(s => s[0]).slice(0, 2).join('')}</span>
             )}
           </div>
           {!collapsed && <span>{restaurantName}</span>}
@@ -83,9 +83,8 @@ export default function RestaurantDropdown({ restaurantName, collapsed = false, 
 
             <div
               id="account-drawer"
-              className={`fixed top-0 right-0 h-screen w-full max-w-sm bg-white shadow-2xl z-[9999] flex flex-col transform transition-transform duration-300 ease-out ${
-                isOpen ? "translate-x-0" : "translate-x-full"
-              }`}
+              className={`fixed top-0 right-0 h-screen w-full max-w-sm bg-white shadow-2xl z-[9999] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
+                }`}
             >
               <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-red-500 to-red-600">
                 <h2 className="text-xl font-bold text-white">
@@ -100,7 +99,7 @@ export default function RestaurantDropdown({ restaurantName, collapsed = false, 
                   <HiXMark className="w-6 h-6 text-white" />
                 </button>
               </div>
-              
+
               <div className="flex-grow p-6 space-y-6">
                 <div className="p-5 bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3 mb-4 border-b border-red-100 pb-3">

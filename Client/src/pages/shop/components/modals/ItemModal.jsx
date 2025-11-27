@@ -21,8 +21,8 @@ export default function ItemModal({ item, modifiers, onClose, onAddToCart }) {
         required: modifier.required || modifier.isRequired || false,
         options: modifier.options
           ? Object.values(modifier.options).sort(
-              (a, b) => (a.index || 0) - (b.index || 0)
-            )
+            (a, b) => (a.index || 0) - (b.index || 0)
+          )
           : [],
       }));
   }, [item.modifierIds, modifiers]);
@@ -71,7 +71,7 @@ export default function ItemModal({ item, modifiers, onClose, onAddToCart }) {
 
   const canAddToCart = useMemo(
     () =>
-      itemModifiers.length === 0 || 
+      itemModifiers.length === 0 ||
       itemModifiers.every(
         (modifier) =>
           !modifier.required ||
@@ -80,24 +80,12 @@ export default function ItemModal({ item, modifiers, onClose, onAddToCart }) {
     [itemModifiers, selectedOptions]
   );
 
-  console.log("🎯 Modal state:", {
-    canAddToCart,
-    itemModifiers: itemModifiers.length,
-    selectedOptions: selectedOptions.length,
-    requiredModifiers: itemModifiers.filter((m) => m.required).length,
-  });
-
   const handleAddToCart = () => {
     if (!canAddToCart) {
       alert("Please select all required options");
       return;
     }
-    console.log("🎯 Adding to cart:", {
-      item,
-      selectedOptions,
-      quantity,
-      specialInstruction,
-    });
+
     onAddToCart(
       item,
       selectedOptions,
@@ -201,41 +189,37 @@ export default function ItemModal({ item, modifiers, onClose, onAddToCart }) {
                                       isSingle
                                     )
                                   }
-                                  className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                                    isSelected
-                                      ? "border-orange-500 bg-orange-50 shadow-md"
-                                      : "border-gray-200 hover:border-orange-300 hover:bg-gray-50"
-                                  }`}
+                                  className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
+                                    ? "border-orange-500 bg-orange-50 shadow-md"
+                                    : "border-gray-200 hover:border-orange-300 hover:bg-gray-50"
+                                    }`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div
-                                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                        isSelected
-                                          ? "border-orange-500 bg-orange-500"
-                                          : "border-gray-300"
-                                      }`}
+                                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected
+                                        ? "border-orange-500 bg-orange-500"
+                                        : "border-gray-300"
+                                        }`}
                                     >
                                       {isSelected && (
                                         <div className="w-2 h-2 bg-white rounded-full"></div>
                                       )}
                                     </div>
                                     <span
-                                      className={`font-medium ${
-                                        isSelected
-                                          ? "text-orange-900"
-                                          : "text-gray-900"
-                                      }`}
+                                      className={`font-medium ${isSelected
+                                        ? "text-orange-900"
+                                        : "text-gray-900"
+                                        }`}
                                     >
                                       {option.name}
                                     </span>
                                   </div>
                                   {option.price > 0 && (
                                     <span
-                                      className={`font-semibold ${
-                                        isSelected
-                                          ? "text-orange-700"
-                                          : "text-gray-600"
-                                      }`}
+                                      className={`font-semibold ${isSelected
+                                        ? "text-orange-700"
+                                        : "text-gray-600"
+                                        }`}
                                     >
                                       +${option.price.toFixed(2)}
                                     </span>
@@ -337,7 +321,7 @@ export default function ItemModal({ item, modifiers, onClose, onAddToCart }) {
                   {Math.round(
                     ((item.originalPrice - item.price) /
                       item.originalPrice) *
-                      100
+                    100
                   )}
                   % off)
                 </span>

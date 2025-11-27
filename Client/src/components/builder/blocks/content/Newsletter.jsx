@@ -14,13 +14,16 @@ export default function Newsletter({
   textColor = "text",
   showDecorativeElements = true,
   globalStyles,
-  blockId
+  blockId,
+  anchorId,
+  titleStyle,
+  subtitleStyle
 }) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
-  
+
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
   };
@@ -30,7 +33,7 @@ export default function Newsletter({
     setIsSubmitting(true);
     setMessage('');
 
-    
+
     setTimeout(() => {
       setMessage('Thank you for subscribing!');
       setEmail('');
@@ -39,7 +42,7 @@ export default function Newsletter({
   };
 
   const renderCentered = () => (
-    <section className="py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} id={blockId} data-block-id={blockId} data-control="container">
+    <section id={anchorId || 'newsletter'} className="py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }}>
       {showDecorativeElements && (
         <>
           <div className="absolute inset-0 opacity-5">
@@ -64,6 +67,7 @@ export default function Newsletter({
             styleConfig={{
               fontFamily: globalStyles?.typography?.headingFont,
               color: getColor(textColor),
+              ...titleStyle
             }}
             dataControl="newsletter-title"
             dataBlockId={blockId}
@@ -77,7 +81,7 @@ export default function Newsletter({
           <StyledText
             tag="p"
             className="text-xl mb-12 leading-relaxed"
-            styleConfig={{ color: getColor('muted') }}
+            styleConfig={{ color: getColor('muted'), ...subtitleStyle }}
             dataControl="newsletter-subtitle"
             dataBlockId={blockId}
           >
@@ -156,7 +160,7 @@ export default function Newsletter({
   );
 
   const renderInline = () => (
-    <section className="py-16 px-4 md:px-8" style={{ backgroundColor: getColor(backgroundColor) }} id={blockId} data-block-id={blockId} data-control="container">
+    <section className="py-16 px-4 md:px-8" style={{ backgroundColor: getColor(backgroundColor) }} id={anchorId || 'newsletter'} data-block-id={blockId} data-control="container">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1" data-control="newsletter-content" data-block-id={blockId}>
@@ -167,6 +171,7 @@ export default function Newsletter({
                 styleConfig={{
                   fontFamily: globalStyles?.typography?.headingFont,
                   color: getColor(textColor),
+                  ...titleStyle
                 }}
                 dataControl="newsletter-title"
                 dataBlockId={blockId}
@@ -178,7 +183,7 @@ export default function Newsletter({
               <StyledText
                 tag="p"
                 className="text-lg mb-6 leading-relaxed"
-                styleConfig={{ color: getColor('muted') }}
+                styleConfig={{ color: getColor('muted'), ...subtitleStyle }}
                 dataControl="newsletter-subtitle"
                 dataBlockId={blockId}
               >
@@ -238,7 +243,7 @@ export default function Newsletter({
   );
 
   const renderCard = () => (
-    <section className="py-20 px-4 md:px-8" style={{ backgroundColor: getColor(backgroundColor) }} id={blockId} data-block-id={blockId} data-control="container">
+    <section className="py-20 px-4 md:px-8" style={{ backgroundColor: getColor(backgroundColor) }} id={anchorId || 'newsletter'} data-block-id={blockId} data-control="container">
       <div className="max-w-4xl mx-auto">
         <div className="rounded-2xl shadow-xl p-12 text-center" style={{ backgroundColor: getColor('surface') }}>
           {title && (
@@ -248,6 +253,7 @@ export default function Newsletter({
               styleConfig={{
                 fontFamily: globalStyles?.typography?.headingFont,
                 color: getColor(textColor),
+                ...titleStyle
               }}
               dataControl="newsletter-title"
               dataBlockId={blockId}
@@ -259,7 +265,7 @@ export default function Newsletter({
             <StyledText
               tag="p"
               className="text-lg mb-8 leading-relaxed"
-              styleConfig={{ color: getColor('muted') }}
+              styleConfig={{ color: getColor('muted'), ...subtitleStyle }}
               dataControl="newsletter-subtitle"
               dataBlockId={blockId}
             >
@@ -316,7 +322,7 @@ export default function Newsletter({
     </section>
   );
 
-  
+
   switch (layout) {
     case "inline":
       return renderInline();

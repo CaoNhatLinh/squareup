@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import useAppStore from '@/store/useAppStore';
 import { useToast } from '@/hooks/useToast';
 import { createDiscount } from '@/api/discounts';
-import { fetchCategories } from '@/api/categories';
-import { fetchItems } from '@/api/items';
+import { fetchAllCategories } from '@/api/categories';
+import { fetchAllItems } from '@/api/items';
 import { HiXMark, HiCurrencyDollar, HiClock, HiCalendar, HiTag, HiShoppingCart, HiGift, HiSparkles, HiCheck } from 'react-icons/hi2';
 import { Input, Button, Checkbox, Dropdown } from '@/components/ui';
 import { MdPercent } from "react-icons/md";
@@ -65,8 +65,8 @@ export default function CreateDiscount() {
   useEffect(() => {
     if (restaurantId) {
       Promise.all([
-        fetchCategories(restaurantId),
-        fetchItems(restaurantId)
+        fetchAllCategories(restaurantId),
+        fetchAllItems(restaurantId)
       ]).then(([categoriesData, itemsData]) => {
           setCategories(categoriesData?.categories || categoriesData || []);
           setItems(itemsData?.items || itemsData || []);
@@ -75,7 +75,7 @@ export default function CreateDiscount() {
   }, [restaurantId]);
 
   const handleClose = () => {
-    navigate(`/restaurant/discounts`);
+    navigate(-1);
   };
 
   const handleSave = async () => {

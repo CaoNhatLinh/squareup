@@ -5,6 +5,7 @@ import { VARIANT_THUMBNAILS } from "@/components/builder/variantThumbnails.jsx";
 import SchemaRenderer from "@/components/builder/ui/SchemaRenderer";
 import { computeSchemaPanelOptions, applyNavPropsToLinks } from "@/components/builder/utils/schemaUtils";
 import SettingsGroup from "@/components/builder/ui/SettingsGroup";
+import ListEmpty from "@/components/common/ListEmpty";
 
 const PropertiesPanel = memo(function PropertiesPanel({
   selectedBlock,
@@ -21,12 +22,12 @@ const PropertiesPanel = memo(function PropertiesPanel({
 }) {
   if (selectedSection === 'header') {
     const headerType = BLOCK_TYPES.find((t) => t.type === 'HEADER');
-    
+
     const handleHeaderChange = (updatedConfig) => {
       const applied = applyNavPropsToLinks(updatedConfig, headerConfig);
       onHeaderChange(applied);
     };
-    
+
     const headerOptions = computeSchemaPanelOptions({ schema: headerType?.schema || [], selectedBlock: { id: 'HEADER', props: headerConfig }, globalUseRealData, activeControl });
     const headerExcludes = headerOptions.excludeFields;
     headerExcludes.push('title');
@@ -75,8 +76,11 @@ const PropertiesPanel = memo(function PropertiesPanel({
 
   if (!selectedBlock) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 p-4 text-center">
-        <p>Select a block, header, or footer to edit properties</p>
+      <div className="h-full flex items-center justify-center p-4">
+        <ListEmpty
+          title="No Block Selected"
+          subtitle="Select a block, header, or footer to edit properties"
+        />
       </div>
     );
   }
@@ -97,7 +101,7 @@ const PropertiesPanel = memo(function PropertiesPanel({
   let variantField = null;
   if (hasVariants) {
     if (!blockOptions.excludeFields) blockOptions.excludeFields = [];
-    
+
     const allFields = schema.flatMap(group => group.fields || [group]);
     variantField = allFields.find(field =>
       field.type === 'select' &&
@@ -125,18 +129,18 @@ const PropertiesPanel = memo(function PropertiesPanel({
       ) : null}
 
 
-        <SchemaRenderer
-          schema={schema}
-          data={selectedBlock.props}
-          onChange={handleBlockChange}
-          globalStyles={globalStyles}
-          selectedBlock={selectedBlock}
-          selectedSection={'block'}
-          setActiveControl={setActiveControl}
-          activeControl={activeControl}
-          forceShowGroupElements={blockOptions.forceShowGroupElements}
-          excludeFields={blockOptions.excludeFields}
-        />
+      <SchemaRenderer
+        schema={schema}
+        data={selectedBlock.props}
+        onChange={handleBlockChange}
+        globalStyles={globalStyles}
+        selectedBlock={selectedBlock}
+        selectedSection={'block'}
+        setActiveControl={setActiveControl}
+        activeControl={activeControl}
+        forceShowGroupElements={blockOptions.forceShowGroupElements}
+        excludeFields={blockOptions.excludeFields}
+      />
     </SettingsGroup>
   );
 });

@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { useShop } from "@/context/ShopContext";
 import { resolveColor } from "@/components/builder/utils/colorUtils";
-import CategoryNav from "@/components/builder/blocks/commerce/MenuSection/CategoryNav";
-import ProductGrid from "@/components/builder/blocks/commerce/MenuSection/ProductGrid";
-import ProductCardTemplate from "@/components/builder/blocks/commerce/MenuSection/ProductCardTemplate";
+import CategoryNav from "@/components/builder/blocks/content/MenuSection/CategoryNav";
+import ProductGrid from "@/components/builder/blocks/content/MenuSection/ProductGrid";
+import ProductCardTemplate from "@/components/builder/blocks/content/MenuSection/ProductCardTemplate";
 import StyledText from '@/components/builder/atoms/StyledText';
+import { useContainerQuery } from "@/components/builder/hooks/useContainerQuery";
 
 export default function MenuSection({
   title = "Our Menu",
@@ -28,18 +29,29 @@ export default function MenuSection({
   anchorId,
 }) {
   const { categories, items, activeDiscounts } = useShop();
+  const { containerRef, isMobile } = useContainerQuery();
   const [activeCategoryId, setActiveCategoryId] = useState("all");
   const categoriesList = categories
     ? [
       { id: "all", name: "All Items" },
-      ...Object.entries(categories).map(([key, val]) => {
-        const itemCount = val.itemIds
-          ? Array.isArray(val.itemIds)
-            ? val.itemIds.length
-            : Object.keys(val.itemIds || {}).length
-          : 0;
-        return { id: key, ...val, count: itemCount };
-      }),
+      ...(Array.isArray(categories)
+        ? categories.map((cat) => {
+          const itemCount = cat.itemIds
+            ? Array.isArray(cat.itemIds)
+              ? cat.itemIds.length
+              : Object.keys(cat.itemIds || {}).length
+            : 0;
+          return { ...cat, count: itemCount };
+        })
+        : Object.entries(categories).map(([key, val]) => {
+          const itemCount = val.itemIds
+            ? Array.isArray(val.itemIds)
+              ? val.itemIds.length
+              : Object.keys(val.itemIds || {}).length
+            : 0;
+          return { id: key, ...val, count: itemCount };
+        })
+      ),
     ]
     : [{ id: "all", name: "All Items" }];
 
@@ -51,7 +63,14 @@ export default function MenuSection({
     if (activeCategoryId === "all") {
       filtered = Object.entries(items).map(([id, item]) => ({ id, ...item }));
     } else {
-      const cat = categories[activeCategoryId];
+      // Handle both array and object formats for categories
+      let cat;
+      if (Array.isArray(categories)) {
+        cat = categories.find(c => c.id === activeCategoryId);
+      } else {
+        cat = categories[activeCategoryId];
+      }
+
       if (cat && cat.itemIds) {
         const ids = Array.isArray(cat.itemIds)
           ? cat.itemIds
@@ -102,6 +121,7 @@ export default function MenuSection({
 
   return (
     <section
+      ref={containerRef}
       className={`w-full relative ${paddingMap[paddingY]}`}
       style={{ backgroundColor: bgColor }}
       id={anchorId || "menu"}
@@ -120,8 +140,8 @@ export default function MenuSection({
           </StyledText>
         )}
         {sectionLayout === "split" ? (
-          <div className="flex flex-col md:flex-row md:gap-8">
-            <aside className="md:w-1/4 mb-6 md:mb-0">
+          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-8'}`}>
+            <aside className={`${isMobile ? 'w-full mb-6' : 'w-1/4'}`}>
               <CategoryNav
                 categories={categoriesList}
                 activeCategory={activeCategoryId}
@@ -132,7 +152,7 @@ export default function MenuSection({
                 vertical={true}
               />
             </aside>
-            <div className="md:w-3/4">
+            <div className={`${isMobile ? 'w-full' : 'w-3/4'}`}>
               <ProductGrid
                 items={displayItems}
                 config={gridConfig}
@@ -168,6 +188,7 @@ export default function MenuSection({
               onItemClick={onItemClick}
               onQuickAdd={onQuickAdd}
               isPublic={isPublic}
+              isMobile={isMobile}
             />
           </>
         ) : (
@@ -211,6 +232,7 @@ function CarouselView({
   onItemClick,
   onQuickAdd,
   isPublic = false,
+  isMobile = false,
 }) {
   const containerRef = useRef(null);
 
@@ -233,24 +255,28 @@ function CarouselView({
 
   return (
     <div className="relative">
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
-        <button
-          aria-label="Previous"
-          onClick={() => scrollBy(-1)}
-          className="bg-white shadow rounded-full p-2 ml-1"
-        >
-          ‹
-        </button>
-      </div>
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
-        <button
-          aria-label="Next"
-          onClick={() => scrollBy(1)}
-          className="bg-white shadow rounded-full p-2 mr-1"
-        >
-          ›
-        </button>
-      </div>
+      {!isMobile && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+          <button
+            aria-label="Previous"
+            onClick={() => scrollBy(-1)}
+            className="bg-white shadow rounded-full p-2 ml-1"
+          >
+            ‹
+          </button>
+        </div>
+      )}
+      {!isMobile && (
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
+          <button
+            aria-label="Next"
+            onClick={() => scrollBy(1)}
+            className="bg-white shadow rounded-full p-2 mr-1"
+          >
+            ›
+          </button>
+        </div>
+      )}
 
       <div
         id={`menu-carousel-${blockId || ""}`}

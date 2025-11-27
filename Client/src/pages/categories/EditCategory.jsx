@@ -5,8 +5,9 @@ import useAppStore from '@/store/useAppStore';
 import {
   updateCategory,
   fetchCategory,
-  fetchCategories,
+  fetchAllCategories,
 } from "@/api/categories";
+import { fetchAllItems } from "@/api/items";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import {
   HiXMark,
@@ -17,6 +18,7 @@ import {
   HiCamera,
 } from "react-icons/hi2";
 import { Input, Button, Checkbox, LoadingSpinner } from '@/components/ui';
+
 
 
 
@@ -47,8 +49,8 @@ export default function EditCategory() {
     setLoading(true);
     Promise.all([
       fetchCategory(restaurantId, categoryId),
-      fetchCategories(restaurantId),
-      import("../../api/items").then(({ fetchItems }) => fetchItems(restaurantId)),
+      fetchAllCategories(restaurantId),
+      fetchAllItems(restaurantId),
     ])
       .then(([categoryData, allCategories, itemsData]) => {
         setFormData({

@@ -329,9 +329,9 @@ export default function Location({
             )}
           </div>
         )}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="flex flex-wrap justify-center gap-8 mb-16">
           {showAddress && (
-            <div className="rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>
+            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('primary') + '20' }}>
                 <svg
                   className="w-8 h-8"
@@ -371,7 +371,7 @@ export default function Location({
           )}
 
           {showContact && (displayPhone || displayEmail) && (
-            <div className="rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>
+            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('secondary') + '20' }}>
                 <svg
                   className="w-8 h-8"

@@ -13,25 +13,37 @@ const Button = ({
   onClick,
   className = '',
   
-  btnStyle, 
-  btnTextColor, 
+  btnStyle,      // 'filled' (default) | 'outline'
+  btnTextColor,  // Custom text color override
   radius, 
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed border-2';
 
-  const variantStyles = {
-    primary: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm',
-    secondary: 'bg-white text-red-600 border-2 border-red-200 hover:bg-red-50 focus:ring-red-300',
-    danger: 'bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 shadow-sm',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm',
-    warning: 'bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500 shadow-sm',
-    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-    link: 'bg-transparent text-indigo-600 hover:text-indigo-700 hover:underline focus:ring-indigo-500 p-0',
+  // Định nghĩa style cho dạng nền đặc (Filled)
+  const filledStyles = {
+    primary: 'bg-red-600 border-red-600 text-white hover:bg-red-700 hover:border-red-700 focus:ring-red-500 shadow-sm',
+    secondary: 'bg-gray-600 border-gray-600 text-white hover:bg-gray-700 hover:border-gray-700 focus:ring-gray-500 shadow-sm', // Sửa lại secondary chuẩn hơn
+    danger: 'bg-rose-600 border-rose-600 text-white hover:bg-rose-700 hover:border-rose-700 focus:ring-rose-500 shadow-sm',
+    success: 'bg-green-600 border-green-600 text-white hover:bg-green-700 hover:border-green-700 focus:ring-green-500 shadow-sm',
+    warning: 'bg-amber-500 border-amber-500 text-white hover:bg-amber-600 hover:border-amber-600 focus:ring-amber-500 shadow-sm',
+    ghost: 'bg-transparent border-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+    link: 'bg-transparent border-transparent text-indigo-600 hover:text-indigo-700 hover:underline p-0 shadow-none',
+  };
+
+  // Định nghĩa style cho dạng viền (Outline) - Đảo ngược màu nền và màu chữ
+  const outlineStyles = {
+    primary: 'bg-transparent border-red-600 text-red-600 hover:bg-red-50 focus:ring-red-500',
+    secondary: 'bg-transparent border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
+    danger: 'bg-transparent border-rose-600 text-rose-600 hover:bg-rose-50 focus:ring-rose-500',
+    success: 'bg-transparent border-green-600 text-green-600 hover:bg-green-50 focus:ring-green-500',
+    warning: 'bg-transparent border-amber-500 text-amber-500 hover:bg-amber-50 focus:ring-amber-500',
+    ghost: 'bg-transparent border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500', // Ghost outline giống secondary
+    link: 'bg-transparent border-transparent text-indigo-600 hover:text-indigo-700',
   };
 
   const sizeStyles = {
-    small: 'px-3 py-1.5 text-sm rounded-md gap-1.5',
+    small: 'px-3 py-1 text-sm rounded-md gap-1.5',
     medium: 'px-4 py-2 text-sm rounded-lg gap-2',
     large: 'px-6 py-3 text-base rounded-lg gap-2.5',
   };
@@ -44,22 +56,31 @@ const Button = ({
 
   const widthStyles = fullWidth ? 'w-full' : '';
 
-  const outlineClass = btnStyle === 'outline' ? 'border' : '';
+  // Xử lý logic chọn style (Filled hay Outline)
+  const isOutline = btnStyle === 'outline';
+  const selectedVariantClass = isOutline ? outlineStyles[variant] : filledStyles[variant];
 
-  
+  // Xử lý Inline Style (Custom overrides)
   const incomingStyle = props.style || {};
   const mergedStyle = {
     ...incomingStyle,
-    borderColor: btnStyle === 'outline' ? (btnTextColor || incomingStyle.color) : incomingStyle.borderColor,
     borderRadius: radius ? `${radius}px` : incomingStyle.borderRadius,
   };
+
+  // Nếu có btnTextColor, ta ghi đè màu chữ (và màu viền nếu là outline để đồng bộ)
+  if (btnTextColor) {
+    mergedStyle.color = btnTextColor;
+    if (isOutline) {
+      mergedStyle.borderColor = btnTextColor;
+    }
+  }
 
   return (
     <button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`${baseStyles} ${variantStyles[variant] || ''} ${sizeStyles[size] || ''} ${widthStyles} ${outlineClass} ${className}`}
+      className={`${baseStyles} ${selectedVariantClass || ''} ${sizeStyles[size] || ''} ${widthStyles} ${className}`}
       style={mergedStyle}
       {...props}
     >

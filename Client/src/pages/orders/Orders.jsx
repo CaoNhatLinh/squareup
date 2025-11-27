@@ -10,6 +10,7 @@ import { ref, onValue } from "firebase/database";
 import { rtdb } from "@/firebase";
 import { getStatusClasses } from "@/utils/statusUtils";
 import { formatDate } from "@/utils/dateUtils";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function Orders() {
   useLoaderData();
@@ -111,7 +112,7 @@ export default function Orders() {
   if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <LoadingSpinner size="large" color="red" />
       </div>
     );
   }
@@ -173,9 +174,8 @@ export default function Orders() {
           </div>
         </div>
         <div
-          className={`bg-white rounded-xl shadow-md p-5 border-t-4 ${
-            newOrderIds.length > 0 ? "border-yellow-600" : "border-gray-400"
-          }`}
+          className={`bg-white rounded-xl shadow-md p-5 border-t-4 ${newOrderIds.length > 0 ? "border-yellow-600" : "border-gray-400"
+            }`}
         >
           <div className="text-sm font-semibold text-yellow-600 mb-1">
             Pending Orders
@@ -220,11 +220,10 @@ export default function Orders() {
                   key={status}
                   onClick={() => setFilter(status)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm
-           ${
-             isActive
-               ? "bg-red-600 text-white shadow-md"
-               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-           }`}
+           ${isActive
+                      ? "bg-red-600 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
@@ -236,11 +235,10 @@ export default function Orders() {
               onClick={markAllAsRead}
               disabled={newOrderIds.length === 0}
               className={` px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm
-       ${
-         newOrderIds.length > 0
-           ? "bg-red-600 text-white hover:bg-red-700"
-           : "bg-gray-300 text-gray-500 cursor-not-allowed"
-       }`}
+       ${newOrderIds.length > 0
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
             >
               <svg
                 className="w-4 h-4"
@@ -262,9 +260,7 @@ export default function Orders() {
               disabled={loading}
               className="cursor-pointer px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <HiRefresh
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
+              {loading ? <LoadingSpinner size="small" color="indigo" /> : <HiRefresh className="w-4 h-4" />}
               {loading ? "Loading..." : "Reload"}
             </button>
           </div>
@@ -282,7 +278,7 @@ export default function Orders() {
                 viewBox="0 0 24 24"
               >
                 <path
-                  strokeLinecap="round" 
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
@@ -334,11 +330,10 @@ export default function Orders() {
                   <tr
                     key={order.id}
                     onClick={() => openOrderDetails(order.id)}
-                    className={`transition-colors cursor-pointer ${
-                      isNewOrder(order.id)
-                        ? "bg-red-50/70 border-l-4 border-red-500"
-                        : "hover:bg-gray-50"
-                    }`}
+                    className={`transition-colors cursor-pointer ${isNewOrder(order.id)
+                      ? "bg-red-50/70 border-l-4 border-red-500"
+                      : "hover:bg-gray-50"
+                      }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-2">
@@ -393,18 +388,18 @@ export default function Orders() {
                       <div className="flex items-center justify-end gap-2">
                         {(order.status === "paid" ||
                           order.status === "pending") && (
-                          <button
-                            onClick={(e) => handleAcceptOrder(order.id, e)}
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md cursor-pointer"
-                            aria-label={`Accept order ${order.id?.substring(
-                              0,
-                              8
-                            )}`}
-                          >
-                            <HiCheck size={16} className="mr-1" />
-                            <span>Accept</span>
-                          </button>
-                        )}
+                            <button
+                              onClick={(e) => handleAcceptOrder(order.id, e)}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md cursor-pointer"
+                              aria-label={`Accept order ${order.id?.substring(
+                                0,
+                                8
+                              )}`}
+                            >
+                              <HiCheck size={16} className="mr-1" />
+                              <span>Accept</span>
+                            </button>
+                          )}
 
                         <button
                           onClick={(e) => {

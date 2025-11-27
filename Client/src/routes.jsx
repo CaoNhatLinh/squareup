@@ -18,7 +18,6 @@ import EditItem from "@/pages/items/EditItem";
 import BusinessAbout from "@/pages/settings/BusinessAbout";
 import BusinessHours from "@/pages/settings/BusinessHours";
 import SpecialClosures from "@/pages/settings/SpecialClosures";
-import { fetchRestaurant } from "@/api/restaurants";
 import Modifiers from "@/pages/modifiers/Modifiers";
 import CreateModifier from "@/pages/modifiers/CreateModifier";
 import EditModifier from "@/pages/modifiers/EditModifier";
@@ -53,21 +52,7 @@ import CustomerOrders from "@/pages/customers/CustomerOrders";
 import TableListPage from "@/pages/pos/TableListPage";
 import TablePOSPage from "@/pages/pos/TablePOSPage";
 
-export const dashboardLoader = async () => {
-  try {
-    const restaurantId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("restaurantId")
-        : null;
-    const restaurant = await fetchRestaurant(restaurantId).catch(() => null);
-    return { restaurant };
-  } catch (error) {
-    if (error?.response?.status === 401 || error?.response?.status === 403) {
-      throw redirect("/signin");
-    }
-    throw redirect("/signin");
-  }
-};
+
 
 export const discountsLoader = async () => {
   try {
@@ -195,13 +180,11 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Dashboard />,
-            loader: dashboardLoader,
           },
           { path: "settings/website-builder", element: <WebsiteBuilder /> },
           {
             path: "dashboard",
             element: <Dashboard />,
-            loader: dashboardLoader,
           },
           {
             path: "items",

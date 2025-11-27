@@ -1,4 +1,4 @@
-import * as client from '@/api/apiClient'
+import * as apiClient from '@/api/apiClient'
 
 export async function fetchCategories(restaurantId, params = {}) {
   const queryParams = new URLSearchParams();
@@ -8,26 +8,30 @@ export async function fetchCategories(restaurantId, params = {}) {
   if (params.sortBy) queryParams.append('sortBy', params.sortBy);
   if (params.sortDir) queryParams.append('sortDir', params.sortDir);
   const url = `/restaurants/${restaurantId}/categories${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  const res = await client.get(url);
+  const res = await apiClient.get(url);
   return { categories: res.data || [], meta: res.meta || {} };
 }
 
 export async function createCategory(restaurantId, body) {
-  const res = await client.post(`/restaurants/${restaurantId}/categories`, body)
+  const res = await apiClient.post(`/restaurants/${restaurantId}/categories`, body)
   return res.data;
 }
 
 export async function deleteCategory(restaurantId, catId) {
-  const res = await client.del(`/restaurants/${restaurantId}/categories/${catId}`)
+  const res = await apiClient.del(`/restaurants/${restaurantId}/categories/${catId}`)
   return res.data;
 }
 
 export async function updateCategory(restaurantId, catId, body) {
-  const res = await client.put(`/restaurants/${restaurantId}/categories/${catId}`, body)
+  const res = await apiClient.put(`/restaurants/${restaurantId}/categories/${catId}`, body)
   return res.data;
 }
 
 export async function fetchCategory(restaurantId, catId) {
-  const res = await client.get(`/restaurants/${restaurantId}/categories/${catId}`)
+  const res = await apiClient.get(`/restaurants/${restaurantId}/categories/${catId}`)
   return res.data;
+}
+
+export async function fetchAllCategories(restaurantId) {
+  return fetchCategories(restaurantId, { limit: 0 });
 }

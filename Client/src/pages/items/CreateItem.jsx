@@ -1,20 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom'
 import useAppStore from '@/store/useAppStore';
 import { createItem } from '@/api/items'
+import { fetchAllCategories } from '@/api/categories'
+import { fetchAllModifiers } from '@/api/modifers'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { useToast } from '@/hooks/useToast'
 import { HiMiniXMark, HiTag, HiOutlineCurrencyDollar, HiCamera, HiRectangleGroup, HiAdjustmentsHorizontal, HiMagnifyingGlass } from 'react-icons/hi2' 
 import { Input, Button, Dropdown, Checkbox } from '@/components/ui';
-import { useLoaderData } from 'react-router-dom'
+// import { useLoaderData } from 'react-router-dom'
 export default function CreateItem() {
   const navigate = useNavigate()
   const { restaurantId: paramRestaurantId } = useParams()
   const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
   const { uploadImage, uploading } = useImageUpload()
   const { success, error } = useToast()
- const loaderData = useLoaderData();
- const { categories, modifiers } = loaderData;
+ // const loaderData = useLoaderData();
+ // const { categories, modifiers } = loaderData;
+  const [categories, setCategories] = useState([]);
+  const [modifiers, setModifiers] = useState([]);
+
+  useEffect(() => {
+    if (restaurantId) {
+      Promise.all([
+        fetchAllCategories(restaurantId),
+        fetchAllModifiers(restaurantId)
+      ]).then(([catsData, modsData]) => {
+         setCategories(catsData.categories || catsData || []);
+         setModifiers(modsData.modifiers || modsData || []);
+      }).catch(err => console.error("Failed to load data", err));
+    }
+  }, [restaurantId]);
 
   const [formData, setFormData] = useState({
     itemType: 'Prepared food and beverage',

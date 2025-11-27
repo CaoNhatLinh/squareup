@@ -1,10 +1,10 @@
 import { HiCube } from 'react-icons/hi';
 import HeroBannerBlock from '@/components/builder/blocks/content/HeroBanner';
-import MenuSection from '@/components/builder/blocks/commerce/MenuSection';
+import MenuSection from '@/components/builder/blocks/content/MenuSection';
 import TextBlock from '@/components/builder/blocks/content/TextBlock';
 import FooterBlock from '@/components/builder/blocks/core/Footer';
 import AlertNoticeBlock from '@/components/builder/blocks/content/AlertNotice';
-import PromoGridBlock from '@/components/builder/blocks/marketing/PromoGrid';
+import PromoGridBlock from '@/components/builder/blocks/content/PromoGrid';
 import RestaurantInfoBlock from '@/components/builder/blocks/content/RestaurantInfo';
 import OurStory from '@/components/builder/blocks/content/OurStory';
 import Gallery from '@/components/builder/blocks/content/Gallery';
@@ -43,7 +43,7 @@ export function BlockRenderer({ block, globalStyles, themeColor, globalUseRealDa
   }
 
   return (
-    <BlockComponent 
+    <BlockComponent
       key={`${block.id}-${JSON.stringify(globalStyles)}-${JSON.stringify(block.props)}`}
       {...block.props}
       globalUseRealData={globalUseRealData}
@@ -53,6 +53,7 @@ export function BlockRenderer({ block, globalStyles, themeColor, globalUseRealDa
       blockId={block.id}
       isPublic={isPublic}
       onItemClick={onItemClick}
+      anchorId={block.type}
     />
   );
 }
@@ -75,10 +76,10 @@ export function BlockList({ layout = [], globalStyles, themeColor, onItemClick, 
   return (
     <div className="w-full">
       {layout.map((block) => (
-        
-        <BlockRenderer 
-          key={block.id} 
-          block={block} 
+
+        <BlockRenderer
+          key={block.id}
+          block={block}
           globalStyles={globalStyles}
           themeColor={themeColor}
           globalUseRealData={globalUseRealData}

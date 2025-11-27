@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import useAppStore from '@/store/useAppStore';
+import useAppStore from "@/store/useAppStore";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { fetchCategories } from "@/api/categories";
 import { fetchItems } from "@/api/items";
 import { fetchModifiers } from "@/api/modifers";
 import { createOrder } from "@/api/orders";
-import useCalculateDiscounts from '@/hooks/useCalculateDiscounts';
+import useCalculateDiscounts from "@/hooks/useCalculateDiscounts";
 import { mergeOrAddCartItem } from "@/utils/cartUtils";
 import { useToast } from "@/hooks/useToast";
 import POSHeader from "@/pages/pos/components/POSHeader";
@@ -18,17 +18,18 @@ import { printInvoice, printKitchenOrder } from "@/utils/printUtils";
 import { Button, Input } from "@/components/ui";
 import BillSplitModal from "@/pages/pos/components/BillSplitModal";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
-import { HiPrinter, HiArrowLeft } from 'react-icons/hi2';
+import { HiPrinter, HiArrowLeft } from "react-icons/hi2";
 import {
   getTableById,
   updateTable,
   createTable,
   clearTable,
 } from "@/api/tables";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function TablePOSPage() {
   const { tableId } = useParams();
-  const restaurantId = useAppStore(s => s.restaurantId);
+  const restaurantId = useAppStore((s) => s.restaurantId);
   const navigate = useNavigate();
   const { restaurant, loading: restaurantLoading } = useRestaurant();
   const { success: showSuccess, error: showError } = useToast();
@@ -71,7 +72,7 @@ export default function TablePOSPage() {
         expectedUpdatedAt: tableUpdatedAt,
       });
       setCart([]);
-        setCustomerInfo({ name: '', phone: '', email: '' });
+      setCustomerInfo({ name: "", phone: "", email: "" });
       setTableUpdatedAt(res?.updatedAt || Date.now());
       showSuccess("Table cleared successfully");
     } catch (err) {
@@ -83,7 +84,6 @@ export default function TablePOSPage() {
   };
   const isNewTable = !tableId || tableId === "new";
 
-  
   const loadPOSData = useCallback(async () => {
     setLoading(true);
     try {
@@ -117,7 +117,6 @@ export default function TablePOSPage() {
     }
   }, [restaurantId, showError, query]);
 
-  
   const loadTableData = useCallback(async () => {
     if (isNewTable || !tableId) return;
 
@@ -125,7 +124,6 @@ export default function TablePOSPage() {
       const tableData = await getTableById(restaurantId, tableId);
       setTableName(tableData.name || "");
 
-      
       if (tableData.items && tableData.items.length > 0) {
         const cartItems = tableData.items.map((item) => ({
           id: `${item.itemId}-${Date.now()}-${Math.random()}`,
@@ -145,7 +143,9 @@ export default function TablePOSPage() {
         setCart(cartItems);
       }
       if (tableData.customerInfo) {
-        setCustomerInfo(tableData.customerInfo || { name: "", phone: "", email: "" });
+        setCustomerInfo(
+          tableData.customerInfo || { name: "", phone: "", email: "" }
+        );
       }
       setTableUpdatedAt(tableData.updatedAt || null);
     } catch (error) {
@@ -161,6 +161,16 @@ export default function TablePOSPage() {
   }, [restaurantId, loadPOSData]);
 
   useEffect(() => {
+    const handleFocus = () => {
+      if (restaurantId) {
+        loadPOSData();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [restaurantId, loadPOSData]);
+
+  useEffect(() => {
     if (restaurantId) {
       loadTableData();
     }
@@ -171,19 +181,24 @@ export default function TablePOSPage() {
     name: c.name,
     price: c.price,
     quantity: c.quantity,
-    totalPrice: (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) * Number(c.quantity ?? 0),
+    totalPrice:
+      (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) *
+      Number(c.quantity ?? 0),
     groupKey: c.id,
     selectedOptions: c.selectedModifiers || [],
   }));
 
-  const storeRestaurantId = useAppStore(s => s.restaurantId);
-  const { loading: hookLoading, discountResult: hookResult } = useCalculateDiscounts(restaurantId || storeRestaurantId, cartItemsToCalc, { couponCode, loyaltyCard });
+  const storeRestaurantId = useAppStore((s) => s.restaurantId);
+  const { loading: hookLoading, discountResult: hookResult } =
+    useCalculateDiscounts(restaurantId || storeRestaurantId, cartItemsToCalc, {
+      couponCode,
+      loyaltyCard,
+    });
   useEffect(() => {
     setDiscountLoading(hookLoading);
     setDiscountResult(hookResult);
   }, [hookLoading, hookResult]);
 
-  
   const addToCart = (
     item,
     selectedOptions = [],
@@ -245,7 +260,6 @@ export default function TablePOSPage() {
     return { subtotal, totalDiscount, taxAmount, total, taxRate };
   };
 
-  
   const handleSaveTable = async () => {
     if (!tableName.trim()) {
       showError("Please enter a table name");
@@ -264,10 +278,10 @@ export default function TablePOSPage() {
           selectedModifiers: item.selectedModifiers,
           notes: item.specialInstruction,
         })),
-        customerInfo: customerInfo || { name: '', phone: '', email: '' },
-        notes: orderNotes || '',
+        customerInfo: customerInfo || { name: "", phone: "", email: "" },
+        notes: orderNotes || "",
       };
-      console.log("isNewTable",isNewTable);
+
       if (isNewTable) {
         const created = await createTable(restaurantId, tableData);
         setTableUpdatedAt(created?.updatedAt || Date.now());
@@ -289,7 +303,6 @@ export default function TablePOSPage() {
     }
   };
 
-  
   const handlePrintKitchenOrder = () => {
     if (cart.length === 0) {
       showError("No items to print");
@@ -309,7 +322,6 @@ export default function TablePOSPage() {
     }
   };
 
-  
   const handleCheckout = () => {
     if (cart.length === 0) {
       showError("Cart is empty");
@@ -374,7 +386,6 @@ export default function TablePOSPage() {
       const created = await createOrder(restaurantId, orderData);
       showSuccess("Order completed successfully!");
 
-      
       if (isFullyPaid && printInvoiceOnCheckout) {
         try {
           const { subtotal, totalDiscount, taxAmount, total, taxRate } =
@@ -396,14 +407,12 @@ export default function TablePOSPage() {
         }
       }
 
-      
       if (!isNewTable) {
         await clearTable(restaurantId, tableId, {
           expectedUpdatedAt: tableUpdatedAt,
         });
       }
 
-      
       navigate(`/pos`);
     } catch (error) {
       console.error("Failed to complete payment:", error);
@@ -418,7 +427,7 @@ export default function TablePOSPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <LoadingSpinner size="xl" color="indigo" />
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -430,7 +439,11 @@ export default function TablePOSPage() {
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="small" onClick={() => navigate("/pos")}> 
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={() => navigate("/pos")}
+            >
               <HiArrowLeft className="h-4 w-4 mr-2" />
               Back to Tables
             </Button>
@@ -451,7 +464,8 @@ export default function TablePOSPage() {
                 value={tableName}
                 onChange={(e) => setTableName(e.target.value)}
                 placeholder="Enter table name..."
-                className="min-w-[200px]"
+                containerClassName="min-w-[200px]"
+                layout="horizontal"
                 fullWidth={false}
               />
             </div>
@@ -559,7 +573,14 @@ export default function TablePOSPage() {
           onClose={() => setIsBillSplitOpen(false)}
           onSplit={(splits) => {
             setPendingSplitPayments(
-              (splits || []).map((s, i) => ({ id: `split_${Date.now()}_${i}`, method: 'cash', amount: Number(s.amount || 0), meta: { person: s.person }, status: 'pending', paymentDetails: null }))
+              (splits || []).map((s, i) => ({
+                id: `split_${Date.now()}_${i}`,
+                method: "cash",
+                amount: Number(s.amount || 0),
+                meta: { person: s.person },
+                status: "pending",
+                paymentDetails: null,
+              }))
             );
             setIsBillSplitOpen(false);
             setIsPaymentModalOpen(true);

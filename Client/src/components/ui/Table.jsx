@@ -1,6 +1,6 @@
 import Pagination from '@/components/ui/Pagination';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { HiOutlineInbox, HiChevronUp, HiChevronDown } from 'react-icons/hi'; 
+import { HiOutlineInbox, HiChevronUp, HiChevronDown } from 'react-icons/hi';
 
 
 export default function Table({
@@ -21,7 +21,7 @@ export default function Table({
   const getRowKey = (r, i) => (typeof rowKey === 'function' ? rowKey(r) : r[rowKey] ?? i);
   return (
     <div className={`bg-white rounded-2xl shadow-sm  border border-gray-100 ${className}`}>
-      <div className="overflow-x-auto">
+      <div className="overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
             <tr>
@@ -42,9 +42,8 @@ export default function Table({
                       {col.sortable ? (
                         <button
                           onClick={() => onSortChange && onSortChange(col.key)}
-                          className={`flex items-center gap-1 transition-colors duration-200 group ${
-                            isCurrentSort ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
-                          }`}
+                          className={`flex items-center gap-1 transition-colors duration-200 group ${isCurrentSort ? 'text-red-600' : 'text-gray-700 hover:text-red-600'
+                            }`}
                         >
                           <span>{col.title}</span>
                           {sortIcon}
@@ -84,9 +83,8 @@ export default function Table({
                 <tr
                   key={getRowKey(row, idx)}
                   onClick={() => (onRowClick ? onRowClick(row) : null)}
-                  className={`transition-all duration-300 ${
-                    onRowClick ? 'cursor-pointer hover:bg-red-50/70' : 'hover:bg-gray-50'
-                  } ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                  className={`transition-all duration-300 ${onRowClick ? 'cursor-pointer hover:bg-red-50/70' : 'hover:bg-gray-50'
+                    } ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                 >
                   {columns.map((col) => (
                     <td

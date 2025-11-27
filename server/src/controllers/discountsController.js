@@ -49,7 +49,8 @@ const getActiveDiscounts = async (req, res) => {
 const getDiscounts = async (req, res) => {
   const { restaurantId } = req.params;
   const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 25;
+  let limit = parseInt(req.query.limit, 10);
+  if (isNaN(limit)) limit = 25;
   const q = (req.query.q || '').toLowerCase().trim();
   try {
     const snapshot = await db.ref(`restaurants/${restaurantId}/discounts`).get();
@@ -57,9 +58,12 @@ const getDiscounts = async (req, res) => {
     let discounts = Object.values(discountsObj);
     if (q) discounts = discounts.filter(d => (d.name || '').toLowerCase().includes(q) || (d.description || '').toLowerCase().includes(q));
     const total = discounts.length;
-    const startIndex = Math.max((page - 1) * limit, 0);
-    const endIndex = startIndex + limit;
-    const paged = discounts.slice(startIndex, endIndex);
+    let paged = discounts;
+    if (limit > 0) {
+      const startIndex = Math.max((page - 1) * limit, 0);
+      const endIndex = startIndex + limit;
+      paged = discounts.slice(startIndex, endIndex);
+    }
     res.json({ success: true, data: paged, meta: { total, limit, page } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch discounts' });

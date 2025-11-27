@@ -16,15 +16,16 @@ export default function Catering({
   subtitleStyle = {},
   cardStyle = {},
   globalStyles,
-  blockId
+  blockId,
+  anchorId
 }) {
-  
+
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
   };
 
   const renderGrid = () => (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <div className="flex flex-wrap justify-center gap-8 mb-12" data-control="catering-packages" data-block-id={blockId}>
       {packages.map((pkg, index) => (
         <div
           key={index}
@@ -59,7 +60,7 @@ export default function Catering({
               >
                 {pkg.name}
               </StyledText>
-              
+
               {showPricing && (
                 <div className="flex items-baseline justify-center gap-1">
                   <StyledText tag="span" className="text-4xl font-bold" styleConfig={{ color: getColor(accentColor) }}>{pkg.price}</StyledText>
@@ -96,7 +97,7 @@ export default function Catering({
               })}
             </div>
 
-            <button 
+            <button
               className={`w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl`}
               style={{
                 backgroundColor: pkg.popular ? getColor(accentColor) : getColor('surface'),
@@ -113,7 +114,7 @@ export default function Catering({
   );
 
   const renderList = () => (
-    <div className="space-y-6 mb-12 max-w-4xl mx-auto">
+    <div className="space-y-6 mb-12 max-w-4xl mx-auto" data-control="catering-packages" data-block-id={blockId}>
       {packages.map((pkg, index) => (
         <div
           key={index}
@@ -159,7 +160,7 @@ export default function Catering({
             >
               {pkg.description}
             </StyledText>
-            
+
             <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-start">
               {pkg.features && pkg.features.map((featureItem, featureIndex) => {
                 const featureText = typeof featureItem === 'object' ? featureItem.feature : featureItem;
@@ -182,7 +183,7 @@ export default function Catering({
                 {pkg.perPerson && <StyledText tag="span" className="text-xs uppercase tracking-wide" styleConfig={{ color: getColor('muted') }}>per person</StyledText>}
               </div>
             )}
-            <button 
+            <button
               className="w-full py-2 px-6 rounded-lg font-medium transition-all duration-200 shadow hover:shadow-md"
               style={{
                 backgroundColor: pkg.popular ? getColor(accentColor) : 'transparent',
@@ -199,7 +200,7 @@ export default function Catering({
   );
 
   return (
-    <section id={blockId} className="py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} data-block-id={blockId} data-control="container">
+    <section id={anchorId || "catering"} className="py-20 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} data-block-id={blockId} >
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-16 left-16 w-36 h-36 rounded-full blur-3xl" style={{ backgroundColor: getColor(accentColor) }}></div>
         <div className="absolute bottom-16 right-16 w-28 h-28 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>
@@ -226,10 +227,10 @@ export default function Catering({
               dataControl="catering-title"
               dataBlockId={blockId}
             >
-              <span style={{ 
-                background: `linear-gradient(to right, ${getColor(accentColor)}, ${getColor('secondary')})`, 
-                backgroundClip: 'text', 
-                WebkitBackgroundClip: 'text', 
+              <span style={{
+                background: `linear-gradient(to right, ${getColor(accentColor)}, ${getColor('secondary')})`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 color: 'transparent'
               }}>
@@ -257,7 +258,7 @@ export default function Catering({
         {layout === 'list' ? renderList() : renderGrid()}
         {(ctaText || ctaUrl) && (
           <div className="text-center" data-control="catering-cta" data-block-id={blockId}>
-            <button 
+            <button
               className="inline-flex items-center gap-2 px-8 py-4 font-semibold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
               style={{
                 background: `linear-gradient(to right, ${getColor(accentColor)}, ${getColor('secondary')})`,

@@ -1,0 +1,99 @@
+import ProductCardTemplate from '@/components/builder/blocks/content/MenuSection/ProductCardTemplate';
+import StyledText from '@/components/builder/atoms/StyledText';
+import { useContainerQuery } from "@/components/builder/hooks/useContainerQuery";
+
+export default function ProductGrid({
+  items = [],
+  config = {},
+  cardConfig = {},
+  globalStyles = {},
+  blockId,
+  sectionLayout = 'standard',
+  onAddToCart,
+  activeDiscounts,
+  onItemClick,
+  onQuickAdd,
+  isPublic = false
+}) {
+  const {
+    columns = 3,
+    gap = 'medium',
+    pagination = 'load-more',
+  } = config;
+
+  const { containerRef, isMobile } = useContainerQuery();
+
+  const getGapClass = (gapSize) => {
+    if (isMobile) {
+      return {
+        small: 'gap-3',
+        medium: 'gap-4',
+        large: 'gap-6',
+      }[gapSize] || 'gap-4';
+    }
+    return {
+      small: 'gap-4',
+      medium: 'gap-6',
+      large: 'gap-8',
+    }[gapSize] || 'gap-6';
+  };
+
+  const getMinColumnWidth = (cols) => {
+    const c = parseInt(cols);
+    if (c === 1) return '100%';
+    if (c === 2) return '300px';
+    if (c === 4) return '200px';
+    return '240px';
+  };
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300 mx-4">
+        <StyledText tag="p" className="text-gray-500" styleConfig={{ fontFamily: globalStyles?.typography?.bodyFont }}>
+          No items found.
+        </StyledText>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full" ref={containerRef}>
+      <div
+        className={`grid ${getGapClass(gap)}`}
+        style={{
+          gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${getMinColumnWidth(columns)}), 1fr))`
+        }}
+      >
+        {items.map((item, index) => {
+          return (
+            <div
+              key={item.id || index}
+              className="flex flex-col h-full min-w-0"
+            >
+              <ProductCardTemplate
+                item={item}
+                config={cardConfig}
+                globalStyles={globalStyles}
+                blockId={blockId}
+                sectionLayout={sectionLayout}
+                onAddToCart={onAddToCart}
+                activeDiscounts={activeDiscounts}
+                onItemClick={onItemClick}
+                onQuickAdd={onQuickAdd}
+                isPublic={isPublic}
+                index={index}
+              />
+            </div>
+          );
+        })}
+      </div>
+      {pagination === 'load-more' && items.length > 6 && (
+        <div className="mt-8 md:mt-12 text-center">
+          <button className="px-6 py-3 border border-gray-300 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors active:scale-95">
+            Load More
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

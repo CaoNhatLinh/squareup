@@ -9,12 +9,13 @@ import {
   updateRestaurantSiteConfig,
   generateSlug,
   isSlugAvailable,
-}  from '@/api/siteConfig';
+} from '@/api/siteConfig';
 import { DEFAULT_SITE_CONFIG } from '@/utils/siteConfigUtils';
 import { BLOCK_TYPES } from "@/components/builder/blockTypes";
 import { ShopProvider } from "@/context/ShopProvider";
 import useAppStore from "@/store/useAppStore";
 import { useToast } from "@/hooks/useToast";
+import { useLoading } from "@/context/LoadingContext";
 import BuilderContent from "@/components/builder/BuilderContent";
 
 import { deepMerge } from "@/utils/objectUtils";
@@ -30,7 +31,8 @@ import {
 
 export default function WebsiteBuilder() {
   const restaurantId = useAppStore((s) => s.restaurantId);
-  const { success :showSuccess, error :showError ,warning :showWarning } = useToast();
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [layout, setLayout] = useState([]);
   const [headerConfig, setHeaderConfig] = useState(
     BLOCK_TYPES.find((t) => t.type === "HEADER").defaultProps
@@ -39,7 +41,7 @@ export default function WebsiteBuilder() {
     BLOCK_TYPES.find((t) => t.type === "FOOTER").defaultProps
   );
   const [globalStyles, setGlobalStyles] = useState(DEFAULT_GLOBAL_STYLES);
- 
+
 
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -49,7 +51,7 @@ export default function WebsiteBuilder() {
   const [originalSlug, setOriginalSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true); // Removed local loading state
 
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -64,6 +66,8 @@ export default function WebsiteBuilder() {
   useEffect(() => {
     async function loadSiteConfig() {
       if (!restaurantId) return;
+
+      showLoading("Loading builder...");
 
       try {
         const restaurantRef = ref(rtdb, `restaurants/${restaurantId}`);
@@ -152,13 +156,14 @@ export default function WebsiteBuilder() {
         }
       } catch (error) {
         console.error("Error loading site config:", error);
+        showError("Failed to load site configuration");
       } finally {
-        setLoading(false);
+        hideLoading();
       }
     }
 
     loadSiteConfig();
-  }, [restaurantId]);
+  }, [restaurantId, showLoading, hideLoading, showError]);
 
   const updateState = useCallback(
     (updates) => {
@@ -167,7 +172,7 @@ export default function WebsiteBuilder() {
       setFooterConfig((prevFooter) => updates.footerConfig !== undefined ? updates.footerConfig : prevFooter);
       setGlobalStyles((prevStyles) => updates.globalStyles !== undefined ? updates.globalStyles : prevStyles);
 
-      
+
       setHistory((prevHistory) => {
         const currentState = {
           layout: updates.layout !== undefined ? updates.layout : layout,
@@ -293,6 +298,7 @@ export default function WebsiteBuilder() {
   const handleSaveDraft = async () => {
     if (!restaurantId) return;
     setSaving(true);
+    showLoading("Saving draft...");
     try {
       await update(ref(rtdb, `restaurants/${restaurantId}`), {
         draftConfig: {
@@ -309,6 +315,7 @@ export default function WebsiteBuilder() {
       showError("Failed to save draft");
     } finally {
       setSaving(false);
+      hideLoading();
     }
   };
 
@@ -329,6 +336,7 @@ export default function WebsiteBuilder() {
     try {
       setSaving(true);
       setSlugError("");
+      showLoading("Publishing site...");
 
       const configData = {
         layout: layout,
@@ -351,6 +359,7 @@ export default function WebsiteBuilder() {
       showError("Failed to publish");
     } finally {
       setSaving(false);
+      hideLoading();
     }
   };
 
@@ -381,20 +390,9 @@ export default function WebsiteBuilder() {
     (styles) => updateState({ globalStyles: styles }),
     [updateState]
   );
-  
+
 
   const selectedBlock = layout.find((b) => b.id === selectedBlockId);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
-          <p>Loading builder...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ShopProvider restaurantId={restaurantId}>

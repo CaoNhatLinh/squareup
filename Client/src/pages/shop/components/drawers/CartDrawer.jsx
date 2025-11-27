@@ -203,7 +203,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
         {cart.length > 0 && (
           <div className="px-4 py-2 bg-white ">
-            <Button onClick={handleCheckout} disabled={checkoutLoading || restaurant?.isOpen === false} variant="destructive" size="large" className="w-full flex items-center justify-between px-4 py-3">
+            <Button onClick={handleCheckout} disabled={checkoutLoading || restaurant?.isOpen === false} variant="primary" size="large" className="w-full flex items-center justify-between px-4 py-3">
               <span>{restaurant?.isOpen === false ? "Closed - Cannot Order" : checkoutLoading ? "Processing..." : "Checkout"}</span>
               <span>${(total || totalAmount).toFixed(2)}</span>
             </Button>
@@ -217,7 +217,7 @@ export default function CartDrawer({ isOpen, onClose, onEditItem }) {
 
         {cart.length > 0 && (
           <div className="px-4 py-2 bg-white">
-            <Button onClick={onClose} variant="outline" className="w-full flex items-center justify-center gap-2" size="small">
+            <Button onClick={onClose} variant="primary" btnStyle="outline" className="w-full flex items-center justify-center gap-2" size="small">
               <HiPlus className="w-4 h-4" />
               <span>Add More Items</span>
             </Button>

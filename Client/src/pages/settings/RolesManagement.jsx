@@ -8,13 +8,14 @@ import Table from '@/components/ui/Table';
 import ListEmpty from '@/components/common/ListEmpty';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Button from '@/components/ui/Button';
 import { HiPlus } from 'react-icons/hi';
 import { useEffect, useCallback } from 'react';
 
 export default function RolesManagement() {
-  const restaurantId = useAppStore(s => s.restaurantId) ;
+  const restaurantId = useAppStore(s => s.restaurantId);
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { success, error: showError } = useToast();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -53,11 +54,11 @@ export default function RolesManagement() {
     if (!confirmTarget) return setConfirmOpen(false);
     try {
       await deleteRole(restaurantId, confirmTarget.id);
-      showToast('Role deleted successfully', 'success');
+      success('Role deleted successfully');
       fetchRoles();
     } catch (err) {
       console.error('Error deleting role:', err);
-      showToast(err.response?.data?.error || 'Failed to delete role', 'error');
+      showError(err.response?.data?.error || 'Failed to delete role');
     } finally {
       setConfirmOpen(false);
       setConfirmTarget(null);
@@ -97,9 +98,11 @@ export default function RolesManagement() {
           columns={[
             { key: 'name', title: 'Role', render: (r) => <div className="font-semibold">{r.name}</div> },
             { key: 'description', title: 'Description', render: (r) => <div className="text-sm text-gray-600">{r.description}</div> },
-            { key: 'permissions', title: 'Permissions', render: (r) => (
+            {
+              key: 'permissions', title: 'Permissions', render: (r) => (
                 <div className="flex flex-wrap gap-2">{Object.entries(r.permissions || {}).map(([resource, perms]) => { const activePerms = Object.entries(perms).filter(([, value]) => value).map(([key]) => key); if (activePerms.length === 0) return null; return (<span key={resource} className="px-2 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold">{resource.replace(/_/g, ' ')} ({activePerms.join(',')})</span>); })}</div>
-            )},
+              )
+            },
             { key: 'actions', title: '', render: (r) => (<div className="flex justify-end gap-2"><Button variant="secondary" size="small" onClick={() => handleEdit(r)}>Edit</Button><Button variant="danger" size="small" onClick={() => handleDelete(r)}>Delete</Button></div>) }
           ]}
           data={roles}

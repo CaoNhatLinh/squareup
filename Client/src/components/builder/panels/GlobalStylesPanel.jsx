@@ -1,6 +1,10 @@
-import { THEME_PRESETS } from '@/components/builder/themePresets';
+import { THEME_PRESETS } from '@/components/builder/config/themePresets';
 import { PALETTE_OPTIONS } from '@/components/builder/blockTypes';
-import { FONT_OPTIONS, PALETTE_KEYS } from '@/constants/builderConstants';
+import { PALETTE_KEYS } from '@/constants/builderConstants';
+import { FONT_OPTIONS } from '@/components/builder/config/fonts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 export default function GlobalStylesPanel({ globalStyles, onChange }) {
   const handleChange = (section, key, value) => {
@@ -64,53 +68,67 @@ export default function GlobalStylesPanel({ globalStyles, onChange }) {
         <p className="text-sm text-gray-500">Global appearance settings</p>
       </div>
 
-      <div>
-        <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider text-gray-500">Color Palette</h4>
-        <div className="mb-3 flex gap-2 flex-wrap">
-          {THEME_PRESETS.map((p) => (
-            <button key={p.id} onClick={() => applyPreset(p)} className="flex items-center gap-2 px-3 py-2 border rounded bg-white hover:shadow-sm">
-              <span style={{ backgroundColor: p.color }} className="w-6 h-6 rounded-full border" />
-              <span className="text-sm">{p.label}</span>
-            </button>
-          ))}
-        </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Color Palette</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            {THEME_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => applyPreset(p)}
+                className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left group bg-white"
+              >
+                <span
+                  style={{ backgroundColor: p.color }}
+                  className="w-6 h-6 rounded-full border border-gray-200 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform"
+                />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 truncate">{p.label}</span>
+              </button>
+            ))}
+          </div>
 
-        <div className="space-y-3">
-          {PALETTE_KEYS.map((key) => {
-            const opt = PALETTE_OPTIONS.find(p => p.value === key);
-            const label = opt ? opt.label : key;
-            const hex = globalStyles.palette?.[key] || '';
-            return (
-              <div key={key}>
-                <label className="block text-sm font-medium mb-1">{label}</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={hex}
-                    onChange={(e) => handlePaletteChange(key, e.target.value)}
-                    className="h-8 w-12 border rounded cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={hex}
-                    onChange={(e) => handlePaletteChange(key, e.target.value)}
-                    className="flex-1 px-3 py-1 border rounded text-sm uppercase"
-                  />
+          <div className="space-y-3">
+            {PALETTE_KEYS.map((key) => {
+              const opt = PALETTE_OPTIONS.find(p => p.value === key);
+              const label = opt ? opt.label : key;
+              const hex = globalStyles.palette?.[key] || '';
+              return (
+                <div key={key}>
+                  <label className="block text-sm font-medium mb-1">{label}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={hex}
+                      onChange={(e) => handlePaletteChange(key, e.target.value)}
+                      className="h-9 w-12 border rounded cursor-pointer p-0 overflow-hidden"
+                    />
+                    <Input
+                      value={hex}
+                      onChange={(e) => handlePaletteChange(key, e.target.value)}
+                      className="uppercase"
+                      maxLength={7}
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="border-t pt-4">
-        <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider text-gray-500">Typography</h4>
-        <div className="space-y-3">
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Typography</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <div>
             <label className="block text-sm font-medium mb-1">Heading Font</label>
             <select
               value={globalStyles.typography.headingFont}
               onChange={(e) => handleChange('typography', 'headingFont', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
+              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {FONT_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -122,15 +140,15 @@ export default function GlobalStylesPanel({ globalStyles, onChange }) {
             <select
               value={globalStyles.typography.bodyFont}
               onChange={(e) => handleChange('typography', 'bodyFont', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
+              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {FONT_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

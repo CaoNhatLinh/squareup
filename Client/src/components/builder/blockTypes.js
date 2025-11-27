@@ -22,6 +22,7 @@ export const BLOCK_TYPES = [
       paddingY: "medium",
       sticky: true,
       title: "My Restaurant",
+      showCtaButton: true,
       logo: {
         showLogo: true,
         showTitle: true,
@@ -107,6 +108,7 @@ export const BLOCK_TYPES = [
             ],
           },
           { name: "sticky", label: "Sticky on Scroll", type: "boolean" },
+          { name: "showCtaButton", label: "Show Order Button", type: "boolean" },
         ],
       },
       {
@@ -219,9 +221,7 @@ export const BLOCK_TYPES = [
         isGroupElement: true,
         highlightControlId: "cta-button",
         fields: [
-          { name: "ctaButton.show", label: "Show Button", type: "boolean" },
-          { name: "ctaButton.label", label: "Label", type: "text" },
-          { name: "ctaButton.url", label: "URL", type: "text" },
+          { name: "ctaButton.label", label: "Button Text", type: "text" },
           {
             name: "ctaButton.style",
             label: "Style",
@@ -732,7 +732,7 @@ export const BLOCK_TYPES = [
             "cardConfig.pricePosition",
           ],
         },
-        
+
       },
       {
         group: "Button Configuration",
@@ -795,14 +795,110 @@ export const BLOCK_TYPES = [
   {
     type: "PROMO_GRID",
     label: "Promotions",
-    icon: "bolt",
+    icon: "sparkles",
     description: "Display active discounts and offers",
     hiddenFromNav: false,
     defaultProps: {
-      layout: "grid", 
+      layout: "banner",
       showCode: true,
-      backgroundColor: "background",
-      textColor: "text",
+      backgroundColor: null,
+      textColor: null,
+      titleStyle: {
+        fontSize: 48,
+        fontWeight: 700,
+        color: null,
+      },
+      subtitleStyle: {
+        fontSize: 20,
+        fontWeight: 400,
+        color: null,
+      },
+      promotions: [
+        {
+          id: 1,
+          name: 'Summer Sale',
+          description: '20% off all drinks',
+          code: 'SUMMER20',
+          icon: '🔥',
+          discountType: 'percentage',
+          discountValue: 20
+        },
+        {
+          id: 2,
+          name: 'Free Delivery',
+          description: 'On orders over $50',
+          code: 'FREEDEL',
+          icon: '🚚',
+          discountType: 'free_delivery'
+        },
+        {
+          id: 3,
+          name: 'New User Special',
+          description: '$5 off your first order',
+          code: 'WELCOME5',
+          icon: '🎉',
+          discountType: 'fixed',
+          discountValue: 5
+        }
+      ],
+      showDecorativeElements: true,
+    },
+    variantThumbnails: {
+      banner: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#f3f4f6" rx="4"/>
+          <rect x="5" y="25" width="90" height="30" fill="url(#grad1)" rx="4"/>
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#FF9F43;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <rect x="15" y="35" width="40" height="4" fill="white" rx="2"/>
+          <rect x="15" y="42" width="25" height="3" fill="white" opacity="0.7" rx="1.5"/>
+          <circle cx="80" cy="40" r="8" fill="white" opacity="0.2"/>
+        </svg>
+      `,
+      popup: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#e5e7eb" rx="4"/>
+          <rect width="100" height="80" fill="#000" opacity="0.1" rx="4"/>
+          <rect x="25" y="15" width="50" height="50" fill="white" rx="4" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+          <rect x="25" y="15" width="50" height="20" fill="#FF6B35" rx="4" clip-path="inset(0 0 70% 0)"/>
+          <circle cx="50" cy="25" r="6" fill="white" opacity="0.9"/>
+          <rect x="35" y="40" width="30" height="3" fill="#333" rx="1.5"/>
+          <rect x="30" y="46" width="40" height="2" fill="#9ca3af" rx="1"/>
+          <rect x="30" y="50" width="40" height="2" fill="#9ca3af" rx="1"/>
+          <rect x="40" y="56" width="20" height="5" fill="#FF6B35" rx="2.5"/>
+        </svg>
+      `,
+      inline: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#fff" rx="4"/>
+          <rect x="35" y="10" width="30" height="3" fill="#333" rx="1.5"/>
+          <rect x="30" y="16" width="40" height="2" fill="#9ca3af" rx="1"/>
+          <rect x="10" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <rect x="12" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1"/>
+          <rect x="38" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <rect x="40" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1"/>
+          <rect x="66" y="25" width="24" height="35" fill="#fff" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <rect x="68" y="27" width="20" height="15" fill="#FF6B35" opacity="0.2" rx="1"/>
+          <rect x="40" y="68" width="20" height="5" fill="#333" rx="2.5"/>
+        </svg>
+      `,
+      grid: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#f9fafb" rx="4"/>
+          <rect x="10" y="10" width="38" height="28" fill="white" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <circle cx="29" cy="24" r="5" fill="#FF6B35" opacity="0.2"/>
+          <rect x="52" y="10" width="38" height="28" fill="white" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <circle cx="71" cy="24" r="5" fill="#FF6B35" opacity="0.2"/>
+          <rect x="10" y="42" width="38" height="28" fill="white" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <circle cx="29" cy="56" r="5" fill="#FF6B35" opacity="0.2"/>
+          <rect x="52" y="42" width="38" height="28" fill="white" stroke="#e5e7eb" stroke-width="1" rx="2"/>
+          <circle cx="71" cy="56" r="5" fill="#FF6B35" opacity="0.2"/>
+        </svg>
+      `,
     },
     schema: [
       {
@@ -822,6 +918,102 @@ export const BLOCK_TYPES = [
             ],
           },
           { name: "showCode", label: "Show Promo Code", type: "boolean" },
+          { name: "showDecorativeElements", label: "Show Decorative Elements", type: "boolean" },
+        ],
+      },
+      {
+        group: "Promotions",
+        key: "promotions",
+        isGroupElement: true,
+        highlightControlId: "promo-list",
+        fields: [
+          {
+            name: "promotions",
+            label: "Promotions List",
+            type: "list",
+            summaryFields: ["name", "code"],
+            itemSchema: [
+              { name: "name", label: "Title", type: "text" },
+              { name: "description", label: "Description", type: "text" },
+              { name: "code", label: "Promo Code", type: "text" },
+              { name: "icon", label: "Icon (Emoji)", type: "text" },
+              { name: "discountValue", label: "Discount Value", type: "text" },
+            ],
+            elementSchema: {
+              controlIdPrefix: "promo-item-",
+              fields: ["name", "description", "code", "icon", "discountValue"],
+            },
+          },
+        ],
+      },
+      {
+        group: "Content",
+        key: "content",
+        isGroupElement: true,
+        highlightControlId: "title",
+        fields: [
+          {
+            name: "title",
+            label: "Title",
+            type: "text",
+            placeholder: "Don't Miss Out on Amazing Deals!"
+          },
+          {
+            name: "subtitle",
+            label: "Subtitle",
+            type: "textarea",
+            placeholder: "Limited time promotions and exclusive discounts just for you."
+          },
+        ],
+      },
+      {
+        group: "Title Style",
+        key: "titleStyle",
+        isGroupElement: true,
+        highlightControlId: "title",
+        fields: [
+          {
+            name: "titleStyle.fontSize",
+            label: "Font Size (px)",
+            type: "range",
+            min: 24,
+            max: 72,
+            step: 2,
+          },
+          {
+            name: "titleStyle.fontWeight",
+            label: "Font Weight",
+            type: "range",
+            min: 100,
+            max: 900,
+            step: 100,
+          },
+          { name: "titleStyle.color", label: "Color", type: "palette" },
+        ],
+      },
+      {
+        group: "Subtitle Style",
+        key: "subtitleStyle",
+        isGroupElement: true,
+        highlightControlId: "subtitle",
+        fields: [
+          {
+            name: "subtitleStyle.fontSize",
+            label: "Font Size (px)",
+            type: "range",
+            min: 12,
+            max: 32,
+            step: 1,
+          },
+          {
+            name: "subtitleStyle.fontWeight",
+            label: "Font Weight",
+            type: "range",
+            min: 100,
+            max: 900,
+            step: 100,
+          },
+          { name: "subtitleStyle.color", label: "Color", type: "palette" },
         ],
       },
       {
@@ -1043,7 +1235,7 @@ export const BLOCK_TYPES = [
           },
         ],
       },
-       {
+      {
         group: "Description",
         key: "description",
         isGroupElement: true,
@@ -1074,7 +1266,7 @@ export const BLOCK_TYPES = [
       {
         group: "Company Title",
         key: "company",
-        isGroupElement: true, 
+        isGroupElement: true,
         highlightControlId: "footer-company",
         fields: [
           {
@@ -1151,7 +1343,7 @@ export const BLOCK_TYPES = [
           },
         ],
       },
-     
+
       {
         group: "Social Links",
         key: "social",
@@ -1211,7 +1403,7 @@ export const BLOCK_TYPES = [
       title: "Our Story",
       content: "Founded in 2023, we bring the best flavors to your table...",
       image: "",
-      layout: "elegant-split", 
+      layout: "elegant-split",
       backgroundColor: "background",
       textColor: "text",
       showDecorativeElements: true,
@@ -1256,15 +1448,15 @@ export const BLOCK_TYPES = [
           { name: "titleStyle.bold", label: "Bold", type: "boolean" },
           { name: "titleStyle.italic", label: "Italic", type: "boolean" },
           { name: "titleStyle.underline", label: "Underline", type: "boolean" },
-          { 
-            name: "titleStyle.alignment", 
-            label: "Alignment", 
-            type: "select", 
+          {
+            name: "titleStyle.alignment",
+            label: "Alignment",
+            type: "select",
             options: [
               { label: "Left", value: "left" },
               { label: "Center", value: "center" },
               { label: "Right", value: "right" }
-            ] 
+            ]
           },
         ]
       },
@@ -1279,15 +1471,15 @@ export const BLOCK_TYPES = [
           { name: "contentStyle.bold", label: "Bold", type: "boolean" },
           { name: "contentStyle.italic", label: "Italic", type: "boolean" },
           { name: "contentStyle.underline", label: "Underline", type: "boolean" },
-          { 
-            name: "contentStyle.alignment", 
-            label: "Alignment", 
-            type: "select", 
+          {
+            name: "contentStyle.alignment",
+            label: "Alignment",
+            type: "select",
             options: [
               { label: "Left", value: "left" },
               { label: "Center", value: "center" },
               { label: "Right", value: "right" }
-            ] 
+            ]
           },
         ]
       },
@@ -1359,20 +1551,20 @@ export const BLOCK_TYPES = [
     defaultProps: {
       title: "Gallery",
       images: [],
-      layout: "premium-grid", 
+      layout: "premium-grid",
       columns: 3,
       gap: "medium",
       showCaptions: true,
       enableLightbox: true,
       showFilters: false,
-      showBadge: true, 
+      showBadge: true,
       filters: ["All", "Food", "Interior", "Events"],
       allLabel: "All",
       backgroundColor: "background",
       textColor: "text",
       showNavigation: true,
-      navStyle: "tabs", 
-      navPosition: "top", 
+      navStyle: "tabs",
+      navPosition: "top",
       navAlignment: "center",
       navSpacing: "medium",
     },
@@ -1502,9 +1694,9 @@ export const BLOCK_TYPES = [
             itemSchema: [
               { name: "url", label: "Image URL", type: "image" },
               { name: "caption", label: "Caption", type: "text" },
-              { 
-                name: "category", 
-                label: "Category", 
+              {
+                name: "category",
+                label: "Category",
                 type: "select",
                 options: []
               },
@@ -1548,7 +1740,7 @@ export const BLOCK_TYPES = [
       showMap: true,
       mapEmbedCode: "",
       showAddress: true,
-      layout: "luxury-split", 
+      layout: "luxury-split",
       showDirectionsButton: true,
       directionsText: "Get Directions",
       directionsUrl: "#",
@@ -1675,7 +1867,20 @@ export const BLOCK_TYPES = [
     defaultProps: {
       title: "About Our Restaurant",
       subtitle: "A culinary journey since 2010",
-      content: "We believe that great food brings people together. Our restaurant has been serving authentic, high-quality dishes made with the finest ingredients for over a decade. Every meal is prepared with passion and served with pride.",
+      story: "We believe that great food brings people together. Our restaurant has been serving authentic, high-quality dishes made with the finest ingredients for over a decade. Every meal is prepared with passion and served with pride.",
+      mission: "To provide an unforgettable dining experience that celebrates local flavors and community connection.",
+      values: [
+        { value: "Quality Ingredients" },
+        { value: "Authentic Flavors" },
+        { value: "Community Focus" },
+        { value: "Sustainable Practices" }
+      ],
+      team: [
+        { name: "John Doe", role: "Head Chef", bio: "20 years of culinary excellence.", image: "" },
+        { name: "Jane Smith", role: "Restaurant Manager", bio: "Ensuring the best service for our guests.", image: "" },
+        { name: "Mike Johnson", role: "Sous Chef", bio: "Passionate about creating new flavors.", image: "" }
+      ],
+      showTeam: true,
       stats: [
         { label: "Years of Experience", value: "10+" },
         { label: "Happy Customers", value: "50K+" },
@@ -1684,37 +1889,117 @@ export const BLOCK_TYPES = [
       ],
       showStats: true,
       image: "",
-      layout: "content-left", 
+      layout: "split",
       backgroundColor: "background",
-      textColor: "text"
+      textColor: "text",
+      subtitleColor: "muted",
+      showDecorativeElements: true
     },
     schema: [
-      { name: "title", label: "Title", type: "text" },
-      { name: "subtitle", label: "Subtitle", type: "text" },
-      { name: "content", label: "Content", type: "textarea", rows: 6 },
-      { name: "image", label: "Image", type: "image" },
       {
-        name: "layout",
-        label: "Layout",
-        type: "select",
-        options: [
-          { label: "Content Left", value: "content-left" },
-          { label: "Content Right", value: "content-right" },
-          { label: "Centered", value: "centered" }
-        ]
+        group: "Header Info",
+        key: "header",
+        isGroupElement: true,
+        highlightControlId: "about-header",
+        fields: [
+          { name: "title", label: "Title", type: "text" },
+          { name: "subtitle", label: "Subtitle", type: "text" },
+        ],
       },
       {
-        name: "stats",
-        label: "Statistics",
-        type: "list",
-        itemSchema: [
-          { name: "label", label: "Label", type: "text" },
-          { name: "value", label: "Value", type: "text" }
-        ]
+        group: "Our Story",
+        key: "story",
+        isGroupElement: true,
+        highlightControlId: "about-story",
+        fields: [
+          { name: "story", label: "Story Content", type: "textarea", rows: 6 },
+        ],
       },
-      { name: "showStats", label: "Show Statistics", type: "boolean" },
-      { name: "backgroundColor", label: "Background Color", type: "palette" },
-      { name: "textColor", label: "Text Color", type: "palette" }
+      {
+        group: "Main Image",
+        key: "image",
+        isGroupElement: true,
+        highlightControlId: "about-image",
+        fields: [
+          { name: "image", label: "Image", type: "image" },
+        ],
+      },
+      {
+        group: "Mission & Values",
+        key: "mission_values",
+        isGroupElement: true,
+        highlightControlId: "about-mission",
+        fields: [
+          { name: "mission", label: "Mission Statement", type: "textarea", rows: 4 },
+          {
+            name: "values",
+            label: "Core Values",
+            type: "list",
+            itemSchema: [
+              { name: "value", label: "Value", type: "text" }
+            ]
+          },
+        ],
+      },
+      {
+        group: "Statistics",
+        key: "stats",
+        isGroupElement: true,
+        highlightControlId: "about-stats",
+        fields: [
+          {
+            name: "stats",
+            label: "Statistics List",
+            type: "list",
+            itemSchema: [
+              { name: "label", label: "Label", type: "text" },
+              { name: "value", label: "Value", type: "text" }
+            ]
+          },
+        ],
+      },
+      {
+        group: "Team",
+        key: "team",
+        isGroupElement: true,
+        highlightControlId: "about-team",
+        fields: [
+          {
+            name: "team",
+            label: "Team Members",
+            type: "list",
+            itemSchema: [
+              { name: "name", label: "Name", type: "text" },
+              { name: "role", label: "Role", type: "text" },
+              { name: "bio", label: "Bio", type: "textarea" },
+              { name: "image", label: "Photo", type: "image" }
+            ]
+          },
+        ],
+      },
+      {
+        group: "Layout & Styling",
+        key: "styling",
+        isGroupElement: false,
+        fields: [
+          {
+            name: "layout",
+            label: "Layout",
+            type: "select",
+            options: [
+              { label: "Split View", value: "split" },
+              { label: "Centered", value: "centered" },
+              { label: "Minimal", value: "minimal" }
+            ]
+          },
+          { name: "showStats", label: "Show Statistics", type: "boolean" },
+          { name: "showTeam", label: "Show Team Section", type: "boolean" },
+          { name: "showDecorativeElements", label: "Show Decorative Elements", type: "boolean" },
+          { name: "backgroundColor", label: "Background Color", type: "palette" },
+          { name: "textColor", label: "Text Color", type: "palette" },
+          { name: "subtitleColor", label: "Subtitle Color", type: "palette" }
+        ],
+      },
     ],
   },
   {
@@ -1826,7 +2111,7 @@ export const BLOCK_TYPES = [
           },
         ],
       },
-       {
+      {
         group: "Description",
         key: "description",
         isGroupElement: true,
@@ -1857,7 +2142,7 @@ export const BLOCK_TYPES = [
       {
         group: "Company Title",
         key: "company",
-        isGroupElement: true, 
+        isGroupElement: true,
         highlightControlId: "footer-company",
         fields: [
           {
@@ -1934,7 +2219,7 @@ export const BLOCK_TYPES = [
           },
         ],
       },
-     
+
       {
         group: "Social Links",
         key: "social",
@@ -1990,6 +2275,38 @@ export const BLOCK_TYPES = [
     icon: "mail",
     description: "Email newsletter signup form",
     hiddenFromNav: false,
+    variantThumbnails: {
+      centered: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#f9fafb" rx="4"/>
+          <rect x="20" y="20" width="60" height="40" fill="white" rx="2" stroke="#e5e7eb" stroke-width="1"/>
+          <rect x="35" y="30" width="30" height="4" fill="#374151" rx="2"/>
+          <rect x="30" y="38" width="40" height="3" fill="#9ca3af" rx="1.5"/>
+          <rect x="30" y="45" width="40" height="8" fill="#f3f4f6" rx="2" stroke="#d1d5db" stroke-width="0.5"/>
+          <rect x="40" y="47" width="20" height="4" fill="#d1d5db" rx="1"/>
+        </svg>
+      `,
+      inline: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#f9fafb" rx="4"/>
+          <rect x="10" y="25" width="80" height="30" fill="white" rx="2" stroke="#e5e7eb" stroke-width="1"/>
+          <rect x="15" y="35" width="25" height="4" fill="#374151" rx="2"/>
+          <rect x="15" y="42" width="35" height="3" fill="#9ca3af" rx="1.5"/>
+          <rect x="55" y="35" width="30" height="10" fill="#f3f4f6" rx="2" stroke="#d1d5db" stroke-width="0.5"/>
+          <rect x="75" y="37" width="8" height="6" fill="#3b82f6" rx="1"/>
+        </svg>
+      `,
+      card: `
+        <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="80" fill="#f9fafb" rx="4"/>
+          <rect x="25" y="10" width="50" height="60" fill="white" rx="2" stroke="#e5e7eb" stroke-width="1"/>
+          <rect x="35" y="20" width="30" height="4" fill="#374151" rx="2"/>
+          <rect x="30" y="28" width="40" height="3" fill="#9ca3af" rx="1.5"/>
+          <rect x="30" y="40" width="40" height="8" fill="#f3f4f6" rx="2" stroke="#d1d5db" stroke-width="0.5"/>
+          <rect x="30" y="52" width="40" height="8" fill="#3b82f6" rx="2"/>
+        </svg>
+      `
+    },
     defaultProps: {
       title: "Stay Updated",
       subtitle: "Subscribe to our newsletter for the latest updates and special offers",
@@ -1997,7 +2314,7 @@ export const BLOCK_TYPES = [
       buttonText: "Subscribe",
       showPrivacyPolicy: true,
       privacyText: "We respect your privacy. Unsubscribe at any time.",
-      layout: "centered", 
+      layout: "centered",
       backgroundColor: "background",
       textColor: "text",
       showDecorativeElements: true,
@@ -2067,6 +2384,9 @@ export const BLOCK_TYPES = [
       showPricing: true,
       ctaText: "Book Catering",
       ctaUrl: "#",
+      showBookButton: true,
+      bookButtonText: "Book Catering",
+      columns: 3,
       layout: "grid",
       packages: [
         {
@@ -2075,7 +2395,7 @@ export const BLOCK_TYPES = [
           perPerson: true,
           description: "Essential catering for small gatherings",
           popular: false,
-          features: [{feature: "Appetizers"}, {feature: "Main Course"}, {feature: "Drinks"}],
+          features: [{ feature: "Appetizers" }, { feature: "Main Course" }, { feature: "Drinks" }],
         },
         {
           name: "Premium Package",
@@ -2083,7 +2403,7 @@ export const BLOCK_TYPES = [
           perPerson: true,
           description: "Full service catering for weddings and events",
           popular: true,
-          features: [{feature: "Appetizers"}, {feature: "Main Course"}, {feature: "Dessert"}, {feature: "Drinks"}, {feature: "Service Staff"}],
+          features: [{ feature: "Appetizers" }, { feature: "Main Course" }, { feature: "Dessert" }, { feature: "Drinks" }, { feature: "Service Staff" }],
         },
         {
           name: "Corporate Package",
@@ -2091,7 +2411,7 @@ export const BLOCK_TYPES = [
           perPerson: true,
           description: "Professional catering for business meetings",
           popular: false,
-          features: [{feature: "Breakfast/Lunch"}, {feature: "Coffee Service"}, {feature: "Snacks"}],
+          features: [{ feature: "Breakfast/Lunch" }, { feature: "Coffee Service" }, { feature: "Snacks" }],
         },
       ],
     },
@@ -2111,6 +2431,18 @@ export const BLOCK_TYPES = [
               { label: "Carousel", value: "carousel" },
             ],
           },
+          {
+            name: "columns",
+            label: "Columns",
+            type: "select",
+            options: [
+              { label: "2", value: 2 },
+              { label: "3", value: 3 },
+              { label: "4", value: 4 },
+            ],
+          },
+          { name: "showBookButton", label: "Show Book Button", type: "boolean" },
+          { name: "bookButtonText", label: "Book Button Text", type: "text" },
         ],
       },
       {

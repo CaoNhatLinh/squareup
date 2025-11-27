@@ -21,8 +21,8 @@ import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi'
 export default function Sidebar({ isOpen, onClose }) {
   const collapsed = useAppStore(s => s.sidebarCollapsed);
   const setCollapsed = useAppStore(s => s.setSidebarCollapsed);
-  
-  
+
+
   const effectiveCollapsed = collapsed;
   const restaurantId = useAppStore(s => s.restaurantId);
   const location = useLocation()
@@ -33,7 +33,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const isAdminPath = location.pathname.startsWith('/admin')
   const adminManagedRestaurantId = sessionStorage.getItem('adminManagingRestaurant')
-  
+
   const isAdminManagingRestaurant = user?.isAdmin && adminManagedRestaurantId && adminManagedRestaurantId === restaurantId;
 
   useEffect(() => {
@@ -109,6 +109,14 @@ export default function Sidebar({ isOpen, onClose }) {
                   <RestaurantDropdown restaurantName={restaurant?.name || 'Select Restaurant'} collapsed={effectiveCollapsed} logoUrl={restaurant?.logoUrl || restaurant?.logo} />
                 </div>
               </div>
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className={`w-full flex items-center ${effectiveCollapsed ? 'justify-center' : 'justify-start gap-3'} p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors duration-200`}
+                title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {effectiveCollapsed ? <HiChevronDoubleRight className="w-5 h-5" /> : <HiChevronDoubleLeft className="w-5 h-5" />}
+                {!effectiveCollapsed && <span className="text-sm font-medium">Collapse sidebar</span>}
+              </button>
             </div>
             <div className="px-4 py-4">
               <div className="relative">
@@ -146,9 +154,9 @@ export default function Sidebar({ isOpen, onClose }) {
                     Admin Panel
                   </h3>
                 </div>
-                    {adminMenuItems.map((item, idx) => (
-                      <MenuItem key={idx} item={item} level={0} collapsed={collapsed} />
-                    ))}
+                {adminMenuItems.map((item, idx) => (
+                  <MenuItem key={idx} item={item} level={0} collapsed={collapsed} />
+                ))}
               </div>
             )}
             {showRestaurantMenu && (
@@ -167,14 +175,6 @@ export default function Sidebar({ isOpen, onClose }) {
             <ProfileMenu collapsed={effectiveCollapsed} />
           </div>
         </div>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`absolute top-5 right-[-14px] z-50 p-1 rounded-full bg-white border shadow-sm text-gray-600 hover:bg-gray-50 ${collapsed ? '' : ''}`}
-          style={{ transform: 'translateX(50%)' }}
-        >
-          {collapsed ? <HiChevronDoubleRight className="w-5 h-5" /> : <HiChevronDoubleLeft className="w-5 h-5" />}
-        </button>
       </aside>
     </>
   )

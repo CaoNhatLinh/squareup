@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useAppStore from '@/store/useAppStore';
-import { fetchItems, updateItem } from "@/api/items";
+import { fetchAllItems, updateItem } from "@/api/items";
+import { fetchAllCategories } from "@/api/categories";
+import { fetchAllModifiers } from "@/api/modifers";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -119,13 +121,9 @@ export default function EditItem() {
     if (!restaurantId || !itemId) return;
     setLoading(true);
     Promise.all([
-      fetchItems(restaurantId),
-      import("../../api/categories").then(({ fetchCategories }) =>
-        fetchCategories(restaurantId)
-      ),
-      import("../../api/modifers").then(({ fetchModifiers }) =>
-        fetchModifiers(restaurantId)
-      ),
+      fetchAllItems(restaurantId),
+      fetchAllCategories(restaurantId),
+      fetchAllModifiers(restaurantId),
     ])
       .then(([itemsData, categoriesData, modifiersData]) => {
         const items = itemsData?.items || itemsData || [];

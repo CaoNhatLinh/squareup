@@ -10,9 +10,10 @@ import {
   HiMail,
   HiCake,
   HiPhotograph,
-  HiBookOpen
+  HiBookOpen,
+  HiSparkles
 } from "react-icons/hi";
-import { HiBolt,HiMap  } from "react-icons/hi2";
+import { HiBolt, HiMap } from "react-icons/hi2";
 
 export const ICON_MAP = {
   camera: HiCamera,
@@ -23,10 +24,11 @@ export const ICON_MAP = {
   upload: HiUpload,
   arrow_narrow_right: HiArrowNarrowRight,
   bolt: HiBolt,
+  sparkles: HiSparkles,
   office_building: HiOfficeBuilding,
   book_open: HiBookOpen,
-  photograph: HiPhotograph ,
+  photograph: HiPhotograph,
   mail: HiMail,
-  cake:HiCake,
+  cake: HiCake,
   map: HiMap,
 };

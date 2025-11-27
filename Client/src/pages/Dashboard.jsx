@@ -1,4 +1,4 @@
-import { Link, useLoaderData } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   HiOutlineEye,
   HiOutlineShoppingBag,
@@ -6,21 +6,17 @@ import {
   HiOutlineLink,
   HiOutlineCog,
   HiOutlineClipboard,
-  HiOutlineTemplate 
+  HiOutlineTemplate
 } from 'react-icons/hi';
-import useAppStore from '@/store/useAppStore';
+import { useRestaurant } from '@/hooks/useRestaurant';
 
 export default function Dashboard() {
-  const { restaurant } = useLoaderData();
-  const setRestaurantId = useAppStore(s => s.setRestaurantId);
-  
+  const { restaurant } = useRestaurant();
   const demoShopUrl = `/shop`;
   const publicSlug = restaurant?.slug;
   const publicUrl = publicSlug ? `/${publicSlug}` : null;
 
-  const handleGoToShop = () => {
-    if (restaurant?.id) setRestaurantId(restaurant.id);
-  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -52,7 +48,6 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to={demoShopUrl}
-                  onClick={handleGoToShop}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-3 bg-white border-2 border-blue-100 text-blue-600 hover:bg-blue-50 px-6 py-4 rounded-xl font-semibold transition-all duration-200"
@@ -62,38 +57,38 @@ export default function Dashboard() {
                   View Demo Shop
                 </Link>
                 {publicUrl ? (
-                    <Link
-                        to={publicUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-                    >
-                        <HiOutlineLink className="w-5 h-5" />
-                        Visit Live Website
-                    </Link>
+                  <Link
+                    to={publicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                  >
+                    <HiOutlineLink className="w-5 h-5" />
+                    Visit Live Website
+                  </Link>
                 ) : (
-                    <button
-                        disabled
-                        className="inline-flex items-center justify-center gap-3 bg-gray-100 text-gray-400 px-6 py-4 rounded-xl font-semibold cursor-not-allowed border border-gray-200"
-                        title="You haven't published your website yet. Go to Website Builder to publish."
-                    >
-                         <HiOutlineLink className="w-5 h-5" />
-                        Visit Live Website (Unpublished)
-                    </button>
+                  <button
+                    disabled
+                    className="inline-flex items-center justify-center gap-3 bg-gray-100 text-gray-400 px-6 py-4 rounded-xl font-semibold cursor-not-allowed border border-gray-200"
+                    title="You haven't published your website yet. Go to Website Builder to publish."
+                  >
+                    <HiOutlineLink className="w-5 h-5" />
+                    Visit Live Website (Unpublished)
+                  </button>
                 )}
                 <Link
-                   to="/restaurant/settings/website-builder"
-                   className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl ml-auto"
+                  to="/restaurant/settings/website-builder"
+                  className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl ml-auto"
                 >
-                    <HiOutlineTemplate className="w-5 h-5" />
-                    Design Website
+                  <HiOutlineTemplate className="w-5 h-5" />
+                  Design Website
                 </Link>
               </div>
-              
+
               {!publicUrl && (
-                  <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg inline-block border border-orange-100">
-                      ⚠️ Your website is not live yet. Click "Design Website" to build and publish it with a custom link.
-                  </p>
+                <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg inline-block border border-orange-100">
+                  ⚠️ Your website is not live yet. Click "Design Website" to build and publish it with a custom link.
+                </p>
               )}
             </div>
           </div>
@@ -103,8 +98,8 @@ export default function Dashboard() {
       <div className="mt-8">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
           <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"> {}
-             <Link
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"> { }
+            <Link
               to="/restaurant/settings/website-builder"
               className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-xl border border-orange-200 transition-all duration-200 group"
             >
@@ -134,7 +129,7 @@ export default function Dashboard() {
             >
               <div className="text-center">
                 <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <HiOutlineClipboard className="w-6 h-6 text-white" /> {}
+                  <HiOutlineClipboard className="w-6 h-6 text-white" /> { }
                 </div>
                 <p className="text-sm font-medium text-slate-900">View Orders</p>
               </div>

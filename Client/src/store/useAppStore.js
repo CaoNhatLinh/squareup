@@ -1,17 +1,15 @@
 import { create } from "zustand";
 
 export const useAppStore = create((set) => ({
-  restaurantId: typeof window !== 'undefined' ? (localStorage.getItem('restaurantId') || null) : null,
+  restaurantId: null,
   setRestaurantId: (id) => {
-    try {
-      if (typeof window !== 'undefined') {
-        if (id) localStorage.setItem('restaurantId', id);
-        else localStorage.removeItem('restaurantId');
-      }
-    } catch (error) { void error; }
     set({ restaurantId: id });
   },
-  
+  restaurant: null,
+  setRestaurant: (restaurant) => {
+    set({ restaurant });
+  },
+
   sidebarCollapsed: false,
   setSidebarCollapsed: (val) => set({ sidebarCollapsed: !!val }),
 }));

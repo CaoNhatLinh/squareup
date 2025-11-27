@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { resolveColor } from '@/components/builder/utils/colorUtils';
 import StyledText from '@/components/builder/atoms/StyledText';
+import { useContainerQuery } from '@/components/builder/hooks/useContainerQuery';
 
 export default function OurStory({
   title,
@@ -16,16 +17,18 @@ export default function OurStory({
   contentStyle = {},
   globalStyles,
   blockId,
+  anchorId,
   sections = []
 }) {
+  const { containerRef, isTablet, isDesktop } = useContainerQuery();
 
-  
+
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
   };
 
   const renderElegantSplit = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-24 ${isDesktop || isTablet ? 'px-8' : 'px-4'} relative overflow-hidden`} style={{ backgroundColor: getColor(backgroundColor) }} id={anchorId || 'ourstory'}>
       {showDecorativeElements && (
         <>
           <div className="absolute inset-0 opacity-5">
@@ -39,8 +42,8 @@ export default function OurStory({
       )}
 
       <div className="max-w-7xl mx-auto relative">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-          <div className="order-2 lg:order-1" data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
+        <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} ${isDesktop ? 'gap-20' : 'gap-16'} items-center`}>
+          <div className={isDesktop ? 'order-1' : 'order-2'} data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
             <div className="relative">
               {showDecorativeElements && (
                 <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg border" style={{ backgroundColor: getColor('surface'), color: getColor(textColor), borderColor: getColor('primary') }} >
@@ -53,7 +56,7 @@ export default function OurStory({
               {title && (
                 <StyledText
                   tag="h2"
-                  className="text-5xl lg:text-6xl font-bold mb-8 leading-tight"
+                  className={`font-bold mb-8 leading-tight ${isDesktop ? 'text-6xl' : 'text-5xl'}`}
                   styleConfig={{
                     ...titleStyle,
                     color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -104,11 +107,11 @@ export default function OurStory({
               )}
             </div>
           </div>
-          {image && (
-            <div className="order-1 lg:order-2 relative group" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
+          {(image || image === '') && (
+            <div className={`${isDesktop ? 'order-2' : 'order-1'} relative group`} data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
               <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-4" style={{ borderColor: getColor('surface') }}>
                 <img
-                  src={image}
+                  src={image || "https://placehold.co/800x600?text=No+Image"}
                   alt={title}
                   className="w-full h-auto object-cover"
                 />
@@ -131,7 +134,7 @@ export default function OurStory({
   );
 
   const renderLuxuryCentered = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-32 px-4 md:px-8 relative overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-32 ${isDesktop || isTablet ? 'px-8' : 'px-4'} relative overflow-hidden`} style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={anchorId || 'ourstory'}>
       {showDecorativeElements && (
         <>
           <div className="absolute inset-0 opacity-10">
@@ -157,7 +160,7 @@ export default function OurStory({
         {title && (
           <StyledText
             tag="h2"
-            className="text-6xl lg:text-7xl font-bold mb-12 leading-tight"
+            className={`font-bold mb-12 leading-tight ${isDesktop ? 'text-7xl' : 'text-6xl'}`}
             styleConfig={{
               ...titleStyle,
               color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -171,11 +174,11 @@ export default function OurStory({
             </span>
           </StyledText>
         )}
-        {image && (
+        {(image || image === '') && (
           <div className="mb-16 relative group max-w-2xl mx-auto" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
             <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-8" style={{ borderColor: getColor('surface') }}>
               <img
-                src={image}
+                src={image || "https://placehold.co/800x600?text=No+Image"}
                 alt={title}
                 className="w-full h-auto object-cover"
               />
@@ -225,7 +228,7 @@ export default function OurStory({
   );
 
   const renderModernAsymmetric = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor('background') }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-24 ${isDesktop || isTablet ? 'px-8' : 'px-4'} relative overflow-hidden`} style={{ backgroundColor: getColor('background') }} id={anchorId || 'ourstory'} data-block-id={blockId}>
       {showDecorativeElements && (
         <>
           <div className="absolute inset-0 opacity-5">
@@ -238,8 +241,8 @@ export default function OurStory({
       )}
 
       <div className="max-w-7xl mx-auto relative">
-        <div className="grid lg:grid-cols-5 gap-16 items-center">
-          <div className="lg:col-span-3" data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
+        <div className={`grid ${isDesktop ? 'grid-cols-5' : 'grid-cols-1'} gap-16 items-center`}>
+          <div className={isDesktop ? 'col-span-3' : ''} data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
             <div className="relative">
               {showDecorativeElements && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-full text-sm font-medium mb-8" style={{ backgroundColor: getColor('primary') }} >
@@ -251,7 +254,7 @@ export default function OurStory({
               {title && (
                 <StyledText
                   tag="h2"
-                  className="text-5xl lg:text-6xl font-bold mb-8 leading-tight"
+                  className={`${isDesktop ? 'text-6xl' : 'text-5xl'} font-bold mb-8 leading-tight`}
                   styleConfig={{
                     ...titleStyle,
                     color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -296,11 +299,11 @@ export default function OurStory({
               )}
             </div>
           </div>
-          {image && (
-            <div className="lg:col-span-2 lg:col-start-4 relative group" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
+          {(image || image === '') && (
+            <div className={`${isDesktop ? 'col-span-2 col-start-4' : ''} relative group`} data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
               <div className="relative overflow-hidden rounded-2xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 -rotate-2 hover:rotate-0">
                 <img
-                  src={image}
+                  src={image || "https://placehold.co/800x600?text=No+Image"}
                   alt={title}
                   className="w-full h-auto object-cover"
                 />
@@ -321,7 +324,7 @@ export default function OurStory({
   );
 
   const renderClassicOverlap = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-24 ${isDesktop || isTablet ? 'px-8' : 'px-4'} relative overflow-hidden`} style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={anchorId || 'ourstory'} data-block-id={blockId}>
       {showDecorativeElements && (
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-16 left-16 w-36 h-36 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>
@@ -331,11 +334,11 @@ export default function OurStory({
 
       <div className="max-w-7xl mx-auto relative">
         <div className="relative">
-          {image && (
-            <div className="absolute right-0 top-0 w-1/2 h-full transform translate-x-16 -translate-y-8 hidden lg:block" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
+          {(image || image === '') && (
+            <div className={`absolute right-0 top-0 w-1/2 h-full transform translate-x-16 -translate-y-8 ${isDesktop ? 'block' : 'hidden'}`} data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
               <div className="relative w-full h-full overflow-hidden rounded-2xl shadow-2xl">
                 <img
-                  src={image}
+                  src={image || "https://placehold.co/800x600?text=No+Image"}
                   alt={title}
                   className="w-full h-full object-cover"
                 />
@@ -344,7 +347,7 @@ export default function OurStory({
             </div>
           )}
 
-          <div className="relative rounded-2xl shadow-xl p-12 lg:p-16 lg:mr-32" style={{ backgroundColor: getColor('surface') }} data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
+          <div className={`relative rounded-2xl shadow-xl p-12 ${isDesktop ? 'p-16 mr-32' : ''}`} style={{ backgroundColor: getColor('surface') }} data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
             {showDecorativeElements && (
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ backgroundColor: getColor('primary') + '20', color: getColor('primary') }} >
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getColor('primary') }}></span>
@@ -355,7 +358,7 @@ export default function OurStory({
             {title && (
               <StyledText
                 tag="h2"
-                className="text-4xl lg:text-5xl font-bold mb-6 leading-tight"
+                className={`font-bold mb-6 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}
                 styleConfig={{
                   ...titleStyle,
                   color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -405,7 +408,7 @@ export default function OurStory({
   );
 
   const renderMinimalist = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-20 px-4 md:px-8" style={{ backgroundColor: getColor('background') }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-20 ${isDesktop || isTablet ? 'px-8' : 'px-4'}`} style={{ backgroundColor: getColor('background') }} id={anchorId || 'ourstory'} data-block-id={blockId}>
       <div className="max-w-4xl mx-auto text-center">
         {showDecorativeElements && (
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8" style={{ backgroundColor: getColor('surface'), color: getColor('muted') }} >
@@ -417,7 +420,7 @@ export default function OurStory({
         {title && (
           <StyledText
             tag="h2"
-            className="text-4xl lg:text-5xl font-bold mb-8 leading-tight"
+            className={`font-bold mb-8 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}
             styleConfig={{
               ...titleStyle,
               color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -430,11 +433,11 @@ export default function OurStory({
           </StyledText>
         )}
 
-        {image && (
+        {(image || image === '') && (
           <div className="mb-12 relative group max-w-2xl mx-auto" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
             <div className="relative overflow-hidden rounded-xl shadow-lg transform group-hover:scale-105 transition-transform duration-300">
               <img
-                src={image}
+                src={image || "https://placehold.co/800x600?text=No+Image"}
                 alt={title}
                 className="w-full h-auto object-cover"
               />
@@ -475,7 +478,7 @@ export default function OurStory({
   );
 
   const renderPremiumShowcase = ({ title, content, image, showDecorativeElements, showCallToAction, callToActionText, isMain }) => (
-    <section className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={blockId} data-block-id={blockId}>
+    <section ref={containerRef} className={`py-24 ${isDesktop || isTablet ? 'px-8' : 'px-4'} relative overflow-hidden`} style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} id={anchorId || 'ourstory'} data-block-id={blockId}>
       {showDecorativeElements && (
         <>
           <div className="absolute inset-0 opacity-5">
@@ -487,8 +490,8 @@ export default function OurStory({
       )}
 
       <div className="max-w-7xl mx-auto relative">
-        <div className="grid lg:grid-cols-3 gap-16 items-center">
-          <div className="lg:col-span-2" data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
+        <div className={`grid ${isDesktop ? 'grid-cols-3' : 'grid-cols-1'} gap-16 items-center`}>
+          <div className={isDesktop ? 'col-span-2' : ''} data-control={isMain ? "ourstory-content" : undefined} data-block-id={blockId}>
             <div className="relative">
               {showDecorativeElements && (
                 <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg" style={{ background: `linear-gradient(to right, ${getColor('surface')}, ${getColor('background')})`, color: getColor(textColor) }} >
@@ -501,7 +504,7 @@ export default function OurStory({
               {title && (
                 <StyledText
                   tag="h2"
-                  className="text-5xl lg:text-6xl font-bold mb-8 leading-tight"
+                  className={`${isDesktop ? 'text-6xl' : 'text-5xl'} font-bold mb-8 leading-tight`}
                   styleConfig={{
                     ...titleStyle,
                     color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
@@ -546,11 +549,11 @@ export default function OurStory({
               )}
             </div>
           </div>
-          {image && (
+          {(image || image === '') && (
             <div className="relative group" data-control={isMain ? "ourstory-image" : undefined} data-block-id={blockId}>
               <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-4" style={{ borderColor: getColor('surface') }}>
                 <img
-                  src={image}
+                  src={image || "https://placehold.co/800x600?text=No+Image"}
                   alt={title}
                   className="w-full h-auto object-cover"
                 />
@@ -607,7 +610,7 @@ export default function OurStory({
         <Fragment key={index}>
           {renderLayout(layout, {
             ...section,
-            showDecorativeElements: false, 
+            showDecorativeElements: false,
             showCallToAction: false,
             isMain: false
           })}

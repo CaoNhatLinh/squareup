@@ -5,6 +5,7 @@ import { resolveColor } from '@/components/builder/utils/colorUtils';
 import StyledText from "@/components/builder/atoms/StyledText";
 import { fetchItems } from '@/api/items';
 import { getRestaurantReviews } from '@/api/reviews';
+import { useContainerQuery } from '@/components/builder/hooks/useContainerQuery';
 
 export default function RestaurantInfoBlock({
   layout = 'card',
@@ -24,7 +25,8 @@ export default function RestaurantInfoBlock({
   customWebsite,
   backgroundColor = "background",
   textColor = "text",
-  blockId
+  blockId,
+  anchorId,
 }) {
   const { restaurant } = useShop();
   const [menuItemsCount, setMenuItemsCount] = useState(0);
@@ -33,6 +35,8 @@ export default function RestaurantInfoBlock({
   const [hasItems, setHasItems] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const actualUseRealData = globalUseRealData !== undefined ? globalUseRealData : useRealData;
+
+  const { containerRef, isMobile, isTablet, isDesktop } = useContainerQuery();
 
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
@@ -68,7 +72,6 @@ export default function RestaurantInfoBlock({
   const currentLayout = layout;
 
   const slug = isPublic ? window.location.pathname.split('/')[1] : null;
-  const positionType = isPublic ? 'fixed' : 'absolute';
   const displayRestaurant = (actualUseRealData && restaurant) ? restaurant : {
     name: customTitle || 'Sample Restaurant',
     description: customDescription || 'A delicious dining experience with fresh ingredients and amazing flavors.',
@@ -113,14 +116,14 @@ export default function RestaurantInfoBlock({
     switch (currentLayout) {
       case 'hero':
         return (
-          <div className="relative w-full min-h-screen overflow-hidden" style={{ background: `linear-gradient(135deg, ${resolvedPrimary}e6, ${resolvedPrimary}b3, ${resolvedPrimary}80)` }} id={blockId} data-block-id={blockId}>
+          <div className="relative w-full min-h-screen overflow-hidden" ref={containerRef} style={{ background: `linear-gradient(135deg, ${resolvedPrimary}e6, ${resolvedPrimary}b3, ${resolvedPrimary}80)` }} id={anchorId || 'restaurantinfo'} data-block-id={blockId}>
             <div className="absolute inset-0 opacity-10">
               <div className="w-full h-full bg-gradient-to-br from-white/20 to-transparent"></div>
             </div>
 
             <div className="relative z-10 min-h-screen flex items-center">
               <div className="max-w-7xl mx-auto px-4 w-full py-20">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 items-center`}>
                   <div className="text-white space-y-8">
                     <div className="space-y-4">
                       <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
@@ -129,7 +132,7 @@ export default function RestaurantInfoBlock({
                       </div>
                       <StyledText
                         tag="h1"
-                        className="text-5xl lg:text-7xl font-bold leading-tight"
+                        className={`font-bold leading-tight ${isDesktop ? 'text-7xl' : 'text-5xl'}`}
                         dataControl="restaurant-title"
                         dataBlockId={blockId}
                       >
@@ -144,7 +147,7 @@ export default function RestaurantInfoBlock({
                         {displayRestaurant.description}
                       </StyledText>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                       {showAddress && displayRestaurant.address && (
                         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20" data-control="restaurant-address" data-block-id={blockId}>
                           <div className="flex items-center gap-3 mb-3">
@@ -220,7 +223,7 @@ export default function RestaurantInfoBlock({
                       )}
                     </div>
                   </div>
-                  <div className="lg:text-right">
+                  <div className={isDesktop ? 'text-right' : ''}>
                     <div className="relative">
                       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl" style={{ backgroundColor: `${resolvedPrimary}20` }}></div>
                       <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full blur-xl" style={{ backgroundColor: `${resolvedPrimary}30` }}></div>
@@ -266,7 +269,12 @@ export default function RestaurantInfoBlock({
 
       case 'sidebar':
         return (
-          <div className={`relative w-full ${isPublic ? 'min-h-screen' : 'min-h-[100px] bg-gray-100/50 border-2 border-dashed border-gray-300 rounded-lg'}`} id={blockId} data-block-id={blockId}>
+          <div ref={containerRef} className={`relative w-full bg-gray-100/50 border-2 border-dashed border-gray-300 rounded-lg`} id={anchorId || 'restaurantinfo'} data-block-id={blockId}>
+            {!isSidebarOpen && (
+              <div className="fixed bottom-6 right-6 z-40">
+                <div className="w-14 h-14 rounded-full animate-ping" style={{ backgroundColor: `${resolvedPrimary}30` }}></div>
+              </div>
+            )}
             <button
               className={`fixed bottom-6 right-6 z-50 w-14 h-14 text-white rounded-full shadow-2xl hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group`}
               style={{
@@ -281,11 +289,7 @@ export default function RestaurantInfoBlock({
               <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
 
-            {!isSidebarOpen && (
-              <div className="absolute bottom-6 right-6 z-40">
-                <div className="w-14 h-14 rounded-full animate-ping" style={{ backgroundColor: `${resolvedPrimary}30` }}></div>
-              </div>
-            )}
+
             <div
               className={`fixed top-0 left-0 h-full w-96 transform transition-all duration-500 ease-out z-40 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
@@ -548,7 +552,7 @@ export default function RestaurantInfoBlock({
 
       default:
         return (
-          <div className="w-full max-w-4xl mx-auto rounded-2xl shadow-xl overflow-hidden m-8" style={{ backgroundColor: getColor(backgroundColor) }} id={blockId} data-block-id={blockId}>
+          <div ref={containerRef} className="w-full max-w-4xl mx-auto rounded-2xl shadow-xl overflow-hidden m-8" style={{ backgroundColor: getColor(backgroundColor) }} id={anchorId || 'restaurantinfo'} data-block-id={blockId}>
             <div className="p-8 text-white" style={{ background: `linear-gradient(90deg, ${resolvedPrimary}, ${resolvedPrimary}dd)` }}>
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
@@ -576,7 +580,7 @@ export default function RestaurantInfoBlock({
             </div>
 
             <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid ${isDesktop ? 'grid-cols-3' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-6`}>
                 {showAddress && displayRestaurant.address && (
                   <div className="bg-gray-50 rounded-xl p-6" data-control="restaurant-address" data-block-id={blockId}>
                     <div className="flex items-center gap-3 mb-3">

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createCategory, fetchCategories } from "@/api/categories";
+import useAppStore from '@/store/useAppStore';
+import { createCategory, fetchAllCategories } from "@/api/categories";
+import { fetchAllItems } from "@/api/items";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -14,7 +16,9 @@ import { Input, Button, Checkbox } from '@/components/ui';
 
 export default function CreateCategory() {
   const navigate = useNavigate();
-  const { restaurantId } = useParams();
+  const { restaurantId: paramRestaurantId } = useParams();
+  const storeRestaurantId = useAppStore(s => s.restaurantId);
+  const restaurantId = storeRestaurantId || paramRestaurantId;
   const { uploadImage, uploading } = useImageUpload();
   const { success, error } = useToast();
   const [formData, setFormData] = useState({
@@ -35,10 +39,8 @@ export default function CreateCategory() {
   useEffect(() => {
     if (restaurantId) {
       Promise.all([
-        fetchCategories(restaurantId),
-        import("../../api/items").then(({ fetchItems }) =>
-          fetchItems(restaurantId)
-        ),
+        fetchAllCategories(restaurantId),
+        fetchAllItems(restaurantId),
       ])
         .then(([categoriesData, itemsData]) => {
           const cats = categoriesData?.categories || categoriesData || [];
@@ -54,7 +56,7 @@ export default function CreateCategory() {
   }, [restaurantId]);
 
   const handleClose = () => {
-    navigate(`/${restaurantId}/categories`);
+    navigate(-1);
   };
 
   const handleParentSelect = (category) => {
@@ -110,7 +112,7 @@ export default function CreateCategory() {
         itemIds: selectedItems.map((item) => item.id),
       });
       success(`Category "${formData.name}" created successfully!`);
-      navigate(`/${restaurantId}/categories`);
+      navigate(restaurantId ? `/${restaurantId}/categories` : '/restaurant/categories');
     } catch (err) {
       console.error("Failed to create category:", err);
       error("Failed to create category: " + err.message);
@@ -122,14 +124,14 @@ export default function CreateCategory() {
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-            <h2 className="text-2xl font-bold text-gray-900">Create New Category</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+          <h2 className="text-2xl font-bold text-gray-900">Create New Category</h2>
 
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
-              <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save</Button>
-            </div>
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} loading={saving || uploading}>Save</Button>
           </div>
+        </div>
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div>
             <Input
@@ -214,8 +216,8 @@ export default function CreateCategory() {
                   {showParentSelector
                     ? "Close Selector"
                     : selectedParent
-                    ? "Change Parent"
-                    : "Select Parent"}
+                      ? "Change Parent"
+                      : "Select Parent"}
                 </button>
               </div>
             </div>
@@ -231,11 +233,10 @@ export default function CreateCategory() {
                       <button
                         key={cat.id}
                         onClick={() => handleParentSelect(cat)}
-                        className={`w-full text-left px-3 py-2 text-sm rounded flex items-center gap-3 ${
-                          selectedParent?.id === cat.id
-                            ? "bg-red-50 text-red-700 font-medium"
-                            : "hover:bg-gray-100 text-gray-800"
-                        }`}
+                        className={`w-full text-left px-3 py-2 text-sm rounded flex items-center gap-3 ${selectedParent?.id === cat.id
+                          ? "bg-red-50 text-red-700 font-medium"
+                          : "hover:bg-gray-100 text-gray-800"
+                          }`}
                       >
                         {cat.image && (
                           <img
@@ -292,21 +293,21 @@ export default function CreateCategory() {
                   {showItemSelector
                     ? "Close Item Selector"
                     : selectedItems.length > 0
-                    ? `Edit (${selectedItems.length}) Items`
-                    : "Add Items"}
+                      ? `Edit (${selectedItems.length}) Items`
+                      : "Add Items"}
                 </button>
               </div>
 
               {showItemSelector && (
                 <div className="mt-4 border-t border-gray-200 pt-3">
                   <div className="relative mb-3">
-                        <Input
-                          leftIcon={HiMagnifyingGlass}
-                          placeholder="Search and select items..."
-                          value={itemSearch}
-                          onChange={(e) => setItemSearch(e.target.value)}
-                          className="text-sm"
-                        />
+                    <Input
+                      leftIcon={HiMagnifyingGlass}
+                      placeholder="Search and select items..."
+                      value={itemSearch}
+                      onChange={(e) => setItemSearch(e.target.value)}
+                      className="text-sm"
+                    />
                   </div>
 
                   <div className="max-h-60 overflow-y-auto space-y-1">
@@ -320,11 +321,10 @@ export default function CreateCategory() {
                         <button
                           key={item.id}
                           onClick={() => handleItemToggle(item)}
-                          className={`w-full text-left px-3 py-2 text-sm rounded flex items-center justify-between gap-3 ${
-                            selectedItems.find((i) => i.id === item.id)
-                              ? "bg-red-50 text-red-700 font-medium"
-                              : "hover:bg-gray-100 text-gray-800"
-                          }`}
+                          className={`w-full text-left px-3 py-2 text-sm rounded flex items-center justify-between gap-3 ${selectedItems.find((i) => i.id === item.id)
+                            ? "bg-red-50 text-red-700 font-medium"
+                            : "hover:bg-gray-100 text-gray-800"
+                            }`}
                         >
                           <span className="flex items-center gap-3">
                             <Checkbox
@@ -351,10 +351,10 @@ export default function CreateCategory() {
                     {items.filter((item) =>
                       item.name.toLowerCase().includes(itemSearch.toLowerCase())
                     ).length === 0 && (
-                      <p className="text-sm text-gray-500 text-center p-3">
-                        No matching items found.
-                      </p>
-                    )}
+                        <p className="text-sm text-gray-500 text-center p-3">
+                          No matching items found.
+                        </p>
+                      )}
                   </div>
                 </div>
               )}

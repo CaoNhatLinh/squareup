@@ -9,15 +9,13 @@ import StyledText from "@/components/builder/atoms/StyledText";
 import SocialIcon from "@/components/builder/blocks/core/Footer/components/SocialIcon";
 import ContactInfo from "@/components/builder/blocks/core/Footer/components/ContactInfo";
 import OpeningHours from "@/components/builder/blocks/core/Footer/components/OpeningHours";
-
+import { useContainerQuery } from "@/components/builder/hooks/useContainerQuery";
 
 
 export default function FooterBlock({
   config,
   variant = "multi-col",
   paddingY = "medium",
-  companyName,
-  links = [],
   backgroundColor,
   textColor = "text",
   globalStyles,
@@ -30,8 +28,10 @@ export default function FooterBlock({
   showSocialLinks,
 }) {
   const { typography } = globalStyles || { colors: {}, typography: {}, palette: {} };
-  const cfg = config || { variant, paddingY, companyName, links, backgroundColor, textColor };
+  const cfg = config || { variant, paddingY, backgroundColor, textColor };
 
+  const { containerRef, isMobile, isTablet } = useContainerQuery();
+  const isSmall = isMobile;
 
   const finalShowQuickLinks = showQuickLinks !== undefined ? showQuickLinks : cfg.showQuickLinks !== undefined ? cfg.showQuickLinks : true;
   const finalShowContactInfo = showContactInfo !== undefined ? showContactInfo : cfg.showContactInfo !== undefined ? cfg.showContactInfo : true;
@@ -52,10 +52,11 @@ export default function FooterBlock({
     { label: "About", url: "#about" },
     { label: "Locations", url: "#location" },
   ];
-  const displayLinks = links.length > 0 ? links : defaultLinks;
+  const displayLinks = cfg.links.length > 0 ? cfg.links : defaultLinks;
 
   return (
     <footer
+      ref={containerRef}
       className={`w-full ${paddingClass} px-6 mt-auto relative`}
       style={{ backgroundColor: bgColor, color: resolvedTextColor, fontFamily: typography?.bodyFont }}
       data-block-id={blockId}
@@ -64,7 +65,7 @@ export default function FooterBlock({
         {cfg.variant === "multi-col" && (
           <div className="mb-12">
             {cfg.showOpeningHours ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-12`}>
                 <div className="space-y-8">
                   <div>
                     <StyledText
@@ -140,7 +141,7 @@ export default function FooterBlock({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : isTablet ? 'grid-cols-2' : 'grid-cols-3'} gap-8 lg:gap-12`}>
                 <div className="space-y-4">
                   <StyledText
                     tag="h3"
@@ -264,7 +265,7 @@ export default function FooterBlock({
           </div>
         )}
         {cfg.variant === "split" && (
-          <div className="mb-12 flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className={`mb-12 flex ${isSmall ? 'flex-col' : 'flex-row'} justify-between items-start gap-8`}>
             <div>
               <StyledText
                 tag="h3"
@@ -283,16 +284,16 @@ export default function FooterBlock({
               </StyledText>
               {finalShowContactInfo && <ContactInfo addr={restaurantData.address} ph={restaurantData.phone} email={restaurantData.email} blockId={blockId} />}
             </div>
-            <div className="text-right">
+            <div className={isSmall ? 'text-left' : 'text-right'}>
               {finalShowSocialLinks && (
-                <div className="flex justify-end gap-4 mb-6" data-control="footer-social" data-block-id={blockId}>
+                <div className={`flex ${isSmall ? 'justify-start' : 'justify-end'} gap-4 mb-6`} data-control="footer-social" data-block-id={blockId}>
                   {socialIcons.map((social, idx) => (
                     <SocialIcon key={idx} social={social} idx={idx} cfg={cfg} globalStyles={globalStyles} resolvedTextColor={resolvedTextColor} blockId={blockId} />
                   ))}
                 </div>
               )}
               {finalShowQuickLinks && (
-                <ul className="space-y-2 text-sm opacity-80 inline-block text-right" data-control="footer-links" data-block-id={blockId}>
+                <ul className={`space-y-2 text-sm opacity-80 inline-block ${isSmall ? 'text-left' : 'text-right'}`} data-control="footer-links" data-block-id={blockId}>
                   {displayLinks.map((link, index) => (
                     <li key={index}><a href={link.url} className="hover:underline">{link.label}</a></li>
                   ))}
@@ -301,9 +302,9 @@ export default function FooterBlock({
             </div>
           </div>
         )}
-        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center text-xs opacity-50">
+        <div className={`border-t border-white/10 pt-6 flex ${isSmall ? 'flex-col' : 'flex-row'} justify-between items-center text-xs opacity-50`}>
           <StyledText tag="p">&copy; {new Date().getFullYear()} {restaurantData.name}. All rights reserved.</StyledText>
-          <div className="flex gap-4 mt-2 md:mt-0">
+          <div className={`flex gap-4 ${isSmall ? 'mt-2' : 'mt-0'}`}>
             <a href="#">Privacy Policy</a>
             <a href="#">Terms of Service</a>
           </div>

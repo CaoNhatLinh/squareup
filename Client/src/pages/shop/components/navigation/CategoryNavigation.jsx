@@ -10,10 +10,10 @@ export default function CategoryNavigation({
     if (categoryId !== "all") {
       const element = document.getElementById(`category-${categoryId}`);
       if (element) {
-        const offset = 150; 
+        const offset = 150;
         const elementPosition = element.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - offset;
-        
+
         window.scrollTo({
           top: offsetPosition,
           behavior: "smooth",
@@ -33,9 +33,9 @@ export default function CategoryNavigation({
             isActive={selectedCategory === "all"}
             onClick={() => handleCategoryClick("all")}
           />
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <TabButton
-              key={category.id}
+              key={category.id ? `${category.id}-${index}` : index}
               name={category.name}
               isActive={selectedCategory === category.id}
               onClick={() => handleCategoryClick(category.id)}

@@ -27,8 +27,11 @@ export async function deleteItem(restaurantId, itemId) {
   return res.data;
 }
 
-
 export async function toggleItemSoldOut(restaurantId, itemId, isSoldOut) {
   const res = await client.patch(`/restaurants/${restaurantId}/items/${itemId}`, { isSoldOut })
   return res.data;
+}
+
+export async function fetchAllItems(restaurantId) {
+  return fetchItems(restaurantId, { limit: 0 });
 }

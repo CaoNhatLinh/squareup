@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth';
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function Home() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  
+
   useEffect(() => {
     if (user && user.role !== 'guest') {
       navigate('/restaurants')
@@ -18,8 +19,8 @@ export default function Home() {
   if (loading) {
     return (<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="text-center">
-        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mb-4 mx-auto"></div>
-        <h2 className="text-xl font-semibold text-gray-700">Loading...</h2>
+        <LoadingSpinner size="xl" color="blue" />
+        <h2 className="text-xl font-semibold text-gray-700 mt-4">Loading...</h2>
       </div>
     </div>
     )
@@ -52,12 +53,12 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">
             Manage your restaurant
             <br />
             <span className="text-blue-600">with ease</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Complete restaurant management system. Handle items, categories, orders, and more - all in one place.
           </p>
           <div className="flex justify-center gap-4">
