@@ -116,10 +116,33 @@ Please refer to the `README.md` files in each directory for detailed documentati
 3.  **Setup Server:**
     Follow the instructions in [server/README.md](./server/README.md).
 
+## 💳 Stripe Test Cards for Payment Testing
+
+When testing payment in **test mode**, use these card numbers. They won't be charged.
+
+### Common Test Cards
+
+| Card Number | Type | Description |
+|-------------|------|-------------|
+| `4242 4242 4242 4242` | ✅ Success | Basic successful payment (most common) |
+| `5555 5555 5555 4444` | ✅ Success | Mastercard successful payment |
+| `4000 0027 6000 3184` | 🔐 3D Secure | Requires authentication (succeeds) |
+| `4000 0000 0000 0002` | ❌ Decline | Generic card decline |
+| `4000 0000 0000 9995` | ❌ Decline | Insufficient funds |
+
+**For all test cards:**
+- Expiry: Any future date (e.g., `12/34`)
+- CVC: Any 3 digits (e.g., `123`)
+- ZIP: Any valid format (e.g., `12345`)
+
+**More test cards:** [Stripe Testing Docs](https://stripe.com/docs/testing#cards)
+
+---
+
 ## 📄 License
 
 This project is licensed under the ISC License.
 
-## 📞 Contact
+## 📞 Support
 
 If you have any questions or need support, please create an issue on GitHub or contact the maintainer directly.
