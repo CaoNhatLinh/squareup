@@ -1,0 +1,1 @@
+export const STORAGE_KEYS = {    RESTAURANT_ID: 'restaurantId',    CART: 'shop_cart',    LAST_ORDER_ID: 'lastOrderId',    CHECKOUT_SUCCESS_TOAST: 'checkoutSuccessToastOrderId',    ADMIN_MANAGING_RESTAURANT: 'adminManagingRestaurant',};

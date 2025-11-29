@@ -1,11 +1,12 @@
 const admin = require('firebase-admin');
 const db = admin.database();
+
 async function calculateCartDiscounts(restaurantId, cartItems) {
   try {
-    const discountsSnapshot = await db.ref(`restaurants/${restaurantId}/discounts`).once('value');
+    const discountsSnapshot = await db.ref(`restaurants/${restaurantId}/discounts`).get();
     const allDiscounts = discountsSnapshot.val() || {};
-
     const now = Date.now();
+
     const activeDiscounts = Object.entries(allDiscounts)
       .map(([id, discount]) => ({ id, ...discount }))
       .filter(discount => {
@@ -14,21 +15,19 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
           const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd).getTime() : Infinity;
           if (now < startTime || now > endTime) return false;
         }
-        
+
         if (discount.setSchedule) {
           const currentDate = new Date();
           const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-          const currentTime = currentDate.toTimeString().slice(0, 5); 
-          
+          const currentTime = currentDate.toTimeString().slice(0, 5);
+
           if (!discount.scheduleDays?.[dayName]) return false;
           if (currentTime < discount.scheduleTimeStart || currentTime > discount.scheduleTimeEnd) return false;
         }
-        
         return true;
       });
 
     const discountResults = [];
-    
     for (const discount of activeDiscounts) {
       const result = calculateSingleDiscount(discount, cartItems);
       if (result && result.discountAmount > 0) {
@@ -50,7 +49,7 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
     const appliedDiscounts = [];
     const combinedItemDiscounts = {};
     const itemsAlreadyDiscounted = new Set();
-    const discountAmounts = {}; 
+    const discountAmounts = {};
     let totalDiscount = 0;
 
     for (const result of discountResults) {
@@ -78,7 +77,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
         discountAmount: discountAmounts[discount.id] || 0,
       }))
     };
-
   } catch (error) {
     console.error('Error calculating cart discounts:', error);
     return {
@@ -89,7 +87,6 @@ async function calculateCartDiscounts(restaurantId, cartItems) {
     };
   }
 }
-
 
 function calculateSingleDiscount(discount, cartItems) {
   if (!discount.automaticDiscount) {
@@ -103,10 +100,8 @@ function calculateSingleDiscount(discount, cartItems) {
   if (discount.discountApplyTo === 'item_category') {
     const eligibleItems = cartItems.filter(item => {
       if (discount.addAllItemsToPurchase) return true;
-      
       const matchesCategory = discount.purchaseCategories?.some(cat => cat.id === item.categoryId);
       const matchesItem = discount.purchaseItems?.some(i => i.id === item.itemId);
-      
       return matchesCategory || matchesItem;
     });
 
@@ -114,6 +109,7 @@ function calculateSingleDiscount(discount, cartItems) {
       const itemDiscount = calculateItemDiscount(discount, item.price, item.quantity);
       discountAmount += itemDiscount;
       const itemKey = item.groupKey || item.id || item.itemId;
+
       itemDiscounts[itemKey] = {
         originalPrice: item.price,
         discountAmount: itemDiscount / item.quantity,
@@ -121,6 +117,7 @@ function calculateSingleDiscount(discount, cartItems) {
         quantityDiscounted: item.quantity,
         discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / item.quantity / item.price) * 100)
       };
+
       affectedItems.push({
         itemId: item.itemId,
         itemName: item.name,
@@ -128,7 +125,6 @@ function calculateSingleDiscount(discount, cartItems) {
         discountPerItem: itemDiscount / item.quantity
       });
     });
-
   } else if (discount.discountApplyTo === 'quantity') {
     const result = calculateQuantityDiscount(discount, cartItems);
     discountAmount = result.discountAmount;
@@ -137,6 +133,7 @@ function calculateSingleDiscount(discount, cartItems) {
   }
 
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
   if (discount.setMinimumSpend && cartSubtotal < discount.minimumSubtotal) {
     return null;
   }
@@ -161,6 +158,7 @@ function calculateItemDiscount(discount, itemPrice, quantity) {
   }
   return 0;
 }
+
 function calculateQuantityDiscount(discount, cartItems) {
   let discountAmount = 0;
   const itemDiscounts = {};
@@ -168,10 +166,8 @@ function calculateQuantityDiscount(discount, cartItems) {
 
   const eligibleItems = cartItems.filter(item => {
     if (discount.addAllItemsToPurchase) return true;
-    
     const matchesCategory = discount.purchaseCategories?.some(cat => cat.id === item.categoryId);
     const matchesItem = discount.purchaseItems?.some(i => i.id === item.itemId);
-    
     return matchesCategory || matchesItem;
   });
 
@@ -180,8 +176,8 @@ function calculateQuantityDiscount(discount, cartItems) {
   if (discount.quantityRuleType === 'exact') {
     if (totalEligibleQuantity === discount.purchaseQuantity) {
       const discountQty = discount.discountQuantity || discount.purchaseQuantity;
-      
       let discountTargetItems = [];
+
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
         discountTargetItems = [...eligibleItems];
       } else if (discount.discountTargetCategories?.length > 0 || discount.discountTargetItems?.length > 0) {
@@ -193,19 +189,18 @@ function calculateQuantityDiscount(discount, cartItems) {
       } else {
         discountTargetItems = [...eligibleItems];
       }
-      
+
       const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);
-      
       let remainingDiscountQty = discountQty;
-      
+
       for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {
         const item = sortedItems[i];
         const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);
-        
         const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);
+
         discountAmount += itemDiscount;
-        
         const itemKey = item.groupKey || item.id || item.itemId;
+
         itemDiscounts[itemKey] = {
           originalPrice: item.price,
           discountAmount: itemDiscount / qtyToDiscount,
@@ -213,23 +208,22 @@ function calculateQuantityDiscount(discount, cartItems) {
           quantityDiscounted: qtyToDiscount,
           discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)
         };
-        
+
         affectedItems.push({
           itemId: item.itemId,
           itemName: item.name,
           quantity: qtyToDiscount,
           discountPerItem: itemDiscount / qtyToDiscount
         });
-        
+
         remainingDiscountQty -= qtyToDiscount;
       }
     }
-
   } else if (discount.quantityRuleType === 'minimum') {
     if (totalEligibleQuantity >= discount.purchaseQuantity) {
       const discountQty = discount.discountQuantity || totalEligibleQuantity;
-      
       let discountTargetItems = [];
+
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
         discountTargetItems = [...eligibleItems];
       } else if (discount.discountTargetCategories?.length > 0 || discount.discountTargetItems?.length > 0) {
@@ -241,19 +235,18 @@ function calculateQuantityDiscount(discount, cartItems) {
       } else {
         discountTargetItems = [...eligibleItems];
       }
-      
+
       const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);
-      
       let remainingDiscountQty = discountQty;
-      
+
       for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {
         const item = sortedItems[i];
         const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);
-        
         const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);
+
         discountAmount += itemDiscount;
-        
         const itemKey = item.groupKey || item.id || item.itemId;
+
         itemDiscounts[itemKey] = {
           originalPrice: item.price,
           discountAmount: itemDiscount / qtyToDiscount,
@@ -261,25 +254,24 @@ function calculateQuantityDiscount(discount, cartItems) {
           quantityDiscounted: qtyToDiscount,
           discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)
         };
-        
+
         affectedItems.push({
           itemId: item.itemId,
           itemName: item.name,
           quantity: qtyToDiscount,
           discountPerItem: itemDiscount / qtyToDiscount
         });
-        
+
         remainingDiscountQty -= qtyToDiscount;
       }
     }
-
   } else if (discount.quantityRuleType === 'bogo') {
     const purchaseQty = discount.purchaseQuantity || 1;
     const discountQty = discount.discountQuantity || 1;
 
     if (totalEligibleQuantity >= purchaseQty + discountQty) {
       let discountTargetItems = [];
-      
+
       if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {
         discountTargetItems = [...eligibleItems];
       } else {
@@ -291,19 +283,17 @@ function calculateQuantityDiscount(discount, cartItems) {
       }
 
       const sortedItems = [...discountTargetItems].sort((a, b) => b.price - a.price);
-      
       const bogoSets = Math.floor(totalEligibleQuantity / (purchaseQty + discountQty));
-      
       let itemsToDiscount = bogoSets * discountQty;
-      
+
       for (let i = sortedItems.length - 1; i >= 0 && itemsToDiscount > 0; i--) {
         const item = sortedItems[i];
         const qtyToDiscount = Math.min(item.quantity, itemsToDiscount);
-        
         const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);
+
         discountAmount += itemDiscount;
-        
         const itemKey = item.groupKey || item.id || item.itemId;
+
         itemDiscounts[itemKey] = {
           originalPrice: item.price,
           discountAmount: itemDiscount / qtyToDiscount,
@@ -311,14 +301,14 @@ function calculateQuantityDiscount(discount, cartItems) {
           quantityDiscounted: qtyToDiscount,
           discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)
         };
-        
+
         affectedItems.push({
           itemId: item.itemId,
           itemName: item.name,
           quantity: qtyToDiscount,
           discountPerItem: itemDiscount / qtyToDiscount
         });
-        
+
         itemsToDiscount -= qtyToDiscount;
       }
     }

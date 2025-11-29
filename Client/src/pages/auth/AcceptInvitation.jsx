@@ -1,245 +1,1 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getInvitation, acceptInvitation } from '@/api/staff';
-import { useToast } from '@/hooks/useToast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebase';
-
-export default function AcceptInvitation() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { success, error: showError } = useToast();
-  const token = searchParams.get('token');
-
-  const [invitation, setInvitation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [formData, setFormData] = useState({
-    displayName: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  useEffect(() => {
-    const fetchInvitation = async () => {
-      if (!token) {
-        setError('Invalid invitation link');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const data = await getInvitation(token);
-        setInvitation(data.invitation);
-      } catch (error) {
-        console.error('Error fetching invitation:', error);
-        setError(error.response?.data?.error || 'Failed to load invitation');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvitation();
-  }, [token]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      showError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      showError('Password must be at least 6 characters');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-
-      
-      await acceptInvitation({
-        token,
-        password: formData.password,
-        displayName: formData.displayName,
-      });
-
-      success('Account created successfully! Logging you in...');
-      await signInWithEmailAndPassword(auth, invitation.email, formData.password);
-      setTimeout(() => {
-        navigate(`/${invitation.restaurantId}/dashboard`);
-      }, 1000);
-    } catch (err) {
-      console.error('Error accepting invitation:', err);
-      showError(err.response?.data?.error || 'Failed to create account');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-              <svg
-                className="h-6 w-6 text-red-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invitation</h2>
-            <p className="text-gray-600">{error}</p>
-            <button
-              onClick={() => navigate('/signin')}
-              className="mt-6 w-full inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Go to Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white shadow-md rounded-lg p-8">
-          <div className="text-center mb-8">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 mb-4">
-              <svg
-                className="h-6 w-6 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              You're Invited!
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Join <span className="font-semibold">{invitation?.restaurantName}</span> as a{' '}
-              <span className="font-semibold">{invitation?.role?.name || 'staff member'}</span>
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={invitation?.email || ''}
-                disabled
-                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-                Display Name *
-              </label>
-              <input
-                type="text"
-                id="displayName"
-                name="displayName"
-                value={formData.displayName}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="John Doe"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password *
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="••••••••"
-                minLength={6}
-                required
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Must be at least 6 characters
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password *
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="••••••••"
-                minLength={6}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Creating Account...' : 'Create Account & Join'}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-xs text-gray-500">
-            Already have an account?{' '}
-            <a href="/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </a>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useEffect, useState } from "react";import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';import { getInvitation, acceptInvitation } from '@/api/staff';import { useToast } from '@/hooks/useToast';import { signInWithEmailAndPassword } from 'firebase/auth';import { auth } from '@/firebase';import { useAuth } from '@/hooks/useAuth';export default function AcceptInvitation() {  const [searchParams] = useSearchParams();  const navigate = useNavigate();  const location = useLocation();  const { success, error: showError } = useToast();  const { user } = useAuth();  const token = searchParams.get('token');  console.log('AcceptInvitation mounted. Token:', token, 'User:', user);  const [invitation, setInvitation] = useState(null);  const [loading, setLoading] = useState(true);  const [submitting, setSubmitting] = useState(false);  const [error, setError] = useState(null);  const [view, setView] = useState('choice');   const [formData, setFormData] = useState({    displayName: '',    password: '',    confirmPassword: '',  });  useEffect(() => {    const fetchInvitation = async () => {      if (!token) {        setError('Invalid invitation link');        setLoading(false);        return;      }      try {        const data = await getInvitation(token);        setInvitation(data.invitation);      } catch (error) {        console.error('Error fetching invitation:', error);        setError(error.response?.data?.error || 'Failed to load invitation');      } finally {        setLoading(false);      }    };    fetchInvitation();  }, [token]);  const handleAcceptAsUser = async () => {    try {      setSubmitting(true);      const idToken = await auth.currentUser?.getIdToken();      await acceptInvitation({ token }, idToken);      success('Invitation accepted successfully!');      await auth.currentUser?.getIdToken(true);      window.location.href = '/restaurants';    } catch (err) {      console.error('Error accepting invitation:', err);      showError(err.response?.data?.error || 'Failed to accept invitation');    } finally {      setSubmitting(false);    }  };  const handleInputChange = (e) => {    const { name, value } = e.target;    setFormData(prev => ({ ...prev, [name]: value }));  };  const handleRegisterSubmit = async (e) => {    e.preventDefault();    if (formData.password !== formData.confirmPassword) {      showError('Passwords do not match');      return;    }    if (formData.password.length < 6) {      showError('Password must be at least 6 characters');      return;    }    try {      setSubmitting(true);      await acceptInvitation({        token,        password: formData.password,        displayName: formData.displayName,      });      success('Account created successfully! Logging you in...');      await signInWithEmailAndPassword(auth, invitation.email, formData.password);      setTimeout(() => {        navigate(`/${invitation.restaurantId}/dashboard`);      }, 1000);    } catch (err) {      console.error('Error accepting invitation:', err);      const errMsg = err.response?.data?.error || 'Failed to create account';      showError(errMsg);      if (errMsg.toLowerCase().includes('exists')) {      }    } finally {      setSubmitting(false);    }  };  const handleLoginRedirect = () => {    const returnUrl = encodeURIComponent(`${location.pathname}${location.search}`);    navigate(`/signin?returnUrl=${returnUrl}`);  };  if (loading) {    return (      <div className="min-h-screen flex items-center justify-center bg-gray-50">        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>      </div>    );  }  if (error) {    return (      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />            </svg>          </div>          <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invitation</h2>          <p className="text-gray-600">{error}</p>          <button            onClick={() => navigate('/signin')}            className="mt-6 w-full inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"          >            Go to Sign In          </button>        </div>      </div>    );  }  if (user) {    const isEmailMatch = user.email?.toLowerCase() === invitation?.email?.toLowerCase();    return (      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8 text-center">          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 mb-4">            <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />            </svg>          </div>          <h2 className="text-2xl font-bold text-gray-900 mb-2">Accept Invitation?</h2>          {!isEmailMatch && (            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 text-left">              <div className="flex">                <div className="flex-shrink-0">                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />                  </svg>                </div>                <div className="ml-3">                  <p className="text-sm text-yellow-700">                    Warning: You are logged in as <strong>{user.email}</strong>, but this invitation was sent to <strong>{invitation?.email}</strong>.                  </p>                </div>              </div>            </div>          )}          <p className="text-gray-600 mb-6">            Do you want to join <span className="font-semibold">{invitation?.restaurantName}</span> as a <span className="font-semibold">{invitation?.role?.name}</span>?          </p>          <button            onClick={handleAcceptAsUser}            disabled={submitting}            className="w-full inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"          >            {submitting ? 'Joining...' : (isEmailMatch ? 'Yes, Join Now' : 'Join Anyway (As Current User)')}          </button>          <button            onClick={async () => {              await auth.signOut();              window.location.reload();            }}            className="mt-3 w-full inline-flex justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"          >            Not you? Logout & Switch Account          </button>        </div>      </div>    );  }  if (view === 'choice') {    return (      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">        <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8">          <div className="text-center mb-8">            <h2 className="text-2xl font-bold text-gray-900">You're Invited!</h2>            <p className="mt-2 text-sm text-gray-600">              Join <span className="font-semibold">{invitation?.restaurantName}</span> as a{' '}              <span className="font-semibold">{invitation?.role?.name || 'staff member'}</span>            </p>          </div>          <div className="space-y-4">            <button              onClick={handleLoginRedirect}              className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"            >              I already have an account            </button>            <div className="relative">              <div className="absolute inset-0 flex items-center">                <div className="w-full border-t border-gray-300"></div>              </div>              <div className="relative flex justify-center text-sm">                <span className="px-2 bg-white text-gray-500">Or</span>              </div>            </div>            <button              onClick={() => setView('register')}              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"            >              I'm a new user            </button>          </div>        </div>      </div>    );  }  return (    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8">        <div className="mb-6">          <button            onClick={() => setView('choice')}            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"          >            ← Back          </button>        </div>        <div className="text-center mb-6">          <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>          <p className="mt-2 text-sm text-gray-600">            Create an account to join <span className="font-semibold">{invitation?.restaurantName}</span>          </p>        </div>        <form onSubmit={handleRegisterSubmit} className="space-y-6">          <div>            <label className="block text-sm font-medium text-gray-700">              Display Name            </label>            <input              type="text"              name="displayName"              required              value={formData.displayName}              onChange={handleInputChange}              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"            />          </div>          <div>            <label className="block text-sm font-medium text-gray-700">              Password            </label>            <input              type="password"              name="password"              required              minLength={6}              value={formData.password}              onChange={handleInputChange}              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"            />          </div>          <div>            <label className="block text-sm font-medium text-gray-700">              Confirm Password            </label>            <input              type="password"              name="confirmPassword"              required              minLength={6}              value={formData.confirmPassword}              onChange={handleInputChange}              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"            />          </div>          <button            type="submit"            disabled={submitting}            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"          >            {submitting ? 'Creating Account...' : 'Create Account & Join'}          </button>        </form>      </div>    </div>  );}

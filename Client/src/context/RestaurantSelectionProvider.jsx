@@ -1,36 +1,1 @@
-import { useEffect, useState } from "react";
-import useAppStore from '@/store/useAppStore';
-import { RestaurantSelectionContext } from '@/context/RestaurantSelectionContext';
-
-export default function RestaurantSelectionProvider({ children }) {
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState(
-    localStorage.getItem('selectedRestaurantId') || null
-  );
-  const [userRestaurants, setUserRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (selectedRestaurantId) {
-      localStorage.setItem('selectedRestaurantId', selectedRestaurantId);
-    } else {
-      localStorage.removeItem('selectedRestaurantId');
-    }
-    
-    try { useAppStore.setState({ restaurantId: selectedRestaurantId }); } catch (err) { void err; }
-  }, [selectedRestaurantId]);
-
-  const value = {
-    selectedRestaurantId,
-    setSelectedRestaurantId,
-    userRestaurants,
-    setUserRestaurants,
-    loading,
-    setLoading,
-  };
-
-  return (
-    <RestaurantSelectionContext.Provider value={value}>
-      {children}
-    </RestaurantSelectionContext.Provider>
-  );
-}
+import { useEffect, useState } from "react";import useAppStore from '@/store/useAppStore';import { RestaurantSelectionContext } from '@/context/RestaurantSelectionContext';export default function RestaurantSelectionProvider({ children }) {  const [selectedRestaurantId, setSelectedRestaurantId] = useState(    localStorage.getItem('selectedRestaurantId') || null  );  const [userRestaurants, setUserRestaurants] = useState([]);  const [loading, setLoading] = useState(true);  useEffect(() => {    if (selectedRestaurantId) {      localStorage.setItem('selectedRestaurantId', selectedRestaurantId);    } else {      localStorage.removeItem('selectedRestaurantId');    }    try { useAppStore.setState({ restaurantId: selectedRestaurantId }); } catch (err) { void err; }  }, [selectedRestaurantId]);  const value = {    selectedRestaurantId,    setSelectedRestaurantId,    userRestaurants,    setUserRestaurants,    loading,    setLoading,  };  return (    <RestaurantSelectionContext.Provider value={value}>      {children}    </RestaurantSelectionContext.Provider>  );}

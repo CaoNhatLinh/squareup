@@ -2,7 +2,6 @@ import { useShop } from '@/context/ShopContext';
 import { resolveColor } from '@/components/builder/utils/colorUtils';
 import StyledButton from '@/components/builder/atoms/StyledButton';
 import StyledText from '@/components/builder/atoms/StyledText';
-
 export default function HeroBannerBlock({
   variant = 'overlay',
   title,
@@ -28,24 +27,20 @@ export default function HeroBannerBlock({
   anchorId,
   isPublic = false,
   onElementClick,
-  
 }) {
   const { shop } = useShop();
   const displayTitle = title || shop?.name || 'Welcome to Our Restaurant';
-
   const heightClasses = {
     auto: 'py-20',
     medium: 'min-h-[400px]',
     large: 'min-h-[600px]',
     full: 'min-h-screen'
   };
-
   const alignClasses = {
     left: 'text-left items-start',
     center: 'text-center items-center',
     right: 'text-right items-end'
   };
-
   const resolvedTheme = resolveColor(themeColor || globalStyles?.palette?.primary || globalStyles?.colors?.primary, globalStyles) || '#F97316';
   const resolvedButtonColor = resolveColor(buttonColor || themeColor || globalStyles?.palette?.primary || globalStyles?.colors?.primary, globalStyles) || '#F97316';
   const resolvedText = resolveColor(textColor || globalStyles?.palette?.onPrimary || globalStyles?.colors?.text, globalStyles) || '#ffffff';
@@ -59,14 +54,12 @@ export default function HeroBannerBlock({
       }
       return;
     }
-     else if (isPublic) {
-        window.location.href = `/${window.location.pathname.split("/")[1]}/order`;
-      };
+    else if (isPublic) {
+      window.location.href = `/${window.location.pathname.split("/")[1]}/order`;
+    };
   };
-
   const renderButton = () => {
     if (!showButton || !buttonText) return null;
-
     return (
       <StyledButton
         styleConfig={{
@@ -85,7 +78,6 @@ export default function HeroBannerBlock({
       </StyledButton>
     );
   };
-
   if (variant === 'split') {
     return (
       <div className={`w-full flex flex-col md:flex-row ${heightClasses[height] || 'min-h-[500px]'}`} id={anchorId || 'hero'} >
@@ -115,11 +107,10 @@ export default function HeroBannerBlock({
           )}
           {renderButton()}
         </div>
-
         <div className="flex-1 relative min-h-[300px] md:min-h-full">
           {(imageURL || imageURL === '') ? (
             <img
-              src={imageURL || "https://placehold.co/800x600?text=No+Image"}
+              src={imageURL || "/assets/image/no-image.png"}
               alt="Hero"
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -132,17 +123,14 @@ export default function HeroBannerBlock({
       </div>
     );
   }
-
   if (variant === 'minimal') {
     const resolvedHeading = resolveColor(textColor || globalStyles?.palette?.onPrimary || globalStyles?.colors?.text, globalStyles) || '#111827';
     const resolvedBg = resolveColor(globalStyles?.palette?.background || globalStyles?.colors?.background, globalStyles) || '#ffffff';
-
     return (
       <div
         className={`w-full flex flex-col justify-center p-12 ${heightClasses[height] || 'py-24'} ${alignClasses[textAlignment] || 'items-center text-center'}`}
         style={{ backgroundColor: resolvedBg }}
         id={anchorId || 'hero'}
-
       >
         <StyledText
           tag="h1"
@@ -168,15 +156,13 @@ export default function HeroBannerBlock({
       </div>
     );
   }
-
   const resolvedBackground = resolveColor(backgroundColor || globalStyles?.palette?.background || globalStyles?.colors?.background, globalStyles) || resolvedTheme;
-
   return (
     <div
       className={`relative w-full flex flex-col justify-center p-6 ${heightClasses[height] || 'min-h-[400px]'} ${alignClasses[textAlignment] || 'items-center text-center'}`}
       style={{
         backgroundColor: resolvedBackground,
-        backgroundImage: (imageURL || imageURL === '') ? `url(${imageURL || "https://placehold.co/800x600?text=No+Image"})` : 'none',
+        backgroundImage: (imageURL || imageURL === '') ? `url(${imageURL || "/assets/image/no-image.png"})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -188,7 +174,6 @@ export default function HeroBannerBlock({
           style={{ background: `linear-gradient(180deg, rgba(0,0,0,${overlayOpacity * 0.8}), rgba(0,0,0,${overlayOpacity}))` }}
         />
       )}
-
       <div className="relative z-10 max-w-4xl w-full">
         {badgeText && (
           <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-semibold">

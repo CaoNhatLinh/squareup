@@ -1,28 +1,1 @@
-const admin = require('firebase-admin');
-const { getDecodedUserFromRequest } = require('../utils/auth');
-async function verifyAdmin(req, res, next) {
-  try {
-    // ensure req.user is set from decoded claims
-    let decodedClaims;
-    try {
-      decodedClaims = await getDecodedUserFromRequest(req);
-    } catch (err) {
-      if (err?.status === 403 && err?.isGuest) {
-        return res.status(403).json({ error: 'Guest users cannot access admin routes', isAdmin: false, isGuest: true });
-      }
-      return res.status(401).json({ error: err?.message || 'No valid session or idToken provided' });
-    }
-
-    if (!decodedClaims.admin) {
-      return res.status(403).json({ error: 'Access denied. Admin privileges required.', isAdmin: false });
-    }
-
-    // Keep the full decoded claims on req.user so subsequent middleware can rely on claims
-    req.user = decodedClaims;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid or expired session' });
-  }
-}
-
-module.exports = verifyAdmin;
+const admin = require('firebase-admin');const { getDecodedUserFromRequest } = require('../utils/auth');async function verifyAdmin(req, res, next) {  try {    let decodedClaims;    try {      decodedClaims = await getDecodedUserFromRequest(req);    } catch (err) {      if (err?.status === 403 && err?.isGuest) {        return res.status(403).json({ error: 'Guest users cannot access admin routes', isAdmin: false, isGuest: true });      }      return res.status(401).json({ error: err?.message || 'No valid session or idToken provided' });    }    if (!decodedClaims.admin) {      return res.status(403).json({ error: 'Access denied. Admin privileges required.', isAdmin: false });    }    req.user = decodedClaims;    next();  } catch (err) {    return res.status(401).json({ error: 'Invalid or expired session' });  }}module.exports = verifyAdmin;

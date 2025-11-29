@@ -1,30 +1,1 @@
-export default function StyledText({
-  children,
-  tag = 'div',
-  
-  styleConfig = {},
-  className = '',
-  dataControl,
-  dataBlockId,
-  ...rest
-}) {
-  const Comp = tag;
-  const fontSize = styleConfig.fontSize ? `${styleConfig.fontSize}px` : undefined;
-  const fontWeight = styleConfig.fontWeight || undefined;
-  const color = styleConfig.color || undefined;
-  const fontFamily = styleConfig.fontFamily || undefined;
-
-  const style = {
-    fontSize,
-    fontWeight,
-    color,
-    fontFamily,
-    ...(styleConfig.inlineStyle || {}),
-  };
-
-  return (
-    <Comp className={className} style={style} data-control={dataControl} data-block-id={dataBlockId} {...rest}>
-      {children}
-    </Comp>
-  );
-}
+export default function StyledText({  children,  tag = 'div',  styleConfig = {},  className = '',  dataControl,  dataBlockId,  ...rest}) {  const Comp = tag;  const fontSize = styleConfig.fontSize ? `${styleConfig.fontSize}px` : undefined;  const fontWeight = styleConfig.fontWeight || undefined;  const color = styleConfig.color || undefined;  const fontFamily = styleConfig.fontFamily || undefined;  const style = {    fontSize,    fontWeight,    color,    fontFamily,    ...(styleConfig.inlineStyle || {}),  };  return (    <Comp className={className} style={style} data-control={dataControl} data-block-id={dataBlockId} {...rest}>      {children}    </Comp>  );}

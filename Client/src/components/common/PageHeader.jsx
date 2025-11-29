@@ -1,86 +1,1 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { HiArrowLeft } from 'react-icons/hi';
-
-export default function PageHeader({
-  title,
-  subtitle,
-  Icon,
-  iconClassName = 'w-10 h-10 text-red-600',
-  showBack = false,
-  onBack,
-  backTo,
-  SearchBarComponent,
-  searchBarProps,
-  actionLabel,
-  actionLink,
-  onAction,
-  actionClassName = '',
-  rightChildren,
-  className = '',
-}) {
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    if (typeof onBack === 'function') return onBack();
-    if (typeof backTo === 'string') return navigate(backTo);
-    return navigate(-1);
-  };
-
-  return (
-    <Card className={`mb-8 flex flex-col md:flex-row justify-between items-center p-6 ${className}`}>
-      <div className="flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
-        {showBack && (
-          <Button
-            onClick={handleBack}
-            variant="ghost"
-            size="small"
-            className="text-gray-600 hover:bg-gray-50"
-            aria-label="Back"
-          >
-            <HiArrowLeft className="w-5 h-5 text-gray-500" />
-          </Button>
-        )}
-
-        {Icon && (
-          <div className="flex-shrink-0">
-            <Icon className={iconClassName} />
-          </div>
-        )}
-
-        <div>
-          <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-        {SearchBarComponent && <SearchBarComponent {...(searchBarProps || {})} />}
-
-        {rightChildren}
-
-        {actionLabel && (
-          actionLink ? (
-            <Link to={actionLink}>
-              <Button
-                variant="primary"
-                className={`shadow-lg ${actionClassName}`}
-              >
-                {actionLabel}
-              </Button>
-            </Link>
-          ) : (
-            <Button
-              onClick={onAction}
-              variant="primary"
-              className={`shadow-lg ${actionClassName}`}
-            >
-              {actionLabel}
-            </Button>
-          )
-        )}
-      </div>
-    </Card>
-  );
-}
+import { Link, useNavigate } from 'react-router-dom';import { Card } from '@/components/ui/Card';import Button from '@/components/ui/Button';import { HiArrowLeft } from 'react-icons/hi';export default function PageHeader({  title,  subtitle,  Icon,  iconClassName = 'w-10 h-10 text-red-600',  showBack = false,  onBack,  backTo,  SearchBarComponent,  searchBarProps,  actionLabel,  actionLink,  onAction,  actionClassName = '',  rightChildren,  className = '',}) {  const navigate = useNavigate();  const handleBack = () => {    if (typeof onBack === 'function') return onBack();    if (typeof backTo === 'string') return navigate(backTo);    return navigate(-1);  };  return (    <Card className={`mb-8 flex flex-col md:flex-row justify-between items-center p-6 ${className}`}>      <div className="flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">        {showBack && (          <Button            onClick={handleBack}            variant="ghost"            size="small"            className="text-gray-600 hover:bg-gray-50"            aria-label="Back"          >            <HiArrowLeft className="w-5 h-5 text-gray-500" />          </Button>        )}        {Icon && (          <div className="flex-shrink-0">            <Icon className={iconClassName} />          </div>        )}        <div>          <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900">{title}</h1>          {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}        </div>      </div>      <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">        {SearchBarComponent && <SearchBarComponent {...(searchBarProps || {})} />}        {rightChildren}        {actionLabel && (          actionLink ? (            <Link to={actionLink}>              <Button                variant="primary"                className={`shadow-lg ${actionClassName}`}              >                {actionLabel}              </Button>            </Link>          ) : (            <Button              onClick={onAction}              variant="primary"              className={`shadow-lg ${actionClassName}`}            >              {actionLabel}            </Button>          )        )}      </div>    </Card>  );}

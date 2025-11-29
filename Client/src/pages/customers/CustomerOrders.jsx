@@ -1,89 +1,1 @@
-import { useEffect, useState } from "react"; 
-
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import useAppStore from '@/store/useAppStore';
-import * as customersApi from '@/api/customers';
-import { HiArrowCircleLeft } from 'react-icons/hi';
-import Table from '@/components/ui/Table';
-
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
-
-export default function CustomerOrders() {
-  const { customerEmail } = useParams();
-  const restaurantId = useAppStore(s => s.restaurantId);
-  const params = useQuery();
-  const email = params.get('email') || (customerEmail ? decodeURIComponent(customerEmail) : '');
-  const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(25);
-  const [total, setTotal] = useState(0);
-  const [sortBy, setSortBy] = useState('date');
-  const [sortDir, setSortDir] = useState('desc');
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        if (!email) {
-          setOrders([]);
-          return;
-        }
-        const data = await customersApi.fetchCustomerOrders(restaurantId, email, { page, limit, sortBy, sortDir });
-        const list = data.orders || [];
-        setTotal((data.meta && data.meta.total) || list.length);
-        setOrders(list);
-      } catch (err) {
-        console.error('Error loading customer orders', err);
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [restaurantId, email, sortBy, sortDir, page, limit]);
-
-  const gotoOrder = (orderId) => {
-    navigate(`/restaurant/orders/${orderId}`);
-  };
-
-  return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={() => navigate(`/restaurant/customers`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors font-medium"
-        >
-          <HiArrowCircleLeft className="w-6 h-6" />
-          Back to Customers
-        </button>
-      </div>
-      <h1 className="text-2xl font-bold mb-4">Orders for {email || '—'}</h1>
-      <Table
-        columns={[
-          { key: 'name', title: 'Order' },
-          { key: 'date', title: 'Date', sortable: true },
-          { key: 'item_count', title: 'Items', align: 'right' },
-          { key: 'total', title: 'Total', align: 'right', render: (r) => `${(Number(r.total) || 0).toFixed(2)} ${r.currency || 'USD'}` },
-        ]}
-        data={orders.map(o => ({ ...o, date: o.date ? new Date(o.date).toLocaleString() : '' }))}
-        loading={loading}
-        rowKey={'id'}
-        onRowClick={(r) => gotoOrder(r.id)}
-        pagination={{ page, limit, total }}
-        onPageChange={(p) => setPage(p)}
-        onLimitChange={(l) => { setLimit(l); setPage(1); }}
-        sortBy={sortBy}
-        sortDir={sortDir}
-        onSortChange={(key) => {
-          if (key === sortBy) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-          else { setSortBy(key); setSortDir('asc'); }
-        }}
-      />
-    </div>
-  );
-}
- 
+import { useEffect, useState } from "react"; import { useParams, useNavigate, useLocation } from 'react-router-dom';import useAppStore from '@/store/useAppStore';import * as customersApi from '@/api/customers';import { HiArrowCircleLeft } from 'react-icons/hi';import Table from '@/components/ui/Table';function useQuery() {  return new URLSearchParams(useLocation().search);}export default function CustomerOrders() {  const { customerEmail } = useParams();  const restaurantId = useAppStore(s => s.restaurantId);  const params = useQuery();  const email = params.get('email') || (customerEmail ? decodeURIComponent(customerEmail) : '');  const navigate = useNavigate();  const [orders, setOrders] = useState([]);  const [loading, setLoading] = useState(true);  const [page, setPage] = useState(1);  const [limit, setLimit] = useState(25);  const [total, setTotal] = useState(0);  const [sortBy, setSortBy] = useState('date');  const [sortDir, setSortDir] = useState('desc');  useEffect(() => {    const load = async () => {      setLoading(true);      try {        if (!email) {          setOrders([]);          return;        }        const data = await customersApi.fetchCustomerOrders(restaurantId, email, { page, limit, sortBy, sortDir });        const list = data.orders || [];        setTotal((data.meta && data.meta.total) || list.length);        setOrders(list);      } catch (err) {        console.error('Error loading customer orders', err);        setOrders([]);      } finally {        setLoading(false);      }    };    load();  }, [restaurantId, email, sortBy, sortDir, page, limit]);  const gotoOrder = (orderId) => {    navigate(`/restaurant/orders/${orderId}`);  };  return (    <div className="p-6">      <div className="mb-6 flex items-center justify-between">        <button          onClick={() => navigate(`/restaurant/customers`)}          className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors font-medium"        >          <HiArrowCircleLeft className="w-6 h-6" />          Back to Customers        </button>      </div>      <h1 className="text-2xl font-bold mb-4">Orders for {email || '—'}</h1>      <Table        columns={[          { key: 'name', title: 'Order' },          { key: 'date', title: 'Date', sortable: true },          { key: 'item_count', title: 'Items', align: 'right' },          { key: 'total', title: 'Total', align: 'right', render: (r) => `${(Number(r.total) || 0).toFixed(2)} ${r.currency || 'USD'}` },        ]}        data={orders.map(o => ({ ...o, date: o.date ? new Date(o.date).toLocaleString() : '' }))}        loading={loading}        rowKey={'id'}        onRowClick={(r) => gotoOrder(r.id)}        pagination={{ page, limit, total }}        onPageChange={(p) => setPage(p)}        onLimitChange={(l) => { setLimit(l); setPage(1); }}        sortBy={sortBy}        sortDir={sortDir}        onSortChange={(key) => {          if (key === sortBy) setSortDir(d => d === 'asc' ? 'desc' : 'asc');          else { setSortBy(key); setSortDir('asc'); }        }}      />    </div>  );}

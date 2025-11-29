@@ -1,167 +1,1 @@
-const admin = require('firebase-admin');
-const db = admin.database();
-
-async function listCategories(req, res) {
-  const { restaurantId } = req.params;
-  const page = parseInt(req.query.page, 10) || 1;
-  let limit = parseInt(req.query.limit, 10);
-  if (isNaN(limit)) limit = 25;
-  const q = (req.query.q || '').toLowerCase().trim();
-  const sortBy = req.query.sortBy || 'name';
-  const sortDir = (req.query.sortDir || 'asc').toLowerCase();
-  try {
-    const snap = await db.ref(`restaurants/${restaurantId}/categories`).get();
-    const allObj = snap.exists() ? snap.val() : {};
-    let list = Object.values(allObj || {});
-    if (q) {
-      list = list.filter(c => (c.name || '').toLowerCase().includes(q));
-    }
-    // sort
-    if (sortBy) {
-      const dir = sortDir === 'asc' ? 1 : -1;
-      list = list.sort((a, b) => {
-        const va = (a[sortBy] || '').toString().toLowerCase();
-        const vb = (b[sortBy] || '').toString().toLowerCase();
-        if (va < vb) return -1 * dir;
-        if (va > vb) return 1 * dir;
-        return 0;
-      });
-    }
-    const total = list.length;
-    let paged = list;
-    if (limit > 0) {
-      const startIndex = Math.max((page - 1) * limit, 0);
-      const endIndex = startIndex + limit;
-      paged = list.slice(startIndex, endIndex);
-    }
-    return res.json({ success: true, data: paged, meta: { total, limit, page } });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-async function getCategory(req, res) {
-  const { restaurantId, categoryId } = req.params;
-  try {
-    const snap = await db.ref(`restaurants/${restaurantId}/categories/${categoryId}`).get();
-    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
-      return res.json({ success: true, data: snap.val() });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-async function createCategory(req, res) {
-  const { restaurantId } = req.params;
-  const { name, image = null, parentCategoryId = null, itemIds = [] } = req.body;
-  if (!name) return res.status(400).json({ error: 'Missing name' });
-  if (itemIds && !Array.isArray(itemIds)) return res.status(400).json({ error: 'itemIds must be an array' });
-  
-  try {
-    if (parentCategoryId) {
-      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);
-      const parentSnap = await parentRef.get();
-      if (!parentSnap.exists()) {
-        return res.status(400).json({ error: 'Parent category not found' });
-      }
-      const parentData = parentSnap.val();
-      if (parentData.parentCategoryId) {
-        return res.status(400).json({ error: 'Cannot create subcategory of a subcategory. Maximum 2 levels allowed.' });
-      }
-    }
-    
-    const ref = db.ref(`restaurants/${restaurantId}/categories`).push();
-    const id = ref.key;
-    await ref.set({ 
-      id, 
-      name, 
-      image, 
-      parentCategoryId,
-      itemIds: itemIds || [],
-      createdAt: Date.now() 
-    });
-    return res.status(201).json({ id, name, image, parentCategoryId, itemIds });
-      return res.status(201).json({ success: true, data: { id, name, image, parentCategoryId, itemIds } });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-async function updateCategory(req, res) {
-  const { restaurantId, categoryId } = req.params;
-  const { name, image, parentCategoryId, itemIds } = req.body;
-  if (!name && image === undefined && parentCategoryId === undefined && itemIds === undefined) {
-    return res.status(400).json({ error: 'Nothing to update' });
-  }
-  if (itemIds !== undefined && !Array.isArray(itemIds)) {
-    return res.status(400).json({ error: 'itemIds must be an array' });
-  }
-  
-  try {
-    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);
-    const snap = await catRef.get();
-    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
-    
-    const currentData = snap.val();
-    
-    if (parentCategoryId !== undefined && parentCategoryId !== null) {
-      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);
-      const parentSnap = await parentRef.get();
-      if (!parentSnap.exists()) {
-        return res.status(400).json({ error: 'Parent category not found' });
-      }
-      const parentData = parentSnap.val();
-      if (parentData.parentCategoryId) {
-        return res.status(400).json({ error: 'Cannot make this a subcategory of a subcategory. Maximum 2 levels allowed.' });
-      }
-      const allCategoriesSnap = await db.ref(`restaurants/${restaurantId}/categories`).get();
-      if (allCategoriesSnap.exists()) {
-        const allCategories = allCategoriesSnap.val();
-        const hasSubcategories = Object.values(allCategories).some(
-          cat => cat.parentCategoryId === categoryId
-        );
-        if (hasSubcategories) {
-          return res.status(400).json({ error: 'Cannot make this a subcategory because it already has subcategories.' });
-        }
-      }
-    }
-    
-    const updates = {};
-    if (name) updates.name = name;
-    if (image !== undefined) updates.image = image;
-    if (parentCategoryId !== undefined) updates.parentCategoryId = parentCategoryId;
-    if (itemIds !== undefined) updates.itemIds = itemIds;
-    updates.updatedAt = Date.now();
-    await catRef.update(updates);
-    const updated = (await catRef.get()).val();
-      return res.json({ success: true, data: updated });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-async function deleteCategory(req, res) {
-  const { restaurantId, categoryId } = req.params;
-  try {
-    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);
-    const snap = await catRef.get();
-    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });
-    await catRef.remove();
-    return res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
-
-module.exports = {
-  listCategories,
-  getCategory,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-};
+const admin = require('firebase-admin');const db = admin.database();async function listCategories(req, res) {  const { restaurantId } = req.params;  const page = parseInt(req.query.page, 10) || 1;  let limit = parseInt(req.query.limit, 10);  if (isNaN(limit)) limit = 25;  const q = (req.query.q || '').toLowerCase().trim();  const sortBy = req.query.sortBy || 'name';  const sortDir = (req.query.sortDir || 'asc').toLowerCase();  try {    const snap = await db.ref(`restaurants/${restaurantId}/categories`).get();    const allObj = snap.exists() ? snap.val() : {};    let list = Object.values(allObj || {});    if (q) {      list = list.filter(c => (c.name || '').toLowerCase().includes(q));    }    if (sortBy) {      const dir = sortDir === 'asc' ? 1 : -1;      list = list.sort((a, b) => {        const va = (a[sortBy] || '').toString().toLowerCase();        const vb = (b[sortBy] || '').toString().toLowerCase();        if (va < vb) return -1 * dir;        if (va > vb) return 1 * dir;        return 0;      });    }    const total = list.length;    let paged = list;    if (limit > 0) {      const startIndex = Math.max((page - 1) * limit, 0);      const endIndex = startIndex + limit;      paged = list.slice(startIndex, endIndex);    }    return res.json({ success: true, data: paged, meta: { total, limit, page } });  } catch (err) {    console.error(err);    return res.status(500).json({ error: 'Server error' });  }}async function getCategory(req, res) {  const { restaurantId, categoryId } = req.params;  try {    const snap = await db.ref(`restaurants/${restaurantId}/categories/${categoryId}`).get();    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });      return res.json({ success: true, data: snap.val() });  } catch (err) {    console.error(err);    return res.status(500).json({ error: 'Server error' });  }}async function createCategory(req, res) {  const { restaurantId } = req.params;  const { name, image = null, parentCategoryId = null, itemIds = [] } = req.body;  if (!name) return res.status(400).json({ error: 'Missing name' });  if (itemIds && !Array.isArray(itemIds)) return res.status(400).json({ error: 'itemIds must be an array' });  try {    if (parentCategoryId) {      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);      const parentSnap = await parentRef.get();      if (!parentSnap.exists()) {        return res.status(400).json({ error: 'Parent category not found' });      }      const parentData = parentSnap.val();      if (parentData.parentCategoryId) {        return res.status(400).json({ error: 'Cannot create subcategory of a subcategory. Maximum 2 levels allowed.' });      }    }    const ref = db.ref(`restaurants/${restaurantId}/categories`).push();    const id = ref.key;    await ref.set({       id,       name,       image,       parentCategoryId,      itemIds: itemIds || [],      createdAt: Date.now()     });    return res.status(201).json({ id, name, image, parentCategoryId, itemIds });      return res.status(201).json({ success: true, data: { id, name, image, parentCategoryId, itemIds } });  } catch (err) {    console.error(err);    return res.status(500).json({ error: 'Server error' });  }}async function updateCategory(req, res) {  const { restaurantId, categoryId } = req.params;  const { name, image, parentCategoryId, itemIds } = req.body;  if (!name && image === undefined && parentCategoryId === undefined && itemIds === undefined) {    return res.status(400).json({ error: 'Nothing to update' });  }  if (itemIds !== undefined && !Array.isArray(itemIds)) {    return res.status(400).json({ error: 'itemIds must be an array' });  }  try {    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);    const snap = await catRef.get();    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });    const currentData = snap.val();    if (parentCategoryId !== undefined && parentCategoryId !== null) {      const parentRef = db.ref(`restaurants/${restaurantId}/categories/${parentCategoryId}`);      const parentSnap = await parentRef.get();      if (!parentSnap.exists()) {        return res.status(400).json({ error: 'Parent category not found' });      }      const parentData = parentSnap.val();      if (parentData.parentCategoryId) {        return res.status(400).json({ error: 'Cannot make this a subcategory of a subcategory. Maximum 2 levels allowed.' });      }      const allCategoriesSnap = await db.ref(`restaurants/${restaurantId}/categories`).get();      if (allCategoriesSnap.exists()) {        const allCategories = allCategoriesSnap.val();        const hasSubcategories = Object.values(allCategories).some(          cat => cat.parentCategoryId === categoryId        );        if (hasSubcategories) {          return res.status(400).json({ error: 'Cannot make this a subcategory because it already has subcategories.' });        }      }    }    const updates = {};    if (name) updates.name = name;    if (image !== undefined) updates.image = image;    if (parentCategoryId !== undefined) updates.parentCategoryId = parentCategoryId;    if (itemIds !== undefined) updates.itemIds = itemIds;    updates.updatedAt = Date.now();    await catRef.update(updates);    const updated = (await catRef.get()).val();      return res.json({ success: true, data: updated });  } catch (err) {    console.error(err);    return res.status(500).json({ error: 'Server error' });  }}async function deleteCategory(req, res) {  const { restaurantId, categoryId } = req.params;  try {    const catRef = db.ref(`restaurants/${restaurantId}/categories/${categoryId}`);    const snap = await catRef.get();    if (!snap.exists()) return res.status(404).json({ error: 'Category not found' });    await catRef.remove();    return res.json({ ok: true });  } catch (err) {    console.error(err);    return res.status(500).json({ error: 'Server error' });  }}module.exports = {  listCategories,  getCategory,  createCategory,  updateCategory,  deleteCategory,};

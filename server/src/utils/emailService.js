@@ -1,79 +1,1 @@
-const nodemailer = require('nodemailer');
-
-// Configure email transporter
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
-
-/**
- * Send invitation email to new staff member
- */
-async function sendInvitationEmail(email, restaurantName, invitationLink, roleName) {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: `Invitation to join ${restaurantName}`,
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4F46E5; color: white; padding: 20px; text-align: center; }
-          .content { padding: 30px; background-color: #f9fafb; }
-          .button { 
-            display: inline-block; 
-            padding: 12px 30px; 
-            background-color: #4F46E5; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px;
-            margin: 20px 0;
-          }
-          .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>You're Invited!</h1>
-          </div>
-          <div class="content">
-            <p>Hello,</p>
-            <p>You have been invited to join <strong>${restaurantName}</strong> as a <strong>${roleName || 'staff member'}</strong>.</p>
-            <p>To accept this invitation and create your account, please click the button below:</p>
-            <div style="text-align: center;">
-              <a href="${invitationLink}" class="button">Accept Invitation</a>
-            </div>
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #4F46E5;">${invitationLink}</p>
-            <p><strong>Note:</strong> This invitation will expire in 7 days.</p>
-          </div>
-          <div class="footer">
-            <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-            <p>&copy; ${new Date().getFullYear()} ${restaurantName}. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log('Invitation email sent to:', email);
-    return { success: true };
-  } catch (error) {
-    console.error('Error sending invitation email:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-module.exports = {
-  sendInvitationEmail,
-};
+const nodemailer = require('nodemailer');const transporter = nodemailer.createTransport({  service: process.env.EMAIL_SERVICE || 'gmail',  auth: {    user: process.env.EMAIL_USER,    pass: process.env.EMAIL_PASSWORD,  },});async function sendInvitationEmail(email, restaurantName, invitationLink, roleName) {  const mailOptions = {    from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,    to: email,    subject: `🎉 You're Invited to Join ${restaurantName}!`,    html: `      <!DOCTYPE html>      <html lang="en">      <head>        <meta charset="UTF-8">        <meta name="viewport" content="width=device-width, initial-scale=1.0">        <title>Team Invitation</title>        <style>          * { margin: 0; padding: 0; box-sizing: border-box; }          body {             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;            line-height: 1.6;             color: #1f2937;            background-color: #f3f4f6;            padding: 20px;          }          .email-wrapper {             max-width: 600px;             margin: 0 auto;             background: white;            border-radius: 16px;            overflow: hidden;            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);          }          .header {             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);            padding: 40px 30px;            text-align: center;          }          .header-icon {            width: 64px;            height: 64px;            background: rgba(255, 255, 255, 0.2);            border-radius: 16px;            display: inline-flex;            align-items: center;            justify-content: center;            margin-bottom: 16px;            font-size: 32px;          }          .header h1 {             color: white;             font-size: 28px;            font-weight: 700;            margin-bottom: 8px;            letter-spacing: -0.5px;          }          .header p {            color: rgba(255, 255, 255, 0.9);            font-size: 16px;          }          .content {             padding: 40px 30px;            background-color: white;          }          .greeting {            font-size: 18px;            color: #1f2937;            margin-bottom: 20px;            font-weight: 500;          }          .message {            color: #4b5563;            font-size: 16px;            line-height: 1.6;            margin-bottom: 16px;          }          .highlight-box {            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);            border-left: 4px solid #dc2626;            padding: 20px;            border-radius: 8px;            margin: 24px 0;          }          .highlight-box p {            margin: 8px 0;            color: #374151;            font-size: 15px;          }          .highlight-box strong {            color: #1f2937;            font-weight: 600;          }          .button-container {            text-align: center;            margin: 32px 0;          }          .button {             display: inline-block;             padding: 16px 40px;             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);            color: white !important;            text-decoration: none;             border-radius: 12px;            font-weight: 600;            font-size: 16px;            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.4);            transition: transform 0.2s, box-shadow 0.2s;          }          .button:hover {            transform: translateY(-2px);            box-shadow: 0 8px 12px -2px rgba(220, 38, 38, 0.5);          }          .link-fallback {            background: #f9fafb;            padding: 16px;            border-radius: 8px;            margin: 24px 0;            border: 1px solid #e5e7eb;          }          .link-fallback p {            color: #6b7280;            font-size: 13px;            margin-bottom: 8px;          }          .link-fallback a {            color: #dc2626;            word-break: break-all;            font-size: 13px;            text-decoration: none;          }          .warning-box {            background: #fef3c7;            border: 1px solid #fbbf24;            border-radius: 8px;            padding: 16px;            margin: 24px 0;          }          .warning-box p {            color: #78350f;            font-size: 14px;            margin: 0;          }          .warning-box strong {            color: #92400e;            font-weight: 600;          }          .footer {             padding: 30px;             text-align: center;             background: #f9fafb;            border-top: 1px solid #e5e7eb;          }          .footer p {            color: #6b7280;            font-size: 13px;            margin: 8px 0;          }          .footer a {            color: #dc2626;            text-decoration: none;          }          .divider {            height: 1px;            background: linear-gradient(to right, transparent, #e5e7eb, transparent);            margin: 24px 0;          }          @media only screen and (max-width: 600px) {            .email-wrapper { margin: 0; border-radius: 0; }            .content { padding: 30px 20px; }            .header { padding: 30px 20px; }            .header h1 { font-size: 24px; }          }        </style>      </head>      <body>        <div class="email-wrapper">          <!-- Header -->          <div class="header">            <div class="header-icon">🎉</div>            <h1>You're Invited!</h1>            <p>Join our team at ${restaurantName}</p>          </div>          <!-- Content -->          <div class="content">            <p class="greeting">Hello! 👋</p>            <p class="message">              Great news! You've been invited to join <strong>${restaurantName}</strong>               as a member of our team.            </p>            <div class="highlight-box">              <p><strong>👤 Your Role:</strong> ${roleName || 'Staff Member'}</p>              <p><strong>🏢 Restaurant:</strong> ${restaurantName}</p>              <p><strong>📧 Email:</strong> ${email}</p>            </div>            <div class="divider"></div>            <p class="message">              Click the button below to accept your invitation and get started:            </p>            <!-- CTA Button -->            <div class="button-container">              <a href="${invitationLink}" class="button">                Accept Invitation →              </a>            </div>            <!-- Link Fallback -->            <div class="link-fallback">              <p>Or copy and paste this link into your browser:</p>              <a href="${invitationLink}">${invitationLink}</a>            </div>            <!-- Warning Box -->            <div class="warning-box">              <p>                <strong>⏰ Important:</strong> This invitation will expire automatically in 30 minutes                 for security reasons. Please accept it as soon as possible.              </p>            </div>            <div class="divider"></div>            <p class="message" style="font-size: 14px; color: #6b7280;">              Once you accept, you'll have access to the restaurant dashboard and can start               collaborating with your team right away!            </p>          </div>          <!-- Footer -->          <div class="footer">            <p>              If you didn't expect this invitation, you can safely ignore this email.            </p>            <p style="margin-top: 16px;">              © ${new Date().getFullYear()} ${restaurantName}. All rights reserved.            </p>          </div>        </div>      </body>      </html>    `,  };  try {    await transporter.sendMail(mailOptions);    console.log('Invitation email sent to:', email);    return { success: true };  } catch (error) {    console.error('Error sending invitation email:', error);    return { success: false, error: error.message };  }}module.exports = {  sendInvitationEmail,};

@@ -1,288 +1,1 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import useAppStore from '@/store/useAppStore';
-
-import { createModifier } from "@/api/modifers";
-import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";
-import { HiXMark } from "react-icons/hi2";
-import { Input, Button, Checkbox, RadioGroup } from '@/components/ui';
-
-export default function CreateModifier() {
-  const navigate = useNavigate();
-  const { restaurantId: paramRestaurantId } = useParams();
-  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;
-  const [formData, setFormData] = useState({
-    name: "",
-    displayName: "",
-    selectionType: "multiple",
-    required: false,
-  });
-  const [saving, setSaving] = useState(false);
-  const [options, setOptions] = useState([]);
-  const [draggingIndex, setDraggingIndex] = useState(null);
-
-  const handleClose = () => navigate(`/restaurant/modifiers`);
-
-  const handleSave = async () => {
-    if (!formData.name.trim() || !formData.displayName.trim()) {
-      alert("Name and Display Name are required");
-      return;
-    }
-    const invalidIdx = (options || []).findIndex(
-      (o) => !String(o?.name || "").trim()
-    );
-    if (invalidIdx !== -1) {
-      alert(`Option #${invalidIdx + 1} is missing a name`);
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const opts = (options || [])
-        .map((o, idx) => ({
-          ...o,
-          index: o.index !== undefined ? Number(o.index) : idx,
-        }))
-        .sort((a, b) => (a.index || 0) - (b.index || 0));
-
-      await createModifier(restaurantId, {
-        name: formData.name,
-        displayName: formData.displayName,
-        options: opts,
-        selectionType: formData.selectionType,
-        required: formData.required,
-      });
-      navigate(`/restaurant/modifiers`);
-    } catch (err) {
-      console.error("Failed to create modifier:", err);
-      alert("Failed to create modifier: " + (err.message || err));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDragDrop = (e, dropIndex) => {
-    e.preventDefault();
-    if (draggingIndex === null || draggingIndex === dropIndex) {
-      setDraggingIndex(null);
-      return;
-    }
-
-    const newOptions = [...options];
-    const [moved] = newOptions.splice(draggingIndex, 1);
-    newOptions.splice(dropIndex, 0, moved);
-
-    const withIndex = newOptions.map((o, i) => ({ ...o, index: i }));
-    setOptions(withIndex);
-    setDraggingIndex(null);
-  };
-
-  const formInvalid = !formData.name.trim() || !formData.displayName.trim();
-  const optionsValid = (options || []).every(
-    (o) => !!String(o?.name || "").trim()
-  );
-  const disabled =
-    saving || formInvalid || (options.length > 0 && !optionsValid);
-  const isNameInvalid = !formData.name.trim();
-  const isDisplayNameInvalid = !formData.displayName.trim();
-
-  return (
-    <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-            <h2 className="text-2xl font-bold text-gray-900">Create New Modifier Set</h2>
-
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                loading={saving}
-                disabled={disabled}
-                aria-label="Save modifier"
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
-              Basic Information
-            </h3>
-
-            <div>
-              <Input
-                id="name"
-                name="name"
-                placeholder="System Name (e.g., pizza_crust_size)"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`text-sm font-medium px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2
-                ${isNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}
-              />
-              <p className="text-xs text-gray-500 mt-1 ml-1">
-                Internal, system use only. (No spaces or special characters)
-              </p>
-            </div>
-
-            <div>
-              <Input
-                id="displayName"
-                name="displayName"
-                placeholder="Customer Display Name (e.g., Choose your size)"
-                value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                className={`text-lg font-semibold px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2
-                ${isDisplayNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}
-              />
-              <p className="text-xs text-gray-500 mt-1 ml-1">
-                Visible to customers.
-              </p>
-            </div>
-          </div>
-          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">
-              Selection Rules
-            </h3>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Customer must select:
-              </label>
-
-              <RadioGroup
-                name="selectionType"
-                value={formData.selectionType}
-                onChange={(val) => setFormData({ ...formData, selectionType: val })}
-                options={[{ value: 'single', label: 'One option only' }, { value: 'multiple', label: 'Multiple options' }]}
-                orientation="horizontal"
-              />
-            </div>
-
-            <div>
-              <Checkbox
-                checked={formData.required}
-                onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
-                label="Is Required (Customer must make a selection)"
-                size="small"
-              />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold mb-3 text-gray-900">
-              Options List
-            </h3>
-
-            <div className="border border-gray-300 rounded-xl shadow-md overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 bg-gray-100 text-xs text-gray-600 font-bold uppercase border-b border-gray-200">
-                <div className="w-6"></div>
-                <div className="flex-1">Option Name</div>
-                <div className="w-24 text-right">Price ($)</div>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {(options || []).map((opt, idx) => {
-                  const isOptionNameInvalid = !String(opt.name || "").trim();
-                  return (
-                    <div
-                      key={opt.id || idx}
-                      className={`flex gap-3 items-center px-4 py-3 transition-colors ${
-                        draggingIndex === idx
-                          ? "opacity-50 bg-red-50/50 shadow-inner"
-                          : "hover:bg-gray-50"
-                      }`}
-                      draggable
-                      onDragStart={() => setDraggingIndex(idx)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => handleDragDrop(e, idx)}
-                      onDragEnd={() => setDraggingIndex(null)}
-                    >
-                      <div className="text-gray-400 cursor-move w-6 flex-shrink-0">
-                        <MdDragIndicator className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <Input
-                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium
-                          ${
-                            isOptionNameInvalid
-                              ? "border-red-500 focus:ring-red-100"
-                              : "border-gray-300 focus:ring-red-100 focus:border-red-500"
-                          }`}
-                          placeholder="Option name (e.g., Extra Cheese)"
-                          value={opt.name || ""}
-                          onChange={(e) => {
-                            const next = [...options];
-                            next[idx] = { ...next[idx], name: e.target.value };
-                            setOptions(next);
-                          }}
-                        />
-                      </div>
-
-                      <div className="w-24 relative">
-                        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                          $
-                        </span>
-                        <Input
-                          className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"
-                          placeholder="0.00"
-                          type="number"
-                          step="0.01"
-                          value={opt.price === undefined ? "" : opt.price}
-                          onChange={(e) => {
-                            const next = [...options];
-                            next[idx] = {
-                              ...next[idx],
-                              price: parseFloat(e.target.value),
-                            };
-                            setOptions(next);
-                          }}
-                        />
-                      </div>
-                      <div className="w-10 flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="small"
-                          className="text-red-600 hover:bg-red-100 p-2 rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOptions(options.filter((_, i) => i !== idx));
-                          }}
-                          aria-label="Remove option"
-                        >
-                          <MdOutlineDelete className="w-6 h-6" />
-                        </Button>
-                      </div>
-                    </div>
-                    );
-                })}
-                  </div>
-
-                <div className="p-4 border-t border-gray-200">
-                  <Button
-                    variant="primary"
-                    onClick={() =>
-                      setOptions([
-                        ...options,
-                        {
-                          id: `tmp_${Date.now()}`,
-                          name: "",
-                          price: 0,
-                          index: options.length,
-                          available: true,
-                        },
-                      ])
-                    }
-                    aria-label="Add option"
-                  >
-                    <MdAdd className="w-5 h-5" />
-                    <span>Add Option</span>
-                  </Button>
-                </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useState } from "react";import { useNavigate, useParams } from "react-router-dom";import useAppStore from '@/store/useAppStore';import { createModifier } from "@/api/modifers";import { MdOutlineDelete, MdAdd, MdDragIndicator } from "react-icons/md";import { HiXMark } from "react-icons/hi2";import { Input, Button, Checkbox, RadioGroup } from '@/components/ui';export default function CreateModifier() {  const navigate = useNavigate();  const { restaurantId: paramRestaurantId } = useParams();  const restaurantId = useAppStore(s => s.restaurantId) || paramRestaurantId;  const [formData, setFormData] = useState({    name: "",    displayName: "",    selectionType: "multiple",    required: false,  });  const [saving, setSaving] = useState(false);  const [options, setOptions] = useState([]);  const [draggingIndex, setDraggingIndex] = useState(null);  const handleClose = () => navigate(`/restaurant/modifiers`);  const handleSave = async () => {    if (!formData.name.trim() || !formData.displayName.trim()) {      alert("Name and Display Name are required");      return;    }    const invalidIdx = (options || []).findIndex(      (o) => !String(o?.name || "").trim()    );    if (invalidIdx !== -1) {      alert(`Option #${invalidIdx + 1} is missing a name`);      return;    }    setSaving(true);    try {      const opts = (options || [])        .map((o, idx) => ({          ...o,          index: o.index !== undefined ? Number(o.index) : idx,        }))        .sort((a, b) => (a.index || 0) - (b.index || 0));      await createModifier(restaurantId, {        name: formData.name,        displayName: formData.displayName,        options: opts,        selectionType: formData.selectionType,        required: formData.required,      });      navigate(`/restaurant/modifiers`);    } catch (err) {      console.error("Failed to create modifier:", err);      alert("Failed to create modifier: " + (err.message || err));    } finally {      setSaving(false);    }  };  const handleDragDrop = (e, dropIndex) => {    e.preventDefault();    if (draggingIndex === null || draggingIndex === dropIndex) {      setDraggingIndex(null);      return;    }    const newOptions = [...options];    const [moved] = newOptions.splice(draggingIndex, 1);    newOptions.splice(dropIndex, 0, moved);    const withIndex = newOptions.map((o, i) => ({ ...o, index: i }));    setOptions(withIndex);    setDraggingIndex(null);  };  const formInvalid = !formData.name.trim() || !formData.displayName.trim();  const optionsValid = (options || []).every(    (o) => !!String(o?.name || "").trim()  );  const disabled =    saving || formInvalid || (options.length > 0 && !optionsValid);  const isNameInvalid = !formData.name.trim();  const isDisplayNameInvalid = !formData.displayName.trim();  return (    <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 p-4">      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">            <h2 className="text-2xl font-bold text-gray-900">Create New Modifier Set</h2>            <div className="flex items-center gap-3">              <Button variant="secondary" size="small" onClick={handleClose}>Cancel</Button>              <Button                variant="primary"                onClick={handleSave}                loading={saving}                disabled={disabled}                aria-label="Save modifier"              >                Save              </Button>            </div>          </div>        <div className="flex-1 overflow-y-auto p-8 space-y-8">          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">              Basic Information            </h3>            <div>              <Input                id="name"                name="name"                placeholder="System Name (e.g., pizza_crust_size)"                value={formData.name}                onChange={(e) => setFormData({ ...formData, name: e.target.value })}                className={`text-sm font-medium px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2                ${isNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}              />              <p className="text-xs text-gray-500 mt-1 ml-1">                Internal, system use only. (No spaces or special characters)              </p>            </div>            <div>              <Input                id="displayName"                name="displayName"                placeholder="Customer Display Name (e.g., Choose your size)"                value={formData.displayName}                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}                className={`text-lg font-semibold px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2                ${isDisplayNameInvalid ? 'border-red-500 focus:ring-red-100' : 'border-gray-300 focus:ring-red-100'}`}              />              <p className="text-xs text-gray-500 mt-1 ml-1">                Visible to customers.              </p>            </div>          </div>          <div className="space-y-5 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm">            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">              Selection Rules            </h3>            <div className="space-y-3">              <label className="block text-sm font-medium text-gray-700">                Customer must select:              </label>              <RadioGroup                name="selectionType"                value={formData.selectionType}                onChange={(val) => setFormData({ ...formData, selectionType: val })}                options={[{ value: 'single', label: 'One option only' }, { value: 'multiple', label: 'Multiple options' }]}                orientation="horizontal"              />            </div>            <div>              <Checkbox                checked={formData.required}                onChange={(e) => setFormData({ ...formData, required: e.target.checked })}                label="Is Required (Customer must make a selection)"                size="small"              />            </div>          </div>          <div>            <h3 className="text-lg font-bold mb-3 text-gray-900">              Options List            </h3>            <div className="border border-gray-300 rounded-xl shadow-md overflow-hidden">              <div className="flex items-center gap-3 px-4 py-3 bg-gray-100 text-xs text-gray-600 font-bold uppercase border-b border-gray-200">                <div className="w-6"></div>                <div className="flex-1">Option Name</div>                <div className="w-24 text-right">Price ($)</div>              </div>              <div className="divide-y divide-gray-100">                {(options || []).map((opt, idx) => {                  const isOptionNameInvalid = !String(opt.name || "").trim();                  return (                    <div                      key={opt.id || idx}                      className={`flex gap-3 items-center px-4 py-3 transition-colors ${                        draggingIndex === idx                          ? "opacity-50 bg-red-50/50 shadow-inner"                          : "hover:bg-gray-50"                      }`}                      draggable                      onDragStart={() => setDraggingIndex(idx)}                      onDragOver={(e) => e.preventDefault()}                      onDrop={(e) => handleDragDrop(e, idx)}                      onDragEnd={() => setDraggingIndex(null)}                    >                      <div className="text-gray-400 cursor-move w-6 flex-shrink-0">                        <MdDragIndicator className="w-5 h-5" />                      </div>                      <div className="flex-1">                        <Input                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm font-medium                          ${                            isOptionNameInvalid                              ? "border-red-500 focus:ring-red-100"                              : "border-gray-300 focus:ring-red-100 focus:border-red-500"                          }`}                          placeholder="Option name (e.g., Extra Cheese)"                          value={opt.name || ""}                          onChange={(e) => {                            const next = [...options];                            next[idx] = { ...next[idx], name: e.target.value };                            setOptions(next);                          }}                        />                      </div>                      <div className="w-24 relative">                        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 text-sm">                          $                        </span>                        <Input                          className="w-full pl-5 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 text-sm font-medium"                          placeholder="0.00"                          type="number"                          step="0.01"                          value={opt.price === undefined ? "" : opt.price}                          onChange={(e) => {                            const next = [...options];                            next[idx] = {                              ...next[idx],                              price: parseFloat(e.target.value),                            };                            setOptions(next);                          }}                        />                      </div>                      <div className="w-10 flex justify-end">                        <Button                          variant="ghost"                          size="small"                          className="text-red-600 hover:bg-red-100 p-2 rounded-full"                          onClick={(e) => {                            e.stopPropagation();                            setOptions(options.filter((_, i) => i !== idx));                          }}                          aria-label="Remove option"                        >                          <MdOutlineDelete className="w-6 h-6" />                        </Button>                      </div>                    </div>                    );                })}                  </div>                <div className="p-4 border-t border-gray-200">                  <Button                    variant="primary"                    onClick={() =>                      setOptions([                        ...options,                        {                          id: `tmp_${Date.now()}`,                          name: "",                          price: 0,                          index: options.length,                          available: true,                        },                      ])                    }                    aria-label="Add option"                  >                    <MdAdd className="w-5 h-5" />                    <span>Add Option</span>                  </Button>                </div>            </div>          </div>        </div>      </div>    </div>  );}

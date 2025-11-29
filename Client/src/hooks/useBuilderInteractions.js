@@ -1,227 +1,1 @@
-import { useEffect } from "react";
-import { fetchRestaurantForShop } from '@/api/restaurants';
-import { useShop } from '@/context/ShopContext';
-
-export const useBuilderData = (restaurantId) => {
-  const {
-    setRestaurant,
-    setCategories,
-    setItems,
-    setModifiers,
-  } = useShop();
-
-  useEffect(() => {
-    async function loadRestaurantData() {
-      if (!restaurantId) return;
-
-      try {
-        const data = await fetchRestaurantForShop(restaurantId);
-        if (data) {
-          setRestaurant(data);
-          setCategories(data.categories || []);
-          setItems(data.items || {});
-          setModifiers(data.modifiers || {});
-        }
-      } catch (error) {
-        console.error("Error loading restaurant data for preview:", error);
-      }
-    }
-
-    loadRestaurantData();
-  }, [restaurantId, setRestaurant, setCategories, setItems, setModifiers]);
-};
-
-export const useCanvasInteractions = (
-  canvasRef,
-  activeControl,
-  selectedSection,
-  selectedBlockId,
-  setActiveControl,
-  setSelectedSection,
-  setSelectedBlockId
-) => {
-  useEffect(() => {
-    if (!canvasRef || !canvasRef.current) return;
-    const container = canvasRef.current;
-    container
-      .querySelectorAll(".cc-highlight")
-      .forEach((el) => el.classList.remove("cc-highlight"));
-
-    if (!activeControl || !activeControl.controlId) return;
-
-    const controlId = activeControl.controlId;
-    const blockIdAttr = activeControl.blockId;
-    const selector = `[data-control="${controlId}"][data-block-id="${blockIdAttr}"]`;
-    const el = container.querySelector(selector);
-
-    if (el) {
-      el.classList.add("cc-highlight");
-      el.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
-    }
-
-    return () =>
-      container
-        .querySelectorAll(".cc-highlight")
-        .forEach((el) => el.classList.remove("cc-highlight"));
-  }, [activeControl, canvasRef, selectedSection, selectedBlockId]);
-
-  
-  useEffect(() => {
-    if (!canvasRef || !canvasRef.current) return;
-    const container = canvasRef.current;
-
-    const onCanvasClick = (e) => {
-      if (e.target.closest('button[data-action="add-block"]')) {
-        return;
-      }
-
-      const controlEl = e.target.closest && e.target.closest("[data-control]");
-      const blockEl = e.target.closest && e.target.closest("[data-block-id]");
-
-      const blockId = blockEl ? blockEl.getAttribute("data-block-id") : null;
-
-      if (!blockEl && !controlEl) {
-        setActiveControl(null);
-        setSelectedBlockId(null);
-        setSelectedSection(null);
-        return;
-      }
-
-      if (controlEl) {
-        const controlId = controlEl.getAttribute("data-control");
-        let parentId = null;
-        if (
-          controlId === "nav-container" ||
-          controlId.startsWith("nav-") ||
-          controlId.startsWith("category-")
-        ) {
-          parentId = "nav-container";
-        } else if (controlId.startsWith("button-")) {
-          parentId = controlId;
-        } else if (
-          controlId === "actions-container"
-        ) {
-          parentId = "actions-container";
-        } else if (
-          controlId.startsWith("footer-link-") &&
-          controlId !== "footer-links"
-        ) {
-          parentId = "footer-links";
-        } else if (controlId.startsWith("footer-contact")) {
-          parentId = "footer-contact";
-        } else if (controlId.startsWith("footer-social")) {
-          parentId = "footer-social";
-        } else if (controlId.startsWith("card-button")) {
-          parentId = controlId;
-        } else if (
-          controlId === "card-template" ||
-          controlId.startsWith("card-")
-        ) {
-          parentId = "card-template";
-        } else {
-          parentId = controlId;
-        }
-
-        if (blockId) {
-          if (blockId === "HEADER") {
-            setSelectedSection("header");
-            setSelectedBlockId(null);
-          } else if (blockId === "FOOTER") {
-            setSelectedSection("footer");
-            setSelectedBlockId(null);
-          } else {
-            setSelectedSection("block");
-            setSelectedBlockId(blockId);
-          }
-        }
-        if (parentId) {
-          setActiveControl({ blockId, controlId: parentId });
-        }
-
-        if (controlEl.tagName !== 'BUTTON') {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        return;
-      }
-
-      if (blockEl) {
-        setActiveControl(null);
-        if (blockId === "HEADER") {
-          setSelectedSection("header");
-          setSelectedBlockId(null);
-        } else if (blockId === "FOOTER") {
-          setSelectedSection("footer");
-          setSelectedBlockId(null);
-        } else {
-          setSelectedSection("block");
-          setSelectedBlockId(blockId);
-        }
-        return;
-      }
-    };
-
-    const onCanvasFocus = (e) => {
-      const controlEl = e.target.closest && e.target.closest("[data-control]");
-      const blockEl = e.target.closest && e.target.closest("[data-block-id]");
-      const blockId = blockEl ? blockEl.getAttribute("data-block-id") : null;
-
-      if (controlEl) {
-        const controlId = controlEl.getAttribute("data-control");
-        setActiveControl({ blockId, controlId });
-        if (blockId === "HEADER") {
-          setSelectedSection("header");
-          setSelectedBlockId(null);
-        } else if (blockId === "FOOTER") {
-          setSelectedSection("footer");
-          setSelectedBlockId(null);
-        } else if (blockId) {
-          setSelectedSection("block");
-          setSelectedBlockId(blockId);
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
-      if (blockEl) {
-        setActiveControl(null);
-        if (blockId === "HEADER") {
-          setSelectedSection("header");
-          setSelectedBlockId(null);
-        } else if (blockId === "FOOTER") {
-          setSelectedSection("footer");
-          setSelectedBlockId(null);
-        } else if (blockId) {
-          setSelectedSection("block");
-          setSelectedBlockId(blockId);
-        }
-        return;
-      }
-
-      setActiveControl(null);
-      setSelectedBlockId(null);
-      setSelectedSection(null);
-    };
-
-    container.addEventListener("click", onCanvasClick, true);
-    container.addEventListener("focusin", onCanvasFocus, true);
-
-    return () => {
-      container.removeEventListener("click", onCanvasClick, true);
-      container.removeEventListener("focusin", onCanvasFocus, true);
-    };
-  }, [
-    canvasRef,
-    setActiveControl,
-    setSelectedSection,
-    setSelectedBlockId,
-    activeControl,
-    selectedBlockId,
-    selectedSection,
-  ]);
-};
+import { useEffect } from "react";import { fetchRestaurantForShop } from '@/api/restaurants';import { useShop } from '@/context/ShopContext';export const useBuilderData = (restaurantId) => {  const {    setRestaurant,    setCategories,    setItems,    setModifiers,  } = useShop();  useEffect(() => {    async function loadRestaurantData() {      if (!restaurantId) return;      try {        const data = await fetchRestaurantForShop(restaurantId);        if (data) {          setRestaurant(data);          setCategories(data.categories || []);          setItems(data.items || {});          setModifiers(data.modifiers || {});        }      } catch (error) {        console.error("Error loading restaurant data for preview:", error);      }    }    loadRestaurantData();  }, [restaurantId, setRestaurant, setCategories, setItems, setModifiers]);};export const useCanvasInteractions = (  canvasRef,  activeControl,  selectedSection,  selectedBlockId,  setActiveControl,  setSelectedSection,  setSelectedBlockId) => {  useEffect(() => {    if (!canvasRef || !canvasRef.current) return;    const container = canvasRef.current;    container      .querySelectorAll(".cc-highlight")      .forEach((el) => el.classList.remove("cc-highlight"));    if (!activeControl || !activeControl.controlId) return;    const controlId = activeControl.controlId;    const blockIdAttr = activeControl.blockId;    const selector = `[data-control="${controlId}"][data-block-id="${blockIdAttr}"]`;    const el = container.querySelector(selector);    if (el) {      el.classList.add("cc-highlight");      el.scrollIntoView({        behavior: "smooth",        block: "nearest",        inline: "nearest",      });    }    return () =>      container        .querySelectorAll(".cc-highlight")        .forEach((el) => el.classList.remove("cc-highlight"));  }, [activeControl, canvasRef, selectedSection, selectedBlockId]);  useEffect(() => {    if (!canvasRef || !canvasRef.current) return;    const container = canvasRef.current;    const onCanvasClick = (e) => {      if (e.target.closest('button[data-action="add-block"]')) {        return;      }      const controlEl = e.target.closest && e.target.closest("[data-control]");      const blockEl = e.target.closest && e.target.closest("[data-block-id]");      const blockId = blockEl ? blockEl.getAttribute("data-block-id") : null;      if (!blockEl && !controlEl) {        setActiveControl(null);        setSelectedBlockId(null);        setSelectedSection(null);        return;      }      if (controlEl) {        const controlId = controlEl.getAttribute("data-control");        let parentId = null;        if (          controlId === "nav-container" ||          controlId.startsWith("nav-") ||          controlId.startsWith("category-")        ) {          parentId = "nav-container";        } else if (controlId.startsWith("button-")) {          parentId = controlId;        } else if (          controlId === "actions-container"        ) {          parentId = "actions-container";        } else if (          controlId.startsWith("footer-link-") &&          controlId !== "footer-links"        ) {          parentId = "footer-links";        } else if (controlId.startsWith("footer-contact")) {          parentId = "footer-contact";        } else if (controlId.startsWith("footer-social")) {          parentId = "footer-social";        } else if (controlId.startsWith("card-button")) {          parentId = controlId;        } else if (          controlId === "card-template" ||          controlId.startsWith("card-")        ) {          parentId = "card-template";        } else {          parentId = controlId;        }        if (blockId) {          if (blockId === "HEADER") {            setSelectedSection("header");            setSelectedBlockId(null);          } else if (blockId === "FOOTER") {            setSelectedSection("footer");            setSelectedBlockId(null);          } else {            setSelectedSection("block");            setSelectedBlockId(blockId);          }        }        if (parentId) {          setActiveControl({ blockId, controlId: parentId });        }        if (controlEl.tagName !== 'BUTTON') {          e.preventDefault();          e.stopPropagation();        }        return;      }      if (blockEl) {        setActiveControl(null);        if (blockId === "HEADER") {          setSelectedSection("header");          setSelectedBlockId(null);        } else if (blockId === "FOOTER") {          setSelectedSection("footer");          setSelectedBlockId(null);        } else {          setSelectedSection("block");          setSelectedBlockId(blockId);        }        return;      }    };    const onCanvasFocus = (e) => {      const controlEl = e.target.closest && e.target.closest("[data-control]");      const blockEl = e.target.closest && e.target.closest("[data-block-id]");      const blockId = blockEl ? blockEl.getAttribute("data-block-id") : null;      if (controlEl) {        const controlId = controlEl.getAttribute("data-control");        setActiveControl({ blockId, controlId });        if (blockId === "HEADER") {          setSelectedSection("header");          setSelectedBlockId(null);        } else if (blockId === "FOOTER") {          setSelectedSection("footer");          setSelectedBlockId(null);        } else if (blockId) {          setSelectedSection("block");          setSelectedBlockId(blockId);        }        e.preventDefault();        e.stopPropagation();        return;      }      if (blockEl) {        setActiveControl(null);        if (blockId === "HEADER") {          setSelectedSection("header");          setSelectedBlockId(null);        } else if (blockId === "FOOTER") {          setSelectedSection("footer");          setSelectedBlockId(null);        } else if (blockId) {          setSelectedSection("block");          setSelectedBlockId(blockId);        }        return;      }      setActiveControl(null);      setSelectedBlockId(null);      setSelectedSection(null);    };    container.addEventListener("click", onCanvasClick, true);    container.addEventListener("focusin", onCanvasFocus, true);    return () => {      container.removeEventListener("click", onCanvasClick, true);      container.removeEventListener("focusin", onCanvasFocus, true);    };  }, [    canvasRef,    setActiveControl,    setSelectedSection,    setSelectedBlockId,    activeControl,    selectedBlockId,    selectedSection,  ]);};

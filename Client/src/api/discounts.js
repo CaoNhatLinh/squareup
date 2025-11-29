@@ -1,5 +1,4 @@
 import * as client from '@/api/apiClient';
-
 export const fetchActiveDiscounts = async (restaurantId) => {
   try {
     const url = `/restaurants/${restaurantId}/discounts/active`;
@@ -10,7 +9,6 @@ export const fetchActiveDiscounts = async (restaurantId) => {
     throw error;
   }
 };
-
 export const fetchDiscounts = async (restaurantId, params = {}) => {
   try {
     const query = new URLSearchParams();
@@ -25,7 +23,6 @@ export const fetchDiscounts = async (restaurantId, params = {}) => {
     throw error;
   }
 };
-
 export const fetchDiscount = async (restaurantId, discountId) => {
   try {
     const response = await client.get(`/restaurants/${restaurantId}/discounts/${discountId}`);
@@ -35,7 +32,6 @@ export const fetchDiscount = async (restaurantId, discountId) => {
     throw error;
   }
 };
-
 export const createDiscount = async (restaurantId, discountData) => {
   try {
     const response = await client.post(`/restaurants/${restaurantId}/discounts`, discountData);
@@ -45,7 +41,6 @@ export const createDiscount = async (restaurantId, discountData) => {
     throw error;
   }
 };
-
 export const updateDiscount = async (restaurantId, discountId, discountData) => {
   try {
     const response = await client.put(`/restaurants/${restaurantId}/discounts/${discountId}`, discountData);
@@ -55,7 +50,6 @@ export const updateDiscount = async (restaurantId, discountId, discountData) => 
     throw error;
   }
 };
-
 export const deleteDiscount = async (restaurantId, discountId) => {
   try {
     const response = await client.del(`/restaurants/${restaurantId}/discounts/${discountId}`);
@@ -65,7 +59,6 @@ export const deleteDiscount = async (restaurantId, discountId) => {
     throw error;
   }
 };
-
 export const fetchAllDiscounts = async (restaurantId) => {
   return fetchDiscounts(restaurantId, { limit: 0 });
 };

@@ -1,377 +1,1 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from '@/constants/paymentConstants';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { setupStripeElements, processStripePayment, createStripePaymentLink, generateQRCode } from '@/utils/stripeUtils';
-import { Button, Checkbox } from '@/components/ui';
-import useAppStore from '@/store/useAppStore';
-import Dropdown from '@/components/ui/Dropdown';
-import Input from '@/components/ui/Input';
-import BillSplitModal from '@/pages/pos/components/BillSplitModal';
-import SplitCardModal from '@/pages/pos/components/SplitCardModal';
-
-const StripeCardSection = memo(function StripeCardSection({ cardRef, visible = true, onError, onComplete, options }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  useEffect(() => {
-    if (!stripe || !elements) return;
-    cardRef.current = {
-      stripe,
-      elements,
-      createPaymentMethod: async () => {
-        const cardEl = elements.getElement(CardElement);
-        if (!cardEl) throw new Error('Card element not found');
-        const { paymentMethod, error } = await stripe.createPaymentMethod({ type: 'card', card: cardEl });
-        if (error) throw error;
-        return paymentMethod;
-      },
-    };
-    return () => { if (cardRef) cardRef.current = null; };
-  }, [stripe, elements, cardRef]);
-  return (
-    <div style={visible ? {} : { visibility: 'hidden', height: 48 }}>
-      <CardElement options={options} onChange={(e) => { if (e?.error && onError) onError(e.error.message); if (onComplete) onComplete(!!e.complete); }} />
-    </div>
-  );
-});
-
-export default function PaymentModal({
-  open = false,
-  onOpenChange = () => {},
-  total = 0,
-  cart = [],
-  restaurantId = '',
-  customerName = 'Guest',
-  customerInfo = null,
-  orderNotes = '',
-  onClose = () => {},
-  onComplete = null,
-  onCompletePayment = null,
-  isProcessing: propIsProcessing = false,
-  initialSplitPayments = null,
-  printOnCheckout = true,
-  setPrintOnCheckout = () => {},
-  hideOrderTypeSelection = false,
-}) {
-  const storeRestaurantId = useAppStore(s => s.restaurantId);
-  const finalRestaurantId = restaurantId || storeRestaurantId;
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.CASH);
-  const [orderType, setOrderType] = useState('dine_in');
-  const [seatNumber, setSeatNumber] = useState('');
-  const [deliveryAddr, setDeliveryAddr] = useState({ line1: '', city: '', postalCode: '', instructions: '' });
-  const [isSplit, setIsSplit] = useState(false);
-  const [splitPayments, setSplitPayments] = useState([{ id: `split_1`, method: PAYMENT_METHODS.CASH, amount: Number(total || 0), person: 'Split 1', status: 'pending', paymentDetails: null }]);
-  const [receivedAmount, setReceivedAmount] = useState('');
-  const [bankTransferInfo, setBankTransferInfo] = useState({ bankName: '', accountNumber: '' });
-  const [markBankTransferPaid, setMarkBankTransferPaid] = useState(false);
-  const [cardError, setCardError] = useState(null);
-  const [isCardComplete, setIsCardComplete] = useState(false);
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
-  const [qrImage, setQrImage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const processing = propIsProcessing || isProcessing;
-  const cardRef = useRef(null);
-  const cardElementOptions = useMemo(() => ({ style: { base: { fontSize: '16px', color: '#424770', '::placeholder': { color: '#aab7c4' } }, invalid: { color: '#9e2146' } } }), []);
-  const { stripePromise, elementsOptions } = useMemo(() => setupStripeElements(), []);
-  const change = receivedAmount ? (parseFloat(receivedAmount) - Number(total || 0)) : 0;
-
-  const [isBillSplitOpen, setIsBillSplitOpen] = useState(false);
-  const [activeSplitIndex, setActiveSplitIndex] = useState(null);
-  const [splitCardModalIndex, setSplitCardModalIndex] = useState(null);
-  const splitModalResolveRef = useRef(null);
-
-  const handleSplitModalPaid = (result) => {
-    setSplitCardModalIndex(null);
-    if (splitModalResolveRef.current) {
-      splitModalResolveRef.current(result);
-      splitModalResolveRef.current = null;
-    }
-  };
-
-  const handleSplitModalCancel = () => {
-    setSplitCardModalIndex(null);
-    if (splitModalResolveRef.current) {
-      splitModalResolveRef.current({ success: false, error: 'cancelled' });
-      splitModalResolveRef.current = null;
-    }
-  };
-
-  useEffect(() => { if (paymentMethod !== PAYMENT_METHODS.STRIPE) { setIsCardComplete(false); setCardError(null); } }, [paymentMethod]);
-  useEffect(() => {
-    if (hideOrderTypeSelection) setOrderType('dine_in');
-  }, [hideOrderTypeSelection]);
-  useEffect(() => {
-    if (initialSplitPayments && Array.isArray(initialSplitPayments) && initialSplitPayments.length > 0) {
-      setSplitPayments(initialSplitPayments);
-      setIsSplit(true);
-    }
-  }, [initialSplitPayments]);
-
-  const handleGenerateQR = async () => {
-    setIsGeneratingQR(true);
-    try {
-      const payload = { restaurantId: finalRestaurantId, customerName, items: cart.map((c) => ({ name: c.name, quantity: c.quantity, unitPrice: Number(c.price || 0) })), total };
-      const { url } = await createStripePaymentLink(payload);
-      const img = generateQRCode(url);
-      setQrImage(img);
-    } catch (err) { console.error('QR create failed', err); alert('Failed to create payment link'); } finally { setIsGeneratingQR(false); }
-  };
-
-  const handleComplete = async () => {
-    if (paymentMethod === PAYMENT_METHODS.CASH && (!receivedAmount || Number(receivedAmount) < Number(total || 0))) return;
-    setIsProcessing(true);
-    try {
-      
-      const completeFn = onComplete || onCompletePayment;
-      
-      const orderMeta = { orderType, seatNumber, deliveryAddress: deliveryAddr };
-
-      if (isSplit) {
-        const ok = await payAllSplits();
-        if (!ok) { setIsProcessing(false); alert('Not all split payments completed - order not finalized.'); return; }
-        if (completeFn) await completeFn(PAYMENT_METHODS.SPLIT, splitPayments, null, orderMeta);
-        onOpenChange(false);
-        onClose();
-        return;
-      }
-
-      if (paymentMethod === PAYMENT_METHODS.STRIPE) {
-        if (!cardRef.current) { alert('Card not ready'); setIsProcessing(false); return; }
-        const pm = await cardRef.current.createPaymentMethod();
-        const res = await processStripePayment(pm.id, Number(total || 0));
-        if (res.success) {
-          if (completeFn) await completeFn(PAYMENT_METHODS.STRIPE, null, { paymentMethodId: pm.id, paymentIntentId: res.paymentIntentId, success: true }, orderMeta);
-          onOpenChange(false);
-          onClose();
-          return;
-        }
-        if (res.requiresAction && res.clientSecret) {
-          const stripeClient = cardRef.current && cardRef.current.stripe;
-          const confirm = await stripeClient.confirmCardPayment(res.clientSecret, { payment_method: pm.id });
-          if (confirm.error) throw confirm.error;
-          if (completeFn) await completeFn(PAYMENT_METHODS.STRIPE, null, { paymentMethodId: pm.id, paymentIntentId: confirm.paymentIntent.id, success: true }, orderMeta);
-          onOpenChange(false);
-          onClose();
-          return;
-        }
-        throw new Error(res.message || 'Payment failed');
-      }
-
-      if (paymentMethod === PAYMENT_METHODS.BANK_TRANSFER) {
-        if (completeFn) await completeFn(PAYMENT_METHODS.BANK_TRANSFER, null, { bankTransferInfo, qrImage, paid: !!markBankTransferPaid }, orderMeta);
-        onOpenChange(false);
-        onClose();
-        return;
-      }
-
-      
-      if (completeFn) await completeFn(PAYMENT_METHODS.CASH, null, { amount: receivedAmount ? Number(receivedAmount) : total, success: true }, orderMeta);
-      onOpenChange(false);
-      onClose();
-    } catch (err) {
-      console.error('Payment failed', err);
-      alert('Payment failed: ' + (err?.message || 'Unknown'));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const setSplitMethod = (index, method) => {
-    setSplitPayments((prev) => prev.map((s, i) => i === index ? ({ ...s, method }) : s));
-    if (method === PAYMENT_METHODS.STRIPE) setPaymentMethod(PAYMENT_METHODS.STRIPE);
-  };
-
-  const updateSplit = (index, patch) => {
-    setSplitPayments(prev => prev.map((s, i) => i === index ? ({ ...s, ...patch }) : s));
-  };
-
-  const paySplit = async (index) => {
-    const split = splitPayments[index];
-    if (!split) return;
-    if (split.status === 'paid') return;
-    setActiveSplitIndex(index);
-    try {
-      if (split.method === PAYMENT_METHODS.CASH) {
-        updateSplit(index, { status: 'paid', paymentDetails: { received: split.amount, method: PAYMENT_METHODS.CASH } });
-        return true;
-      }
-      if (split.method === PAYMENT_METHODS.BANK_TRANSFER) {
-        const payload = { restaurantId: finalRestaurantId, customerName, items: cart.map((c) => ({ name: c.name, quantity: c.quantity, unitPrice: Number(c.price || 0) })), total: split.amount };
-        const { url } = await createStripePaymentLink(payload);
-        updateSplit(index, { status: 'pending', paymentDetails: { method: PAYMENT_METHODS.BANK_TRANSFER, qr: url } });
-        return true;
-      }
-      if (split.method === PAYMENT_METHODS.STRIPE) {
-        const ok = await new Promise((resolve) => { splitModalResolveRef.current = resolve; setSplitCardModalIndex(index); });
-        if (ok && ok.success) {
-          updateSplit(index, { status: 'paid', paymentDetails: { method: PAYMENT_METHODS.STRIPE, paymentIntentId: ok.paymentIntentId } });
-          return true;
-        }
-        if (ok && ok.error) throw new Error(ok.error);
-        return false;
-      }
-    } catch (err) {
-      console.error('Split payment failed', err);
-      alert('Split payment failed: ' + (err?.message || 'Unknown'));
-      return false;
-    } finally {
-      setActiveSplitIndex(null);
-    }
-  };
-
-  const payAllSplits = async () => {
-    for (let i = 0; i < splitPayments.length; i++) {
-      const sp = splitPayments[i];
-      if (sp.status !== 'paid') {
-        const ok = await paySplit(i);
-        if (!ok) return false; 
-      }
-    }
-    return true;
-  };
-
-  const quickAmounts = [20, 50, 100, 200];
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Payment</h2>
-            <div className="text-sm text-gray-600 mt-1">
-              {customerInfo?.name || customerName} {orderNotes ? `• ${orderNotes}` : ''}
-            </div>
-          </div>
-            <div className="flex items-center gap-3">
-            <Button onClick={() => setIsBillSplitOpen(true)} variant="ghost" size="small">Split</Button>
-            <Button onClick={() => { onOpenChange(false); onClose(); }} variant="ghost" size="small">✕</Button>
-          </div>
-        </div>
-        <div className="mb-6">Total: <span className="font-semibold">${Number(total || 0).toFixed(2)}</span></div>
-        
-        <div className="mb-2 flex items-center gap-2">
-          <Checkbox checked={!!printOnCheckout} onChange={(e) => setPrintOnCheckout(!!e.target.checked)} label="Print Invoice" size="small" />
-        </div>
-        {!hideOrderTypeSelection && (
-          <div className="mb-4">
-            <Dropdown
-              label="Order Type"
-              value={orderType}
-              onChange={(v) => setOrderType(v)}
-              options={[{ value: 'dine_in', label: 'Dine-in' }, { value: 'delivery', label: 'Delivery' }, { value: 'pickup', label: 'Pickup' }]}
-            />
-          </div>
-        )}
-        {orderType === 'dine_in' && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Seat Number</label>
-            <Input value={seatNumber} onChange={(e) => setSeatNumber(e.target.value)} placeholder="Seat/Chair number" />
-          </div>
-        )}
-        {orderType === 'delivery' && (!hideOrderTypeSelection) && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Delivery Address</label>
-            <Input value={deliveryAddr.line1} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, line1: e.target.value }))} placeholder="Address line 1" className="mb-2" />
-            <div className="grid grid-cols-2 gap-2">
-              <Input value={deliveryAddr.city} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, city: e.target.value }))} placeholder="City" />
-              <Input value={deliveryAddr.postalCode} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, postalCode: e.target.value }))} placeholder="Postal code" />
-            </div>
-            <Input value={deliveryAddr.instructions} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, instructions: e.target.value }))} placeholder="Delivery instructions (optional)" />
-          </div>
-        )}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <Button onClick={() => setPaymentMethod(PAYMENT_METHODS.CASH)} variant={paymentMethod === PAYMENT_METHODS.CASH ? 'default' : 'outline'} className={`p-3 rounded`}>{PAYMENT_METHOD_LABELS[PAYMENT_METHODS.CASH]}</Button>
-          <Button onClick={() => setPaymentMethod(PAYMENT_METHODS.STRIPE)} variant={paymentMethod === PAYMENT_METHODS.STRIPE ? 'default' : 'outline'} className={`p-3 rounded`}>{PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE]}</Button>
-        </div>
-        {!isSplit && paymentMethod === PAYMENT_METHODS.CASH && (
-          <div className="mb-6">
-            <label className="block text-sm text-gray-700 mb-2">Received amount</label>
-            <Input type="number" value={receivedAmount} onChange={(e) => setReceivedAmount(e.target.value)} className="w-full" step="0.01" />
-            <div className="grid grid-cols-4 gap-2 mt-3">{quickAmounts.map(a => <Button key={a} onClick={() => setReceivedAmount(a.toString())} variant="outline" className="px-2 py-2">${a}</Button>)}</div>
-            {receivedAmount && <div className="mt-2 text-sm">Change: <span className={`${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>${Number(change || 0).toFixed(2)}</span></div>}
-          </div>
-        )}
-        <Elements stripe={stripePromise} options={elementsOptions}>
-          <StripeCardSection cardRef={cardRef} visible={paymentMethod === PAYMENT_METHODS.STRIPE} onError={setCardError} onComplete={setIsCardComplete} options={cardElementOptions} />
-        </Elements>
-        {cardError && <div className="text-xs text-red-600 mt-2">{cardError}</div>}
-          {isSplit && (
-          <div className="mb-4 border p-3 rounded bg-gray-50">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium">Split Payments</div>
-                <div className="flex gap-2 items-center">
-                <Button disabled={activeSplitIndex !== null} onClick={() => payAllSplits()} variant="ghost" size="small">Pay All</Button>
-                <Button onClick={() => { setIsSplit(false); setSplitPayments([{ id: `split_${Date.now()}`, method: PAYMENT_METHODS.CASH, amount: Number(total || 0), person: 'Split 1', status: 'pending', paymentDetails: null }]); }} variant="destructive" size="small">Clear split</Button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {splitPayments.map((sp, idx) => (
-                <div key={sp.id || idx} className="flex items-center justify-between text-sm gap-3">
-                  <div className="truncate w-1/3">{(sp.meta && sp.meta.person) || sp.person || `Split ${idx + 1}`}</div>
-                  <div className="font-semibold w-1/4 text-right">${Number(sp.amount || 0).toFixed(2)}</div>
-                  <div className="w-1/4">
-                    <Dropdown
-                      value={sp.method}
-                      onChange={(v) => setSplitMethod(idx, v)}
-                      options={[
-                        { value: PAYMENT_METHODS.CASH, label: PAYMENT_METHOD_LABELS[PAYMENT_METHODS.CASH] },
-                        { value: PAYMENT_METHODS.STRIPE, label: PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE] },
-                        { value: PAYMENT_METHODS.BANK_TRANSFER, label: PAYMENT_METHOD_LABELS[PAYMENT_METHODS.BANK_TRANSFER] },
-                      ]}
-                    />
-                  </div>
-                  <div className="w-1/6 text-right flex items-center gap-2">
-                    {sp.status === 'paid' ? <div className="text-xs text-green-600">Paid</div> : (sp.status === 'pending' ? <div className="text-xs text-orange-600">Pending</div> : <div className="text-xs text-gray-500">{sp.status}</div>)}
-                    <Button disabled={activeSplitIndex === idx} onClick={() => paySplit(idx)} className={`px-2 py-1 rounded text-xs ${sp.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{activeSplitIndex === idx ? 'Processing...' : (sp.status === 'paid' ? 'Paid' : (sp.method === PAYMENT_METHODS.BANK_TRANSFER ? 'Generate QR' : 'Pay'))}</Button>
-                    {sp.paymentDetails && sp.paymentDetails.qr && (<a href={sp.paymentDetails.qr} target="_blank" rel="noreferrer" className="text-xs text-blue-600">Open QR</a>)}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {
-              splitPayments.some(sp => sp.status === 'pending' && sp.paymentDetails?.method === PAYMENT_METHODS.BANK_TRANSFER) && (
-                <div className="mt-2 text-xs text-gray-600">Note: Some splits are awaiting bank transfer (QR). These will be marked as pending in the order.</div>
-              )
-            }
-          </div>
-        )}
-        {!isSplit && paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && (
-          <div className="mb-6">
-            <label className="block text-sm text-gray-700 mb-2">Bank transfer</label>
-            <Input placeholder="Bank name" value={bankTransferInfo.bankName} onChange={(e) => setBankTransferInfo(prev => ({ ...prev, bankName: e.target.value }))} className="mb-2" />
-            <Input placeholder="Account number" value={bankTransferInfo.accountNumber} onChange={(e) => setBankTransferInfo(prev => ({ ...prev, accountNumber: e.target.value }))} className="mb-2" />
-            <Button onClick={handleGenerateQR} disabled={isGeneratingQR} variant="outline" className="w-full">{isGeneratingQR ? 'Generating...' : 'Generate QR'}</Button>
-            {qrImage && <div className="mt-3 text-center"><img src={qrImage} alt="QR" style={{ maxWidth: 200 }} /></div>}
-            <div className="mt-2 flex items-center gap-2 text-sm">
-              <Checkbox checked={markBankTransferPaid} onChange={(e) => setMarkBankTransferPaid(e.target.checked)} label="Mark bank transfer as paid" size="small" />
-            </div>
-          </div>
-        )}
-        <div className="flex gap-3 mt-6"><Button onClick={() => { onOpenChange(false); onClose(); }} disabled={processing} variant="outline" className="flex-1">Cancel</Button><Button onClick={handleComplete} disabled={processing || (paymentMethod === PAYMENT_METHODS.STRIPE && !isCardComplete) || (paymentMethod === PAYMENT_METHODS.CASH && (!receivedAmount || Number(receivedAmount) < Number(total || 0)))} className="flex-1">{processing ? 'Processing...' : 'Complete'}</Button></div>
-      </div>
-      {isBillSplitOpen && (
-          <BillSplitModal
-          cart={cart}
-          total={total}
-          onClose={() => setIsBillSplitOpen(false)}
-          onSplit={(splits) => {
-            setSplitPayments(splits.map((s, i) => ({ id: `split_${Date.now()}_${i}`, method: PAYMENT_METHODS.CASH, amount: Number(s.amount || 0), meta: { person: s.person }, status: 'pending', paymentDetails: null }))); 
-            setIsSplit(true);
-            setIsBillSplitOpen(false);
-          }}
-        />
-      )}
-      {splitCardModalIndex !== null && splitPayments[splitCardModalIndex] && (
-        <SplitCardModal
-          split={splitPayments[splitCardModalIndex]}
-          restaurantId={finalRestaurantId}
-          pendingOrderId={null}
-          onPaid={handleSplitModalPaid}
-          onCancel={handleSplitModalCancel}
-        />
-      )}
-    </div>
-  );
-}
-
+import { memo, useEffect, useMemo, useRef, useState } from "react";import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from '@/constants/paymentConstants';import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';import { setupStripeElements, processStripePayment, createStripePaymentLink, generateQRCode } from '@/utils/stripeUtils';import { Button, Checkbox } from '@/components/ui';import useAppStore from '@/store/useAppStore';import Dropdown from '@/components/ui/Dropdown';import Input from '@/components/ui/Input';import BillSplitModal from '@/pages/pos/components/BillSplitModal';import SplitCardModal from '@/pages/pos/components/SplitCardModal';const StripeCardSection = memo(function StripeCardSection({ cardRef, visible = true, onError, onComplete, options }) {  const stripe = useStripe();  const elements = useElements();  useEffect(() => {    if (!stripe || !elements) return;    cardRef.current = {      stripe,      elements,      createPaymentMethod: async () => {        const cardEl = elements.getElement(CardElement);        if (!cardEl) throw new Error('Card element not found');        const { paymentMethod, error } = await stripe.createPaymentMethod({ type: 'card', card: cardEl });        if (error) throw error;        return paymentMethod;      },    };    return () => { if (cardRef) cardRef.current = null; };  }, [stripe, elements, cardRef]);  return (    <div style={visible ? {} : { visibility: 'hidden', height: 48 }}>      <CardElement options={options} onChange={(e) => { if (e?.error && onError) onError(e.error.message); if (onComplete) onComplete(!!e.complete); }} />    </div>  );});export default function PaymentModal({  open = false,  onOpenChange = () => { },  total = 0,  cart = [],  restaurantId = '',  customerName = 'Guest',  customerInfo = null,  orderNotes = '',  onClose = () => { },  onComplete = null,  onCompletePayment = null,  isProcessing: propIsProcessing = false,  initialSplitPayments = null,  printOnCheckout = true,  setPrintOnCheckout = () => { },  hideOrderTypeSelection = false,}) {  const storeRestaurantId = useAppStore(s => s.restaurantId);  const finalRestaurantId = restaurantId || storeRestaurantId;  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.CASH);  const [orderType, setOrderType] = useState('dine_in');  const [seatNumber, setSeatNumber] = useState('');  const [deliveryAddr, setDeliveryAddr] = useState({ line1: '', city: '', postalCode: '', instructions: '' });  const [isSplit, setIsSplit] = useState(false);  const [splitPayments, setSplitPayments] = useState([{ id: `split_1`, method: PAYMENT_METHODS.CASH, amount: Number(total || 0), person: 'Split 1', status: 'pending', paymentDetails: null }]);  const [receivedAmount, setReceivedAmount] = useState('');  const [bankTransferInfo, setBankTransferInfo] = useState({ bankName: '', accountNumber: '' });  const [markBankTransferPaid, setMarkBankTransferPaid] = useState(false);  const [cardError, setCardError] = useState(null);  const [isCardComplete, setIsCardComplete] = useState(false);  const [isGeneratingQR, setIsGeneratingQR] = useState(false);  const [qrImage, setQrImage] = useState(null);  const [isProcessing, setIsProcessing] = useState(false);  const processing = propIsProcessing || isProcessing;  const cardRef = useRef(null);  const cardElementOptions = useMemo(() => ({ style: { base: { fontSize: '16px', color: '#424770', '::placeholder': { color: '#aab7c4' } }, invalid: { color: '#9e2146' } } }), []);  const { stripePromise, elementsOptions } = useMemo(() => setupStripeElements(), []);  const change = receivedAmount ? (parseFloat(receivedAmount) - Number(total || 0)) : 0;  const [isBillSplitOpen, setIsBillSplitOpen] = useState(false);  const [activeSplitIndex, setActiveSplitIndex] = useState(null);  const [splitCardModalIndex, setSplitCardModalIndex] = useState(null);  const splitModalResolveRef = useRef(null);  const handleSplitModalPaid = (result) => {    setSplitCardModalIndex(null);    if (splitModalResolveRef.current) {      splitModalResolveRef.current(result);      splitModalResolveRef.current = null;    }  };  const handleSplitModalCancel = () => {    setSplitCardModalIndex(null);    if (splitModalResolveRef.current) {      splitModalResolveRef.current({ success: false, error: 'cancelled' });      splitModalResolveRef.current = null;    }  };  useEffect(() => { if (paymentMethod !== PAYMENT_METHODS.STRIPE) { setIsCardComplete(false); setCardError(null); } }, [paymentMethod]);  useEffect(() => {    if (hideOrderTypeSelection) setOrderType('dine_in');  }, [hideOrderTypeSelection]);  useEffect(() => {    if (initialSplitPayments && Array.isArray(initialSplitPayments) && initialSplitPayments.length > 0) {      setSplitPayments(initialSplitPayments);      setIsSplit(true);    }  }, [initialSplitPayments]);  const handleGenerateQR = async () => {    setIsGeneratingQR(true);    try {      const payload = { restaurantId: finalRestaurantId, customerName, items: cart.map((c) => ({ name: c.name, quantity: c.quantity, unitPrice: Number(c.price || 0) })), total };      const { url } = await createStripePaymentLink(payload);      const img = generateQRCode(url);      setQrImage(img);    } catch (err) { console.error('QR create failed', err); alert('Failed to create payment link'); } finally { setIsGeneratingQR(false); }  };  const handleComplete = async () => {    if (paymentMethod === PAYMENT_METHODS.CASH && (!receivedAmount || Number(receivedAmount) < Number(total || 0))) return;    setIsProcessing(true);    try {      const completeFn = onComplete || onCompletePayment;      const orderMeta = { orderType, seatNumber, deliveryAddress: deliveryAddr };      if (isSplit) {        const ok = await payAllSplits();        if (!ok) { setIsProcessing(false); alert('Not all split payments completed - order not finalized.'); return; }        if (completeFn) await completeFn(PAYMENT_METHODS.SPLIT, splitPayments, null, orderMeta);        onOpenChange(false);        onClose();        return;      }      if (paymentMethod === PAYMENT_METHODS.STRIPE) {        if (!cardRef.current) { alert('Card not ready'); setIsProcessing(false); return; }        const pm = await cardRef.current.createPaymentMethod();        const res = await processStripePayment(pm.id, Number(total || 0));        if (res.success) {          if (completeFn) await completeFn(PAYMENT_METHODS.STRIPE, null, { paymentMethodId: pm.id, paymentIntentId: res.paymentIntentId, success: true }, orderMeta);          onOpenChange(false);          onClose();          return;        }        if (res.requiresAction && res.clientSecret) {          const stripeClient = cardRef.current && cardRef.current.stripe;          const confirm = await stripeClient.confirmCardPayment(res.clientSecret, { payment_method: pm.id });          if (confirm.error) throw confirm.error;          if (completeFn) await completeFn(PAYMENT_METHODS.STRIPE, null, { paymentMethodId: pm.id, paymentIntentId: confirm.paymentIntent.id, success: true }, orderMeta);          onOpenChange(false);          onClose();          return;        }        throw new Error(res.message || 'Payment failed');      }      if (paymentMethod === PAYMENT_METHODS.BANK_TRANSFER) {        if (completeFn) await completeFn(PAYMENT_METHODS.BANK_TRANSFER, null, { bankTransferInfo, qrImage, paid: !!markBankTransferPaid }, orderMeta);        onOpenChange(false);        onClose();        return;      }      if (completeFn) await completeFn(PAYMENT_METHODS.CASH, null, { amount: receivedAmount ? Number(receivedAmount) : total, success: true }, orderMeta);      onOpenChange(false);      onClose();    } catch (err) {      console.error('Payment failed', err);      alert('Payment failed: ' + (err?.message || 'Unknown'));    } finally {      setIsProcessing(false);    }  };  const setSplitMethod = (index, method) => {    setSplitPayments((prev) => prev.map((s, i) => i === index ? ({ ...s, method }) : s));    if (method === PAYMENT_METHODS.STRIPE) setPaymentMethod(PAYMENT_METHODS.STRIPE);  };  const updateSplit = (index, patch) => {    setSplitPayments(prev => prev.map((s, i) => i === index ? ({ ...s, ...patch }) : s));  };  const paySplit = async (index) => {    const split = splitPayments[index];    if (!split) return;    if (split.status === 'paid') return;    setActiveSplitIndex(index);    try {      if (split.method === PAYMENT_METHODS.CASH) {        updateSplit(index, { status: 'paid', paymentDetails: { received: split.amount, method: PAYMENT_METHODS.CASH } });        return true;      }      if (split.method === PAYMENT_METHODS.BANK_TRANSFER) {        const payload = { restaurantId: finalRestaurantId, customerName, items: cart.map((c) => ({ name: c.name, quantity: c.quantity, unitPrice: Number(c.price || 0) })), total: split.amount };        const { url } = await createStripePaymentLink(payload);        updateSplit(index, { status: 'pending', paymentDetails: { method: PAYMENT_METHODS.BANK_TRANSFER, qr: url } });        return true;      }      if (split.method === PAYMENT_METHODS.STRIPE) {        const ok = await new Promise((resolve) => { splitModalResolveRef.current = resolve; setSplitCardModalIndex(index); });        if (ok && ok.success) {          updateSplit(index, { status: 'paid', paymentDetails: { method: PAYMENT_METHODS.STRIPE, paymentIntentId: ok.paymentIntentId } });          return true;        }        if (ok && ok.error) throw new Error(ok.error);        return false;      }    } catch (err) {      console.error('Split payment failed', err);      alert('Split payment failed: ' + (err?.message || 'Unknown'));      return false;    } finally {      setActiveSplitIndex(null);    }  };  const payAllSplits = async () => {    for (let i = 0; i < splitPayments.length; i++) {      const sp = splitPayments[i];      if (sp.status !== 'paid') {        const ok = await paySplit(i);        if (!ok) return false;      }    }    return true;  };  const quickAmounts = [20, 50, 100, 200];  if (!open) return null;  return (    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">      <div className="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">        <div className="flex items-center justify-between mb-6">          <div>            <h2 className="text-2xl font-bold text-gray-900">Payment</h2>            <div className="text-sm text-gray-600 mt-1">              {customerInfo?.name || customerName} {orderNotes ? `• ${orderNotes}` : ''}            </div>          </div>          <div className="flex items-center gap-3">            <Button onClick={() => setIsBillSplitOpen(true)} variant="ghost" size="small">Split</Button>            <Button onClick={() => { onOpenChange(false); onClose(); }} variant="ghost" size="small">✕</Button>          </div>        </div>        <div className="mb-6">Total: <span className="font-semibold">${Number(total || 0).toFixed(2)}</span></div>        <div className="mb-2 flex items-center gap-2">          <Checkbox checked={!!printOnCheckout} onChange={(e) => setPrintOnCheckout(!!e.target.checked)} label="Print Invoice" size="small" />        </div>        {!hideOrderTypeSelection && (          <div className="mb-4">            <Dropdown              label="Order Type"              value={orderType}              onChange={(v) => setOrderType(v)}              options={[{ value: 'dine_in', label: 'Dine-in' }, { value: 'delivery', label: 'Delivery' }, { value: 'pickup', label: 'Pickup' }]}            />          </div>        )}        {orderType === 'dine_in' && (          <div className="mb-4">            <label className="block text-sm font-medium mb-1">Seat Number</label>            <Input value={seatNumber} onChange={(e) => setSeatNumber(e.target.value)} placeholder="Seat/Chair number" />          </div>        )}        {orderType === 'delivery' && (!hideOrderTypeSelection) && (          <div className="mb-4">            <label className="block text-sm font-medium mb-1">Delivery Address</label>            <Input value={deliveryAddr.line1} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, line1: e.target.value }))} placeholder="Address line 1" className="mb-2" />            <div className="grid grid-cols-2 gap-2">              <Input value={deliveryAddr.city} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, city: e.target.value }))} placeholder="City" />              <Input value={deliveryAddr.postalCode} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, postalCode: e.target.value }))} placeholder="Postal code" />            </div>            <Input value={deliveryAddr.instructions} onChange={(e) => setDeliveryAddr(prev => ({ ...prev, instructions: e.target.value }))} placeholder="Delivery instructions (optional)" />          </div>        )}        <div className="grid grid-cols-2 gap-3 mb-4">          <Button onClick={() => setPaymentMethod(PAYMENT_METHODS.CASH)} variant={paymentMethod === PAYMENT_METHODS.CASH ? 'default' : 'outline'} className={`p-3 rounded`}>{PAYMENT_METHOD_LABELS[PAYMENT_METHODS.CASH]}</Button>          <Button onClick={() => setPaymentMethod(PAYMENT_METHODS.STRIPE)} variant={paymentMethod === PAYMENT_METHODS.STRIPE ? 'default' : 'outline'} className={`p-3 rounded`}>{PAYMENT_METHOD_LABELS[PAYMENT_METHODS.STRIPE]}</Button>        </div>        {!isSplit && paymentMethod === PAYMENT_METHODS.CASH && (          <div className="mb-6">            <label className="block text-sm text-gray-700 mb-2">Received amount</label>            <Input type="number" value={receivedAmount} onChange={(e) => setReceivedAmount(e.target.value)} className="w-full" step="0.01" />            <div className="grid grid-cols-4 gap-2 mt-3">{quickAmounts.map(a => <Button key={a} onClick={() => setReceivedAmount(a.toString())} variant="outline" className="px-2 py-2">${a}</Button>)}</div>            {receivedAmount && <div className="mt-2 text-sm">Change: <span className={`${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>${Number(change || 0).toFixed(2)}</span></div>}          </div>        )}        <Elements stripe={stripePromise} options={elementsOptions}>          <StripeCardSection cardRef={cardRef} visible={paymentMethod === PAYMENT_METHODS.STRIPE} onError={setCardError} onComplete={setIsCardComplete} options={cardElementOptions} />        </Elements>        {cardError && <div className="text-xs text-red-600 mt-2">{cardError}</div>}        {isSplit && (          <div className="mb-4 border border-gray-200 p-4 rounded-xl bg-gray-50/50">            <div className="flex items-center justify-between mb-4">              <div className="text-sm font-semibold text-gray-900">Split Payments</div>              <div className="flex gap-2 items-center">                <Button                  disabled={activeSplitIndex !== null}                  onClick={() => payAllSplits()}                  variant="ghost"                  size="small"                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"                >                  Pay All                </Button>                <Button                  onClick={() => {                    setIsSplit(false);                    setSplitPayments([{ id: `split_${Date.now()}`, method: PAYMENT_METHODS.CASH, amount: Number(total || 0), person: 'Split 1', status: 'pending', paymentDetails: null }]);                  }}                  variant="outline"                  size="small"                  className="text-gray-600 border-gray-300 hover:bg-gray-100"                >                  Clear split                </Button>              </div>            </div>            <div className="space-y-3">              {splitPayments.map((sp, idx) => (                <div key={sp.id || idx} className="flex items-center gap-3 text-sm bg-white p-3 rounded-lg border border-gray-100 shadow-sm">                  <div className="font-medium text-gray-900 truncate flex-1">                    {(sp.meta && sp.meta.person) || sp.person || `Split ${idx + 1}`}                  </div>                  <div className="font-bold text-gray-900 w-24 text-right">                    ${Number(sp.amount || 0).toFixed(2)}                  </div>                  <div className="w-32">                    <Dropdown                      value={sp.method}                      onChange={(v) => setSplitMethod(idx, v)}                      options={[                        { value: PAYMENT_METHODS.CASH, label: 'Cash' },                        { value: PAYMENT_METHODS.STRIPE, label: 'Card' },                        { value: PAYMENT_METHODS.BANK_TRANSFER, label: 'Transfer' },                      ]}                      className="text-xs"                    />                  </div>                  <div className="w-24 flex justify-end items-center gap-2">                    {sp.status === 'paid' ? (                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">                        Paid                      </span>                    ) : (                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">                        Pending                      </span>                    )}                  </div>                  <div className="w-20 flex justify-end">                    {sp.status !== 'paid' && (                      <Button                        disabled={activeSplitIndex === idx || sp.amount <= 0}                        onClick={() => paySplit(idx)}                        size="small"                        className={`w-full ${sp.method === PAYMENT_METHODS.BANK_TRANSFER                            ? 'bg-blue-600 hover:bg-blue-700 text-white'                            : 'bg-red-600 hover:bg-red-700 text-white'                          }`}                      >                        {activeSplitIndex === idx                          ? '...'                          : (sp.method === PAYMENT_METHODS.BANK_TRANSFER ? 'QR' : 'Pay')}                      </Button>                    )}                    {sp.paymentDetails && sp.paymentDetails.qr && (                      <a href={sp.paymentDetails.qr} target="_blank" rel="noreferrer" className="text-xs text-blue-600 ml-2">                        Open QR                      </a>                    )}                  </div>                </div>              ))}            </div>            {splitPayments.some(sp => sp.status === 'pending' && sp.paymentDetails?.method === PAYMENT_METHODS.BANK_TRANSFER) && (              <div className="mt-2 text-xs text-gray-600">                Note: Some splits are awaiting bank transfer (QR). These will be marked as pending in the order.              </div>            )}          </div>        )}        {!isSplit && paymentMethod === PAYMENT_METHODS.BANK_TRANSFER && (          <div className="mb-6">            <label className="block text-sm text-gray-700 mb-2">Bank transfer</label>            <Input placeholder="Bank name" value={bankTransferInfo.bankName} onChange={(e) => setBankTransferInfo(prev => ({ ...prev, bankName: e.target.value }))} className="mb-2" />            <Input placeholder="Account number" value={bankTransferInfo.accountNumber} onChange={(e) => setBankTransferInfo(prev => ({ ...prev, accountNumber: e.target.value }))} className="mb-2" />            <Button onClick={handleGenerateQR} disabled={isGeneratingQR} variant="outline" className="w-full">{isGeneratingQR ? 'Generating...' : 'Generate QR'}</Button>            {qrImage && <div className="mt-3 text-center"><img src={qrImage} alt="QR" style={{ maxWidth: 200 }} /></div>}            <div className="mt-2 flex items-center gap-2 text-sm">              <Checkbox checked={markBankTransferPaid} onChange={(e) => setMarkBankTransferPaid(e.target.checked)} label="Mark bank transfer as paid" size="small" />            </div>          </div>        )}        <div className="flex gap-3 mt-6">          <Button onClick={() => { onOpenChange(false); onClose(); }} disabled={processing} variant="outline" className="flex-1">Cancel</Button>          <Button onClick={handleComplete} disabled={processing || (paymentMethod === PAYMENT_METHODS.STRIPE && !isCardComplete) || (paymentMethod === PAYMENT_METHODS.CASH && (!receivedAmount || Number(receivedAmount) < Number(total || 0)))} className="flex-1">{processing ? 'Processing...' : 'Complete'}</Button>        </div>      </div>      {isBillSplitOpen && (        <BillSplitModal          cart={cart}          total={total}          onClose={() => setIsBillSplitOpen(false)}          onSplit={(splits) => {            setSplitPayments(splits.map((s, i) => ({ id: `split_${Date.now()}_${i}`, method: PAYMENT_METHODS.CASH, amount: Number(s.amount || 0), meta: { person: s.person }, status: 'pending', paymentDetails: null })));            setIsSplit(true);            setIsBillSplitOpen(false);          }}        />      )}      {splitCardModalIndex !== null && splitPayments[splitCardModalIndex] && (        <SplitCardModal          split={splitPayments[splitCardModalIndex]}          restaurantId={finalRestaurantId}          pendingOrderId={null}          onPaid={handleSplitModalPaid}          onCancel={handleSplitModalCancel}        />      )}    </div>  );}

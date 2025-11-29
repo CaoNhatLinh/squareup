@@ -1,10 +1,1 @@
-import { ShopProvider } from "@/context/ShopProvider.jsx";
-import CheckoutSuccess from "@/pages/shop/checkout/CheckoutSuccess";
-
-export default function CheckoutSuccessWrapper() {
-  return (
-    <ShopProvider>
-      <CheckoutSuccess />
-    </ShopProvider>
-  );
-}
+import { ShopProvider } from "@/context/ShopProvider.jsx";import CheckoutSuccess from "@/pages/shop/checkout/CheckoutSuccess";export default function CheckoutSuccessWrapper() {  return (    <ShopProvider>      <CheckoutSuccess />    </ShopProvider>  );}

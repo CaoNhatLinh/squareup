@@ -1,98 +1,1 @@
-export const THEME_PRESETS = [
-    {
-        id: 'sunset',
-        label: 'Sunset Bistro',
-        color: '#EA580C',
-        font: 'Inter, sans-serif',
-        palette: {
-            primary: '#EA580C',
-            onPrimary: '#FFFFFF',
-            secondary: '#431407',
-            onSecondary: '#FFFFFF',
-            background: '#FAFAF9',
-            surface: '#FFFFFF',
-            text: '#1C1917',
-            muted: '#78716C'
-        }
-    },
-    {
-        id: 'ocean',
-        label: 'Pacific Ocean',
-        color: '#0284C7',
-        font: 'Inter, sans-serif',
-        palette: {
-            primary: '#0284C7',
-            onPrimary: '#FFFFFF',
-            secondary: '#0C4A6E',
-            onSecondary: '#FFFFFF',
-            background: '#F0F9FF',
-            surface: '#FFFFFF',
-            text: '#0F172A',
-            muted: '#64748B'
-        }
-    },
-    {
-        id: 'forest',
-        label: 'Fresh Basil',
-        color: '#16A34A',
-        font: '"Playfair Display", serif',
-        palette: {
-            primary: '#16A34A',
-            onPrimary: '#FFFFFF',
-            secondary: '#14532D',
-            onSecondary: '#FFFFFF',
-            background: '#F5F5F4',
-            surface: '#FFFFFF',
-            text: '#1C1917',
-            muted: '#57534E'
-        }
-    },
-    {
-        id: 'mono',
-        label: 'Modern Luxury',
-        color: '#18181B',
-        font: 'Montserrat, sans-serif',
-        palette: {
-            primary: '#18181B',
-            onPrimary: '#FFFFFF',
-            secondary: '#F4F4F5',
-            onSecondary: '#18181B',
-            background: '#FFFFFF',
-            surface: '#FAFAFA',
-            text: '#09090B',
-            muted: '#71717A'
-        }
-    },
-    {
-        id: 'coffee',
-        label: 'Coffee & Bean',
-        color: '#78350F',
-        font: 'Lato, sans-serif',
-        palette: {
-            primary: '#78350F',
-            onPrimary: '#FFFFFF',
-            secondary: '#FFFBEB',
-            onSecondary: '#451A03',
-            background: '#FFFCF5',
-            surface: '#FFFFFF',
-            text: '#451A03',
-            muted: '#92400E'
-        }
-    },
-    {
-        id: 'spicy',
-        label: 'Spicy Red',
-        color: '#DC2626',
-        font: 'Poppins, sans-serif',
-        palette: {
-            primary: '#DC2626',
-            onPrimary: '#FFFFFF',
-            secondary: '#450A0A',
-            onSecondary: '#FFFFFF',
-            background: '#FEF2F2',
-            surface: '#FFFFFF',
-            text: '#450A0A',
-            muted: '#991B1B'
-        }
-    }
-];
+export const THEME_PRESETS = [    {        id: 'sunset',        label: 'Sunset Bistro',        color: '#EA580C',        font: 'Inter, sans-serif',        palette: {            primary: '#EA580C',            onPrimary: '#FFFFFF',            secondary: '#431407',            onSecondary: '#FFFFFF',            background: '#FAFAF9',            surface: '#FFFFFF',            text: '#1C1917',            muted: '#78716C'        }    },    {        id: 'ocean',        label: 'Pacific Ocean',        color: '#0284C7',        font: 'Inter, sans-serif',        palette: {            primary: '#0284C7',            onPrimary: '#FFFFFF',            secondary: '#0C4A6E',            onSecondary: '#FFFFFF',            background: '#F0F9FF',            surface: '#FFFFFF',            text: '#0F172A',            muted: '#64748B'        }    },    {        id: 'forest',        label: 'Fresh Basil',        color: '#16A34A',        font: '"Playfair Display", serif',        palette: {            primary: '#16A34A',            onPrimary: '#FFFFFF',            secondary: '#14532D',            onSecondary: '#FFFFFF',            background: '#F5F5F4',            surface: '#FFFFFF',            text: '#1C1917',            muted: '#57534E'        }    },    {        id: 'mono',        label: 'Modern Luxury',        color: '#18181B',        font: 'Montserrat, sans-serif',        palette: {            primary: '#18181B',            onPrimary: '#FFFFFF',            secondary: '#F4F4F5',            onSecondary: '#18181B',            background: '#FFFFFF',            surface: '#FAFAFA',            text: '#09090B',            muted: '#71717A'        }    },    {        id: 'coffee',        label: 'Coffee & Bean',        color: '#78350F',        font: 'Lato, sans-serif',        palette: {            primary: '#78350F',            onPrimary: '#FFFFFF',            secondary: '#FFFBEB',            onSecondary: '#451A03',            background: '#FFFCF5',            surface: '#FFFFFF',            text: '#451A03',            muted: '#92400E'        }    },    {        id: 'spicy',        label: 'Spicy Red',        color: '#DC2626',        font: 'Poppins, sans-serif',        palette: {            primary: '#DC2626',            onPrimary: '#FFFFFF',            secondary: '#450A0A',            onSecondary: '#FFFFFF',            background: '#FEF2F2',            surface: '#FFFFFF',            text: '#450A0A',            muted: '#991B1B'        }    }];

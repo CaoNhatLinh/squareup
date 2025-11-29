@@ -1,8 +1,6 @@
 const { db } = require('../config/firebaseAdmin');
-
 const getActiveDiscounts = async (req, res) => {
   const { restaurantId } = req.params;
-
   try {
     const snapshot = await db.ref(`restaurants/${restaurantId}/discounts`).get();
     const allDiscounts = snapshot.val() || {};
@@ -45,7 +43,6 @@ const getActiveDiscounts = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch active discounts', message: error.message });
   }
 };
-
 const getDiscounts = async (req, res) => {
   const { restaurantId } = req.params;
   const page = parseInt(req.query.page, 10) || 1;
@@ -74,80 +71,66 @@ const getDiscount = async (req, res) => {
   const { restaurantId, discountId } = req.params;
   try {
     const snapshot = await db.ref(`restaurants/${restaurantId}/discounts/${discountId}`).get();
-    const discount = snapshot.val();
-    if (!discount) {
+    if (!snapshot.exists()) {
       return res.status(404).json({ error: 'Discount not found' });
     }
-    res.json({ success: true, data: discount });
+    res.json({ success: true, data: { id: discountId, ...snapshot.val() } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch discount' });
   }
 };
-
 const createDiscount = async (req, res) => {
   const { restaurantId } = req.params;
   const discountData = req.body;
   try {
     const newDiscountRef = db.ref(`restaurants/${restaurantId}/discounts`).push();
     const discountId = newDiscountRef.key;
-
     const discount = {
       ...discountData,
       id: discountId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-
     await newDiscountRef.set(discount);
     res.status(201).json({ success: true, data: { id: discountId, ...discount } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create discount' });
   }
 };
-
 const updateDiscount = async (req, res) => {
   const { restaurantId, discountId } = req.params;
   const updates = req.body;
-
   try {
     const discountRef = db.ref(`restaurants/${restaurantId}/discounts/${discountId}`);
     const snapshot = await discountRef.get();
-
     if (!snapshot.exists()) {
       return res.status(404).json({ error: 'Discount not found' });
     }
-
     const updatedDiscount = {
       ...updates,
       id: discountId,
       updatedAt: Date.now(),
     };
-
     await discountRef.update(updatedDiscount);
     res.json({ success: true, data: updatedDiscount });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update discount' });
   }
 };
-
 const deleteDiscount = async (req, res) => {
   const { restaurantId, discountId } = req.params;
-
   try {
     const discountRef = db.ref(`restaurants/${restaurantId}/discounts/${discountId}`);
     const snapshot = await discountRef.get();
-
     if (!snapshot.exists()) {
       return res.status(404).json({ error: 'Discount not found' });
     }
-
     await discountRef.remove();
     res.json({ success: true, data: { message: 'Discount deleted successfully' } });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete discount' });
   }
 };
-
 module.exports = {
   getActiveDiscounts,
   getDiscounts,

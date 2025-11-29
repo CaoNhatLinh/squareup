@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRestaurant } from "@/hooks/useRestaurant";
-import { upsertRestaurant } from "@/api/restaurants";
+import { updateRestaurant as updateRestaurantApi } from "@/api/restaurants";
 import { uploadImage } from "@/api/upload";
 import { FaInfoCircle } from "react-icons/fa";
 import {
@@ -50,10 +50,8 @@ export default function BusinessAbout() {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const img = new Image();
-
       img.onload = () => {
         let { width, height } = img;
-
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -65,28 +63,21 @@ export default function BusinessAbout() {
             height = maxHeight;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
-
         ctx.drawImage(img, 0, 0, width, height);
-
         const base64Data = canvas.toDataURL(file.type, 0.8);
         resolve(base64Data);
       };
-
       img.src = URL.createObjectURL(file);
     });
   };
 
   const handleImageSelect = async (file, imageType) => {
     if (!file) return;
-
     setProcessingImages((prev) => ({ ...prev, [imageType]: true }));
-
     try {
       let processedFile = file;
-
       switch (imageType) {
         case "logo":
           processedFile = await resizeImage(file, 200, 200);
@@ -98,7 +89,6 @@ export default function BusinessAbout() {
           processedFile = await resizeImage(file, 800, 600);
           break;
       }
-
       const previewUrl = processedFile;
       setImagePreviews((prev) => ({
         ...prev,
@@ -133,51 +123,33 @@ export default function BusinessAbout() {
             socialMediaData.push({
               name: "Facebook",
               url: oldFormat.facebook,
-              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
-</svg>`,
+              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/></svg>`,
             });
           }
           if (oldFormat.instagram) {
             socialMediaData.push({
               name: "Instagram",
               url: oldFormat.instagram,
-              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#instagram-gradient)" stroke-width="2"/>
-<circle cx="18" cy="6" r="1.5" fill="url(#instagram-gradient)"/>
-<path d="M12 7.5c-2.485 0-4.5 2.015-4.5 4.5s2.015 4.5 4.5 4.5 4.5-2.015 4.5-4.5-2.015-4.5-4.5-4.5zm0 7.5c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z" fill="url(#instagram-gradient)"/>
-<defs>
-<linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-<stop offset="0%" style="stop-color:#833ab4"/>
-<stop offset="50%" style="stop-color:#fd1d1d"/>
-<stop offset="100%" style="stop-color:#fcb045"/>
-</linearGradient>
-</defs>
-</svg>`,
+              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#instagram-gradient)" stroke-width="2"/><circle cx="18" cy="6" r="1.5" fill="url(#instagram-gradient)"/><path d="M12 7.5c-2.485 0-4.5 2.015-4.5 4.5s2.015 4.5 4.5 4.5 4.5-2.015 4.5-4.5-2.015-4.5-4.5-4.5zm0 7.5c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z" fill="url(#instagram-gradient)"/><defs><linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#833ab4"/><stop offset="50%" style="stop-color:#fd1d1d"/><stop offset="100%" style="stop-color:#fcb045"/></linearGradient></defs></svg>`,
             });
           }
           if (oldFormat.twitter) {
             socialMediaData.push({
               name: "Twitter",
               url: oldFormat.twitter,
-              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" fill="#1DA1F2"/>
-</svg>`,
+              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" fill="#1DA1F2"/></svg>`,
             });
           }
           if (oldFormat.tiktok) {
             socialMediaData.push({
               name: "TikTok",
               url: oldFormat.tiktok,
-              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" fill="#000000"/>
-</svg>`,
+              svgIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" fill="#000000"/></svg>`,
             });
           }
         }
       }
       setSocialMedia(socialMediaData);
-
       setLogo(restaurant.logo || "");
       setCoverImage(restaurant.coverImage || "");
       setFeaturedImage(restaurant.featuredImage || "");
@@ -191,6 +163,7 @@ export default function BusinessAbout() {
       setMessage(`No data to upload for ${imageType}`);
       return;
     }
+
     try {
       const result = await uploadImage(dataToUpload);
       if (result && result.url) {
@@ -206,17 +179,14 @@ export default function BusinessAbout() {
             setFeaturedImage(imageUrl);
             break;
         }
-
         setImagePreviews((prev) => {
           const newPreviews = { ...prev };
           delete newPreviews[imageType];
           delete newPreviews[`${imageType}Data`];
           return newPreviews;
         });
-
         setMessage(
-          `${
-            imageType.charAt(0).toUpperCase() + imageType.slice(1)
+          `${imageType.charAt(0).toUpperCase() + imageType.slice(1)
           } uploaded successfully!`
         );
         setTimeout(() => setMessage(""), 3000);
@@ -269,7 +239,8 @@ export default function BusinessAbout() {
         coverImage,
         featuredImage,
       };
-      await upsertRestaurant(restaurant.id, updateData);
+
+      await updateRestaurantApi(restaurant.id, updateData);
       setMessage("Restaurant information updated successfully!");
       setTimeout(() => setMessage(""), 4000);
       updateRestaurant(updateData);
@@ -281,26 +252,25 @@ export default function BusinessAbout() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-8 bg-gray-50 min-h-screen">
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-8 bg-gray-50 min-h-screen">
       <PageHeader
         title="Business Information"
         subtitle="Manage your restaurant's profile and branding."
         Icon={FaInfoCircle}
       />
+
       {message && (
         <div className="mb-4 animate-fade-in">
           <div
-            className={`p-4 rounded-xl shadow-lg border-l-4 backdrop-blur-sm ${
-              message.includes("success")
+            className={`p-4 rounded-xl shadow-lg border-l-4 backdrop-blur-sm ${message.includes("success")
                 ? "bg-green-50/80 text-green-800 border-green-500 shadow-green-100"
                 : "bg-red-50/80 text-red-800 border-red-500 shadow-red-100"
-            }`}
+              }`}
           >
             <div className="flex items-start gap-3">
               <div
-                className={`p-1.5 rounded-lg ${
-                  message.includes("success") ? "bg-green-100" : "bg-red-100"
-                }`}
+                className={`p-1.5 rounded-lg ${message.includes("success") ? "bg-green-100" : "bg-red-100"
+                  }`}
               >
                 {message.includes("success") ? (
                   <HiCheckCircle className="w-5 h-5 text-green-600" />
@@ -316,12 +286,13 @@ export default function BusinessAbout() {
         </div>
       )}
 
-      <div className="grid grid-cols-1  gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-full lg:max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-full lg:max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               Basic Information
             </h2>
+
             <div className="group">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
                 <HiTag className="w-4 h-4 text-blue-500" />
@@ -338,6 +309,7 @@ export default function BusinessAbout() {
                 <HiTag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
@@ -432,19 +404,19 @@ export default function BusinessAbout() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-full lg:max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-full lg:max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               Social Media Links
             </h2>
 
             <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between gap-4 flex-nowrap">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm text-gray-600 whitespace-nowrap">
                   Connect your social media profiles
                 </p>
                 <button
                   onClick={addSocialMedia}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
                 >
                   <HiPlus className="w-4 h-4 mr-2" />
                   Add Social Media
@@ -454,7 +426,7 @@ export default function BusinessAbout() {
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <strong>Tip:</strong> Get beautiful SVG icons for your social
-                  media links from{" "}
+                  media links from
                   <a
                     href="https://nucleoapp.com/social-media-icons"
                     target="_blank"
@@ -472,7 +444,7 @@ export default function BusinessAbout() {
                   <HiSparkles className="w-4 h-4 text-yellow-500" />
                   Quick Add Popular Platforms
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() =>
                       setSocialMedia((prev) => [
@@ -499,7 +471,6 @@ export default function BusinessAbout() {
                       />
                     </svg>
                   </button>
-
                   <button
                     onClick={() =>
                       setSocialMedia((prev) => [
@@ -544,9 +515,9 @@ export default function BusinessAbout() {
                 {(socialMedia || []).map((social, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Platform Name
@@ -604,14 +575,13 @@ export default function BusinessAbout() {
                     </div>
                     <button
                       onClick={() => removeSocialMedia(index)}
-                      className="flex items-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      className="flex items-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full md:w-auto justify-center"
                     >
                       <HiXMark className="w-4 h-4 mr-2" />
                       Remove
                     </button>
                   </div>
                 ))}
-
                 {(socialMedia || []).length === 0 && (
                   <div className="text-center py-12 text-gray-500">
                     <HiGlobeAlt className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -627,7 +597,7 @@ export default function BusinessAbout() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-full lg:max-w-6xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 w-full max-w-full lg:max-w-6xl mx-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               Images & Branding
             </h2>
@@ -645,9 +615,8 @@ export default function BusinessAbout() {
                     <p className="text-sm text-gray-600">Your brand identity</p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                  <div className="relative group mx-auto md:mx-0">
                     <div className="w-28 h-28 border-2 border-dashed border-blue-300 rounded-2xl flex items-center justify-center overflow-hidden bg-white hover:bg-blue-50 transition-all duration-300 shadow-sm hover:shadow-md">
                       {processingImages.logo ? (
                         <div className="flex flex-col items-center justify-center">
@@ -683,9 +652,8 @@ export default function BusinessAbout() {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex-1 space-y-3">
-                    <div className="flex gap-3">
+                  <div className="flex-1 space-y-3 w-full">
+                    <div className="flex flex-wrap gap-3">
                       <input
                         ref={logoInputRef}
                         type="file"
@@ -698,16 +666,15 @@ export default function BusinessAbout() {
                       />
                       <button
                         onClick={() => logoInputRef.current?.click()}
-                        className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex-1 md:flex-none justify-center"
                       >
                         <HiCloudArrowUp className="w-4 h-4" />
                         {imagePreviews.logo
                           ? "Change "
                           : logo
-                          ? "Change "
-                          : "Upload Logo"}
+                            ? "Change "
+                            : "Upload Logo"}
                       </button>
-
                       {imagePreviews.logo && (
                         <button
                           onClick={() => {
@@ -720,24 +687,22 @@ export default function BusinessAbout() {
                             if (logoInputRef.current)
                               logoInputRef.current.value = "";
                           }}
-                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiXMark className="w-4 h-4" />
                           Cancel
                         </button>
                       )}
-
                       {logo && !imagePreviews.logo && (
                         <button
                           onClick={() => setLogo("")}
-                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiTrash className="w-4 h-4" />
                           Remove
                         </button>
                       )}
                     </div>
-
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <HiInformationCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -771,9 +736,8 @@ export default function BusinessAbout() {
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                  <div className="relative group mx-auto md:mx-0">
                     <div className="w-48 h-28 border-2 border-dashed border-purple-300 rounded-2xl flex items-center justify-center overflow-hidden bg-white hover:bg-purple-50 transition-all duration-300 shadow-sm hover:shadow-md">
                       {processingImages.cover ? (
                         <div className="flex flex-col items-center justify-center">
@@ -809,9 +773,8 @@ export default function BusinessAbout() {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex-1 space-y-3">
-                    <div className="flex gap-3">
+                  <div className="flex-1 space-y-3 w-full">
+                    <div className="flex flex-wrap gap-3">
                       <input
                         ref={coverInputRef}
                         type="file"
@@ -824,16 +787,15 @@ export default function BusinessAbout() {
                       />
                       <button
                         onClick={() => coverInputRef.current?.click()}
-                        className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex-1 md:flex-none justify-center"
                       >
                         <HiCloudArrowUp className="w-4 h-4" />
                         {imagePreviews.cover
                           ? "Change "
                           : coverImage
-                          ? "Change "
-                          : "Upload Cover"}
+                            ? "Change "
+                            : "Upload Cover"}
                       </button>
-
                       {imagePreviews.cover && (
                         <button
                           onClick={() => {
@@ -846,24 +808,22 @@ export default function BusinessAbout() {
                             if (coverInputRef.current)
                               coverInputRef.current.value = "";
                           }}
-                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiXMark className="w-4 h-4" />
                           Cancel
                         </button>
                       )}
-
                       {coverImage && !imagePreviews.cover && (
                         <button
                           onClick={() => setCoverImage("")}
-                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiTrash className="w-4 h-4" />
                           Remove
                         </button>
                       )}
                     </div>
-
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <HiInformationCircle className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
@@ -882,6 +842,7 @@ export default function BusinessAbout() {
                   </div>
                 </div>
               </div>
+
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-100 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-emerald-500 rounded-lg">
@@ -896,9 +857,8 @@ export default function BusinessAbout() {
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                  <div className="relative group mx-auto md:mx-0">
                     <div className="w-48 h-28 border-2 border-dashed border-emerald-300 rounded-2xl flex items-center justify-center overflow-hidden bg-white hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md">
                       {processingImages.featured ? (
                         <div className="flex flex-col items-center justify-center">
@@ -934,9 +894,8 @@ export default function BusinessAbout() {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex-1 space-y-3">
-                    <div className="flex gap-3">
+                  <div className="flex-1 space-y-3 w-full">
+                    <div className="flex flex-wrap gap-3">
                       <input
                         ref={featuredInputRef}
                         type="file"
@@ -949,16 +908,15 @@ export default function BusinessAbout() {
                       />
                       <button
                         onClick={() => featuredInputRef.current?.click()}
-                        className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl hover:from-emerald-700 hover:to-emerald-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl hover:from-emerald-700 hover:to-emerald-800 flex items-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex-1 md:flex-none justify-center"
                       >
                         <HiCloudArrowUp className="w-4 h-4" />
                         {imagePreviews.featured
                           ? "Change "
                           : featuredImage
-                          ? "Change "
-                          : "Upload Featured"}
+                            ? "Change "
+                            : "Upload Featured"}
                       </button>
-
                       {imagePreviews.featured && (
                         <button
                           onClick={() => {
@@ -971,24 +929,22 @@ export default function BusinessAbout() {
                             if (featuredInputRef.current)
                               featuredInputRef.current.value = "";
                           }}
-                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiXMark className="w-4 h-4" />
                           Cancel
                         </button>
                       )}
-
                       {featuredImage && !imagePreviews.featured && (
                         <button
                           onClick={() => setFeaturedImage("")}
-                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all"
+                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-1.5 transition-all flex-1 md:flex-none justify-center"
                         >
                           <HiTrash className="w-4 h-4" />
                           Remove
                         </button>
                       )}
                     </div>
-
                     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <HiInformationCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
@@ -1011,6 +967,7 @@ export default function BusinessAbout() {
             </div>
           </div>
         </div>
+
         <div className="lg:col-span-3 mt-6">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300">
             <div className="p-4">

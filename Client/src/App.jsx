@@ -12,7 +12,9 @@ export default function App() {
       <RestaurantSelectionProvider>
         <ToastProvider>
           <LoadingProvider>
-            <RouterProvider router={router} />
+            <RouterProvider router={router} future={{
+    v7_startTransition: true,
+  }}/>
           </LoadingProvider>
         </ToastProvider>
       </RestaurantSelectionProvider>

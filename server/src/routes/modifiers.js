@@ -1,15 +1,1 @@
-const express = require('express');
-const { verifyToken } = require('../middleware/verifyToken');
-const { verifyPermission } = require('../middleware/verifyPermission');
-const router = express.Router({ mergeParams: true });
-
-const controller = require('../controllers/modifiersController');
-
-router.use(verifyToken);
-router.get('/', verifyPermission('modifiers', 'read'), controller.listModifiers);
-router.get('/:modifierId', verifyPermission('modifiers', 'read'), controller.getModifier);
-router.post('/', verifyPermission('modifiers', 'create'), controller.createModifier);
-router.put('/:modifierId', verifyPermission('modifiers', 'update'), controller.updateModifier);
-router.delete('/:modifierId', verifyPermission('modifiers', 'delete'), controller.deleteModifier);
-
-module.exports = router;
+const express = require('express');const { verifyToken } = require('../middleware/verifyToken');const { verifyPermission } = require('../middleware/verifyPermission');const router = express.Router({ mergeParams: true });const controller = require('../controllers/modifiersController');router.use(verifyToken);router.get('/', verifyPermission('modifiers', 'read'), controller.listModifiers);router.get('/:modifierId', verifyPermission('modifiers', 'read'), controller.getModifier);router.post('/', verifyPermission('modifiers', 'create'), controller.createModifier);router.put('/:modifierId', verifyPermission('modifiers', 'update'), controller.updateModifier);router.delete('/:modifierId', verifyPermission('modifiers', 'delete'), controller.deleteModifier);module.exports = router;

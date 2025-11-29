@@ -1,16 +1,27 @@
 {
   "rules": {
     "restaurants": {
-      ".indexOn": ["name", "createdAt", "slug"],
+      ".indexOn": [
+        "name",
+        "createdAt",
+        "slug"
+      ],
       ".read": "query.orderByChild == 'slug' && query.equalTo != null",
       "$restaurantId": {
         ".read": true,
         ".write": true,
         "staff": {
-          ".indexOn": ["email", "roleId"]
+          ".indexOn": [
+            "email",
+            "roleId"
+          ]
         },
         "orders": {
-          ".indexOn": ["createdAt", "status", "sessionId"],
+          ".indexOn": [
+            "createdAt",
+            "status",
+            "sessionId"
+          ],
           "$orderId": {
             ".read": true,
             ".write": true
@@ -19,23 +30,35 @@
         "tables": {
           ".read": true,
           ".write": "auth != null",
-          ".indexOn": ["isActive", "tableNumber", "status"]
+          ".indexOn": [
+            "isActive",
+            "tableNumber",
+            "status"
+          ]
         }
       }
     },
     "categories": {
       "$restaurantId": {
-        ".indexOn": ["displayOrder", "name"],
+        ".indexOn": [
+          "displayOrder",
+          "name"
+        ],
         ".read": true,
         ".write": true
       }
     },
     "pendingOrders": {
-      ".indexOn": ["createdAt"]
+      ".indexOn": [
+        "createdAt"
+      ]
     },
     "items": {
       "$restaurantId": {
-        ".indexOn": ["name", "categoryId"],
+        ".indexOn": [
+          "name",
+          "categoryId"
+        ],
         ".read": true,
         ".write": true
       }
@@ -47,15 +70,23 @@
       }
     },
     "users": {
-      ".indexOn": ["guestUuid", "role", "email"],
+      ".indexOn": [
+        "guestUuid",
+        "role",
+        "email"
+      ],
       "$userId": {
         ".read": true,
         ".write": true
       }
-    }
-    ,
+    },
     "invitations": {
-      ".indexOn": ["email", "token"]
+      ".indexOn": [
+        "email",
+        "token",
+        "status",
+        "restaurantId"
+      ]
     }
   }
 }

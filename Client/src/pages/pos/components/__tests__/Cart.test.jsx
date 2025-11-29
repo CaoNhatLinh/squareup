@@ -1,36 +1,1 @@
-import { render, screen } from '@testing-library/react';
-import Cart from '@/pages/pos/components/Cart';
-import { describe, expect, it } from 'vitest';
-
-describe('Cart component', () => {
-  const mockCart = [
-    { id: 'item-1', itemId: 'item-1', name: 'Burger', price: 1000, quantity: 2, modifierTotal: 0 },
-    { id: 'item-2', itemId: 'item-2', name: 'Fries', price: 500, quantity: 1, modifierTotal: 0 },
-  ];
-
-  it('renders subtotal and discount breakdown and per-item discounts', () => {
-    const discountResult = {
-      totalDiscount: 300,
-      itemDiscounts: {
-        'item-1': { discountAmount: 200, discountPercentage: 10 },
-        'item-2': { discountAmount: 100, discountPercentage: 20 },
-      },
-      discountBreakdown: [
-        { discountId: 'd1', discountName: '10% Off', discountType: 'percentage', discountValue: 10, discountAmount: 200 },
-        { discountId: 'd2', discountName: '20% Off', discountType: 'percentage', discountValue: 20, discountAmount: 100 },
-      ]
-    };
-
-    render(<Cart cart={mockCart} total={ (1000*2 + 500) - 300 } discountResult={discountResult} onUpdateQuantity={() => {}} onRemove={() => {}} onClear={() => {}} />);
-
-    expect(screen.getByText('Subtotal:')).toBeInTheDocument();
-    expect(screen.getByText('\u0024' + ((1000*2 + 500)).toFixed(2))).toBeInTheDocument();
-    
-    expect(screen.getByText('-\u0024' + (300).toFixed(2))).toBeInTheDocument();
-    expect(screen.getByText('10% Off')).toBeInTheDocument();
-    expect(screen.getByText('20% Off')).toBeInTheDocument();
-    
-    expect(screen.getByText('- $200.00')).toBeInTheDocument();
-    expect(screen.getByText('- $100.00')).toBeInTheDocument();
-  });
-});
+import { render, screen } from '@testing-library/react';import Cart from '@/pages/pos/components/Cart';import { describe, expect, it } from 'vitest';describe('Cart component', () => {  const mockCart = [    { id: 'item-1', itemId: 'item-1', name: 'Burger', price: 1000, quantity: 2, modifierTotal: 0 },    { id: 'item-2', itemId: 'item-2', name: 'Fries', price: 500, quantity: 1, modifierTotal: 0 },  ];  it('renders subtotal and discount breakdown and per-item discounts', () => {    const discountResult = {      totalDiscount: 300,      itemDiscounts: {        'item-1': { discountAmount: 200, discountPercentage: 10 },        'item-2': { discountAmount: 100, discountPercentage: 20 },      },      discountBreakdown: [        { discountId: 'd1', discountName: '10% Off', discountType: 'percentage', discountValue: 10, discountAmount: 200 },        { discountId: 'd2', discountName: '20% Off', discountType: 'percentage', discountValue: 20, discountAmount: 100 },      ]    };    render(<Cart cart={mockCart} total={ (1000*2 + 500) - 300 } discountResult={discountResult} onUpdateQuantity={() => {}} onRemove={() => {}} onClear={() => {}} />);    expect(screen.getByText('Subtotal:')).toBeInTheDocument();    expect(screen.getByText('\u0024' + ((1000*2 + 500)).toFixed(2))).toBeInTheDocument();    expect(screen.getByText('-\u0024' + (300).toFixed(2))).toBeInTheDocument();    expect(screen.getByText('10% Off')).toBeInTheDocument();    expect(screen.getByText('20% Off')).toBeInTheDocument();    expect(screen.getByText('- $200.00')).toBeInTheDocument();    expect(screen.getByText('- $100.00')).toBeInTheDocument();  });});

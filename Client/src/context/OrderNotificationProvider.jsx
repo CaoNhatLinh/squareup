@@ -1,186 +1,1 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ref, onValue } from "firebase/database";
-import { rtdb } from "@/firebase";
-import { useNavigate, useLocation } from "react-router-dom";
-import { playNotificationSound } from "@/utils/notificationSound";
-import { showDesktopNotification, isNotificationSupported } from "@/utils/desktopNotification";
-import { useToast } from "@/hooks/useToast";
-
-import { useAuth } from '@/hooks/useAuth';
-import { useRestaurant } from '@/hooks/useRestaurant';
-import { OrderNotificationContext } from '@/context/OrderNotificationContext';
-
-export function OrderNotificationProvider({ children }) {
-    
-    const { user } = useAuth();
-    const { restaurant } = useRestaurant();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { success } = useToast();
-    
-    const isShopRoute = (() => {
-        const firstSegment = (location.pathname.split('/')[1] || '').toLowerCase();
-        const reserved = ['admin','signin','signup','signout','restaurant','accept-invitation','pos','restaurants','dashboard','settings','api','track-order'];
-        if (location.pathname.startsWith('/shop/') || location.pathname.startsWith('/track-order/')) return true;
-        
-        if (firstSegment && !reserved.includes(firstSegment)) return true;
-        return false;
-    })();
-
-    const [newOrderIds, setNewOrderIds] = useState(() => {
-        const saved = localStorage.getItem("newOrderIds");
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [newPosOrderIds, setNewPosOrderIds] = useState(() => {
-        const saved = localStorage.getItem("newPosOrderIds");
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [lastOrderCount, setLastOrderCount] = useState(null);
-    const audioRef = useRef(null);
-    const isInitialLoad = useRef(true);
-
-    
-    const markOrderAsViewed = useCallback((orderId) => {
-        setNewOrderIds((prev) => {
-            const updated = prev.filter((id) => id !== orderId);
-            localStorage.setItem("newOrderIds", JSON.stringify(updated));
-            return updated;
-        });
-    }, []);
-
-    const markPosOrderAsViewed = useCallback((orderId) => {
-        setNewPosOrderIds((prev) => {
-            const updated = prev.filter((id) => id !== orderId);
-            localStorage.setItem("newPosOrderIds", JSON.stringify(updated));
-            return updated;
-        });
-    }, []);
-
-    const markAllAsRead = useCallback(() => {
-        setNewOrderIds([]);
-        localStorage.setItem("newOrderIds", JSON.stringify([]));
-    }, []);
-    
-    const markAllPosAsRead = useCallback(() => {
-        setNewPosOrderIds([]);
-        localStorage.setItem("newPosOrderIds", JSON.stringify([]));
-    }, []);
-
-    const isNewOrder = useCallback((orderId) => {
-        return newOrderIds.includes(orderId);
-    }, [newOrderIds]);
-
-    const isNewPosOrder = useCallback((orderId) => {
-        return newPosOrderIds.includes(orderId);
-    }, [newPosOrderIds]);
-
-    
-    useEffect(() => {
-        const restaurantId = restaurant?.id;
-        
-        if (isShopRoute || !user || !restaurantId) {
-            return;
-        }
-
-        
-        if (!audioRef.current) {
-            audioRef.current = new Audio("/assets/audio/notification.mp3");
-            audioRef.current.volume = 0.5;
-            audioRef.current.onerror = () => {
-                console.warn("Notification sound file not found. Using fallback beep.");
-            };
-        }
-
-        const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);
-        
-        const handleOrdersUpdate = (snapshot) => {
-            if (!snapshot.exists()) {
-                return;
-            }
-
-            const orders = snapshot.val();
-            const orderArray = Object.entries(orders).map(([id, data]) => ({
-                id,
-                ...data,
-            }));
-
-            
-            const sortedOrders = orderArray.sort((a, b) => b.createdAt - a.createdAt);
-            const currentOrderCount = sortedOrders.length;
-
-            if (isInitialLoad.current) {
-                isInitialLoad.current = false;
-                setLastOrderCount(currentOrderCount);
-                return;
-            }
-
-            if (lastOrderCount !== null && currentOrderCount > lastOrderCount) {
-                const newOrdersCount = currentOrderCount - lastOrderCount;
-                const newOrders = sortedOrders.slice(0, newOrdersCount);
-                
-                newOrders.forEach((order) => {
-                    
-                    if (audioRef.current) {
-                        playNotificationSound(audioRef.current);
-                    }
-                    
-                    if (isNotificationSupported() && document.hidden) {
-                        showDesktopNotification(order);
-                    }
-
-                    
-                    setNewOrderIds((prev) => {
-                        const updated = [...new Set([...prev, order.id])];
-                        localStorage.setItem("newOrderIds", JSON.stringify(updated));
-                        return updated;
-                    });
-
-                    
-                    if (order.orderType === 'dine_in' || order.orderType === 'pos' || order.orderType === 'in_store') {
-                        setNewPosOrderIds((prev) => {
-                            const updated = [...new Set([...prev, order.id])];
-                            localStorage.setItem("newPosOrderIds", JSON.stringify(updated));
-                            return updated;
-                        });
-                    }
-                    
-                    
-                    success(
-                        `New Order #${order.orderId?.substring(0, 8).toUpperCase()} - $${order.amount?.toFixed(2)}`,
-                        8000,
-                        () => navigate(`/restaurant/orders/${order.id}`)
-                    );
-                });
-            }
-
-            setLastOrderCount(currentOrderCount);
-        };
-
-        const unsubscribe = onValue(ordersRef, handleOrdersUpdate, (error) => {
-            console.error("❌ Firebase notification listener error:", error);
-        });
-
-        return () => {
-            unsubscribe(); 
-        };
-    }, [user, restaurant?.id, isShopRoute, lastOrderCount, navigate, success, setNewOrderIds, setNewPosOrderIds, restaurant]);
-
-
-    
-    const orderNotifications = {
-        newOrderIds,
-        newPosOrderIds,
-        markOrderAsViewed,
-        markAllPosAsRead,
-        markPosOrderAsViewed,
-        markAllAsRead,
-        isNewOrder,
-        isNewPosOrder,
-    };
-
-    return (
-        <OrderNotificationContext.Provider value={orderNotifications}>
-            {children}
-        </OrderNotificationContext.Provider>
-    );
-}
+import { useCallback, useEffect, useRef, useState } from "react";import { ref, onValue } from "firebase/database";import { rtdb } from "@/firebase";import { useNavigate, useLocation } from "react-router-dom";import { playNotificationSound } from "@/utils/notificationSound";import { showDesktopNotification, isNotificationSupported } from "@/utils/desktopNotification";import { useToast } from "@/hooks/useToast";import { useAuth } from '@/hooks/useAuth';import { useRestaurant } from '@/hooks/useRestaurant';import { OrderNotificationContext } from '@/context/OrderNotificationContext';export function OrderNotificationProvider({ children }) {    const { user } = useAuth();    const { restaurant } = useRestaurant();    const location = useLocation();    const navigate = useNavigate();    const { success } = useToast();    const isShopRoute = (() => {        const firstSegment = (location.pathname.split('/')[1] || '').toLowerCase();        const reserved = ['admin','signin','signup','signout','restaurant','accept-invitation','pos','restaurants','dashboard','settings','api','track-order'];        if (location.pathname.startsWith('/shop/') || location.pathname.startsWith('/track-order/')) return true;        if (firstSegment && !reserved.includes(firstSegment)) return true;        return false;    })();    const [newOrderIds, setNewOrderIds] = useState(() => {        const saved = localStorage.getItem("newOrderIds");        return saved ? JSON.parse(saved) : [];    });    const [newPosOrderIds, setNewPosOrderIds] = useState(() => {        const saved = localStorage.getItem("newPosOrderIds");        return saved ? JSON.parse(saved) : [];    });    const [lastOrderCount, setLastOrderCount] = useState(null);    const audioRef = useRef(null);    const isInitialLoad = useRef(true);    const markOrderAsViewed = useCallback((orderId) => {        setNewOrderIds((prev) => {            const updated = prev.filter((id) => id !== orderId);            localStorage.setItem("newOrderIds", JSON.stringify(updated));            return updated;        });    }, []);    const markPosOrderAsViewed = useCallback((orderId) => {        setNewPosOrderIds((prev) => {            const updated = prev.filter((id) => id !== orderId);            localStorage.setItem("newPosOrderIds", JSON.stringify(updated));            return updated;        });    }, []);    const markAllAsRead = useCallback(() => {        setNewOrderIds([]);        localStorage.setItem("newOrderIds", JSON.stringify([]));    }, []);    const markAllPosAsRead = useCallback(() => {        setNewPosOrderIds([]);        localStorage.setItem("newPosOrderIds", JSON.stringify([]));    }, []);    const isNewOrder = useCallback((orderId) => {        return newOrderIds.includes(orderId);    }, [newOrderIds]);    const isNewPosOrder = useCallback((orderId) => {        return newPosOrderIds.includes(orderId);    }, [newPosOrderIds]);    useEffect(() => {        const restaurantId = restaurant?.id;        if (isShopRoute || !user || !restaurantId) {            return;        }        if (!audioRef.current) {            audioRef.current = new Audio("/assets/audio/notification.mp3");            audioRef.current.volume = 0.5;            audioRef.current.onerror = () => {                console.warn("Notification sound file not found. Using fallback beep.");            };        }        const ordersRef = ref(rtdb, `restaurants/${restaurantId}/orders`);        const handleOrdersUpdate = (snapshot) => {            if (!snapshot.exists()) {                return;            }            const orders = snapshot.val();            const orderArray = Object.entries(orders).map(([id, data]) => ({                id,                ...data,            }));            const sortedOrders = orderArray.sort((a, b) => b.createdAt - a.createdAt);            const currentOrderCount = sortedOrders.length;            if (isInitialLoad.current) {                isInitialLoad.current = false;                setLastOrderCount(currentOrderCount);                return;            }            if (lastOrderCount !== null && currentOrderCount > lastOrderCount) {                const newOrdersCount = currentOrderCount - lastOrderCount;                const newOrders = sortedOrders.slice(0, newOrdersCount);                newOrders.forEach((order) => {                    if (audioRef.current) {                        playNotificationSound(audioRef.current);                    }                    if (isNotificationSupported() && document.hidden) {                        showDesktopNotification(order);                    }                    setNewOrderIds((prev) => {                        const updated = [...new Set([...prev, order.id])];                        localStorage.setItem("newOrderIds", JSON.stringify(updated));                        return updated;                    });                    if (order.orderType === 'dine_in' || order.orderType === 'pos' || order.orderType === 'in_store') {                        setNewPosOrderIds((prev) => {                            const updated = [...new Set([...prev, order.id])];                            localStorage.setItem("newPosOrderIds", JSON.stringify(updated));                            return updated;                        });                    }                    success(                        `New Order #${order.orderId?.substring(0, 8).toUpperCase()} - $${order.amount?.toFixed(2)}`,                        8000,                        () => navigate(`/restaurant/orders/${order.id}`)                    );                });            }            setLastOrderCount(currentOrderCount);        };        const unsubscribe = onValue(ordersRef, handleOrdersUpdate, (error) => {            console.error("❌ Firebase notification listener error:", error);        });        return () => {            unsubscribe();         };    }, [user, restaurant?.id, isShopRoute, lastOrderCount, navigate, success, setNewOrderIds, setNewPosOrderIds, restaurant]);    const orderNotifications = {        newOrderIds,        newPosOrderIds,        markOrderAsViewed,        markAllPosAsRead,        markPosOrderAsViewed,        markAllAsRead,        isNewOrder,        isNewPosOrder,    };    return (        <OrderNotificationContext.Provider value={orderNotifications}>            {children}        </OrderNotificationContext.Provider>    );}

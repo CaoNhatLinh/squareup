@@ -5,7 +5,6 @@ import { getOrderById } from "@/api/orders";
 import { addOrderReview } from "@/api/reviews";
 import { useGuestUser } from "@/context/GuestUserContext";
 import { format } from "date-fns";
-
 const StarRating = ({
   rating,
   setRating,
@@ -43,7 +42,6 @@ const StarRating = ({
     ))}
   </div>
 );
-
 const getRatingText = (rating) => {
   const texts = {
     0: "Select a rating",
@@ -55,7 +53,6 @@ const getRatingText = (rating) => {
   };
   return texts[rating] || "";
 };
-
 export default function OrderReview() {
   const { orderId, slug } = useParams();
   const navigate = useNavigate();
@@ -71,7 +68,6 @@ export default function OrderReview() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) return;
@@ -116,7 +112,6 @@ export default function OrderReview() {
     };
     fetchOrder();
   }, [orderId, guestUuid]);
-
   const handleSubmitReview = async () => {
     if (orderRating === 0) {
       alert("Please select an overall rating for your order");
@@ -147,7 +142,6 @@ export default function OrderReview() {
       setSubmitting(false);
     }
   };
-
   if (loading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -190,11 +184,9 @@ export default function OrderReview() {
       </div>
     );
   if (!order) return null;
-
   const reviewedItemsCount = Object.values(itemReviews).filter(
     (item) => item.rating > 0
   ).length;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b sticky top-0 z-10">
@@ -297,7 +289,7 @@ export default function OrderReview() {
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Help others by rating each item{" "}
+                Help others by rating each item
                 {reviewedItemsCount > 0 &&
                   `(${reviewedItemsCount}/${Object.keys(itemReviews).length
                   } rated)`}

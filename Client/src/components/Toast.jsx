@@ -1,112 +1,1 @@
-import { useEffect, useState } from "react";
-import { HiCheckCircle, HiExclamationCircle, HiInformationCircle, HiX, HiXCircle } from "react-icons/hi";
-
-export default function Toast({ message, type = "info", onClose, duration = 3000, onClick }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [progress, setProgress] = useState(100);
-
-  useEffect(() => {
-    setTimeout(() => setIsVisible(true), 10);
-  }, []);
-
-  useEffect(() => {
-    if (duration <= 0) return;
-
-    const interval = 50;
-    const decrement = (100 / duration) * interval;
-
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev - decrement;
-        return next <= 0 ? 0 : next;
-      });
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 300);
-  };
-
-  const config = {
-    success: {
-      icon: HiCheckCircle,
-      bgColor: "bg-green-50",
-      borderColor: "border-green-500",
-      iconColor: "text-green-600",
-      textColor: "text-green-800",
-    },
-    error: {
-      icon: HiXCircle,
-      bgColor: "bg-red-50",
-      borderColor: "border-red-500",
-      iconColor: "text-red-600",
-      textColor: "text-red-800",
-    },
-    warning: {
-      icon: HiExclamationCircle,
-      bgColor: "bg-yellow-50",
-      borderColor: "border-yellow-500",
-      iconColor: "text-yellow-600",
-      textColor: "text-yellow-800",
-    },
-    info: {
-      icon: HiInformationCircle,
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-500",
-      iconColor: "text-blue-600",
-      textColor: "text-blue-800",
-    },
-  };
-
-  const { icon: Icon, bgColor, borderColor, iconColor, textColor } = config[type] || config.info;
-
-  const handleToastClick = () => {
-    if (onClick) {
-      onClick();
-      handleClose();
-    }
-  };
-
-  return (
-    <div
-      className={`pointer-events-auto transition-all duration-300 transform ${
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-      }`}
-    >
-      <div
-        className={`${bgColor} ${borderColor} border-l-4 rounded-lg shadow-lg overflow-hidden min-w-[320px] max-w-md ${
-          onClick ? "cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all" : ""
-        }`}
-        onClick={handleToastClick}
-      >
-        <div className="p-4 flex items-start gap-3">
-          <Icon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />
-          <p className={`${textColor} text-sm font-medium flex-1 leading-relaxed`}>{message}</p>
-          <button
-            onClick={handleClose}
-            className={`${iconColor} hover:opacity-70 transition-opacity flex-shrink-0`}
-            aria-label="Close"
-          >
-            <HiX className="w-5 h-5" />
-          </button>
-        </div>
-        {duration > 0 && (
-          <div className="h-1 bg-gray-200">
-            <div
-              className={`h-full transition-all duration-50 ${
-                type === 'success' ? 'bg-green-500' :
-                type === 'error' ? 'bg-red-500' :
-                type === 'warning' ? 'bg-yellow-500' :
-                'bg-blue-500'
-              }`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import { useEffect, useState } from "react";import { HiCheckCircle, HiExclamationCircle, HiInformationCircle, HiX, HiXCircle } from "react-icons/hi";export default function Toast({ message, type = "info", onClose, duration = 3000, onClick }) {  const [isVisible, setIsVisible] = useState(false);  const [progress, setProgress] = useState(100);  useEffect(() => {    setTimeout(() => setIsVisible(true), 10);  }, []);  useEffect(() => {    if (duration <= 0) return;    const interval = 50;    const decrement = (100 / duration) * interval;    const timer = setInterval(() => {      setProgress((prev) => {        const next = prev - decrement;        return next <= 0 ? 0 : next;      });    }, interval);    return () => clearInterval(timer);  }, [duration]);  const handleClose = () => {    setIsVisible(false);    setTimeout(onClose, 300);  };  const config = {    success: {      icon: HiCheckCircle,      bgColor: "bg-green-50",      borderColor: "border-green-500",      iconColor: "text-green-600",      textColor: "text-green-800",    },    error: {      icon: HiXCircle,      bgColor: "bg-red-50",      borderColor: "border-red-500",      iconColor: "text-red-600",      textColor: "text-red-800",    },    warning: {      icon: HiExclamationCircle,      bgColor: "bg-yellow-50",      borderColor: "border-yellow-500",      iconColor: "text-yellow-600",      textColor: "text-yellow-800",    },    info: {      icon: HiInformationCircle,      bgColor: "bg-blue-50",      borderColor: "border-blue-500",      iconColor: "text-blue-600",      textColor: "text-blue-800",    },  };  const { icon: Icon, bgColor, borderColor, iconColor, textColor } = config[type] || config.info;  const handleToastClick = () => {    if (onClick) {      onClick();      handleClose();    }  };  return (    <div      className={`pointer-events-auto transition-all duration-300 transform ${        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"      }`}    >      <div        className={`${bgColor} ${borderColor} border-l-4 rounded-lg shadow-lg overflow-hidden min-w-[320px] max-w-md ${          onClick ? "cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all" : ""        }`}        onClick={handleToastClick}      >        <div className="p-4 flex items-start gap-3">          <Icon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />          <p className={`${textColor} text-sm font-medium flex-1 leading-relaxed`}>{message}</p>          <button            onClick={handleClose}            className={`${iconColor} hover:opacity-70 transition-opacity flex-shrink-0`}            aria-label="Close"          >            <HiX className="w-5 h-5" />          </button>        </div>        {duration > 0 && (          <div className="h-1 bg-gray-200">            <div              className={`h-full transition-all duration-50 ${                type === 'success' ? 'bg-green-500' :                type === 'error' ? 'bg-red-500' :                type === 'warning' ? 'bg-yellow-500' :                'bg-blue-500'              }`}              style={{ width: `${progress}%` }}            />          </div>        )}      </div>    </div>  );}

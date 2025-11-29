@@ -1,20 +1,1 @@
-export function resolveColor(value, globalStyles, fallback) {
-  if (!value) return fallback;
-  if (typeof value === 'string' && value.trim().startsWith('#')) return value;
-
-  const palette = globalStyles?.palette || globalStyles?.colors || {};
-  if (typeof value === 'string' && palette[value]) return palette[value];
-  if (typeof value === 'string' && globalStyles?.colors && globalStyles.colors[value]) return globalStyles.colors[value];
-  return fallback !== undefined ? fallback : value;
-}
-
-export function normalizeColorValue(value, globalStyles) {
-  if (!value) return undefined;
-  if (typeof value === 'string') {
-    if (value.trim().startsWith('#')) return value.trim();
-    if (globalStyles?.palette && globalStyles.palette[value]) return value;
-    if (globalStyles?.colors && globalStyles.colors[value]) return value;
-    if (/^#([0-9A-F]{3}){1,2}$/i.test(value.trim())) return value.trim();
-  }
-  return value;
-}
+export function resolveColor(value, globalStyles, fallback) {  if (!value) return fallback;  if (typeof value === 'string' && value.trim().startsWith('#')) return value;  const palette = globalStyles?.palette || globalStyles?.colors || {};  if (typeof value === 'string' && palette[value]) return palette[value];  if (typeof value === 'string' && globalStyles?.colors && globalStyles.colors[value]) return globalStyles.colors[value];  return fallback !== undefined ? fallback : value;}export function normalizeColorValue(value, globalStyles) {  if (!value) return undefined;  if (typeof value === 'string') {    if (value.trim().startsWith('#')) return value.trim();    if (globalStyles?.palette && globalStyles.palette[value]) return value;    if (globalStyles?.colors && globalStyles.colors[value]) return value;    if (/^#([0-9A-F]{3}){1,2}$/i.test(value.trim())) return value.trim();  }  return value;}

@@ -1,245 +1,1 @@
-import {formatDateShort} from "@/utils/dateUtils";
-
-export default function DiscountDetailModal({ discount, onClose }) {
-  if (!discount) return null;
-  const getScheduleDaysText = () => {
-    if (!discount.setSchedule || !discount.scheduleDays) return 'All days';
-    const dayNames = {
-      monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday',
-      friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday'
-    };
-    const enabledDays = Object.keys(dayNames).filter(day => discount.scheduleDays[day]);
-    
-    if (enabledDays.length === 7) return 'Every day';
-    if (enabledDays.length === 0) return 'No days selected';
-    if (enabledDays.length === 5 && enabledDays.every(day => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(day))) {
-        return 'Weekdays (Monday - Friday)';
-    }
-    if (enabledDays.length === 2 && enabledDays.every(day => ['saturday', 'sunday'].includes(day))) {
-        return 'Weekends (Saturday - Sunday)';
-    }
-    return enabledDays.map(day => dayNames[day]).join(', ');
-  };
-
-  const getDiscountTypeLabel = () => {
-    if (discount.discountApplyTo === 'item_category') {
-      return 'Direct Discount';
-    } else if (discount.discountApplyTo === 'quantity') {
-      if (discount.quantityRuleType === 'exact') {
-        return 'Quantity Discount (Exact)';
-      } else if (discount.quantityRuleType === 'minimum') {
-        return 'Quantity Discount (Minimum)';
-      } else if (discount.quantityRuleType === 'bogo') {
-        return 'Buy X Get Y (BOGO)';
-      }
-    }
-    return 'Special Offer';
-  };
-
-  const getDiscountDescription = () => {
-    const value = discount.amountType === 'percentage' ? `${discount.amount}%` : `$${discount.amount}`;
-    
-    if (discount.discountApplyTo === 'item_category') {
-      let rule = '';
-      if (discount.quantityRuleType === 'exact') {
-        rule = `when you buy exactly ${discount.purchaseQuantity} items`;
-      } else if (discount.quantityRuleType === 'minimum') {
-        rule = `when you buy at least ${discount.purchaseQuantity} items`;
-      } else {
-        rule = 'on each eligible item';
-      }
-      return `Get ${value} off ${rule}.`;
-    } else if (discount.discountApplyTo === 'quantity') {
-      const discountQty = discount.discountQuantity || 1;
-      
-      if (discount.quantityRuleType === 'bogo') {
-        return `Buy ${discount.purchaseQuantity} items and get ${discountQty} item${discountQty > 1 ? 's' : ''} at ${value} off (equal or lesser value).`;
-      } else if (discount.quantityRuleType === 'exact') {
-        return `Buy exactly ${discount.purchaseQuantity} items and get ${value} off your order.`;
-      } else if (discount.quantityRuleType === 'minimum') {
-        return `Buy at least ${discount.purchaseQuantity} items and get ${value} off your order.`;
-      }
-    }
-    return 'Special discount available.';
-  };
-
-  return (
-    <>
-      <div 
-        className="fixed inset-0 bg-black/50 z-50"
-        onClick={onClose}
-      />
-
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-2xl">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-orange-100 mb-1">{getDiscountTypeLabel()}</div>
-                <h2 className="text-3xl font-bold mb-2">{discount.name}</h2>
-                {discount.description && (
-                  <p className="text-orange-100 text-sm italic">{discount.description}</p>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="ml-4 text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mt-4 inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-full font-bold text-2xl shadow-lg">
-              {discount.amountType === 'percentage' ? `${discount.amount}% OFF` : `$${discount.amount} OFF`}
-            </div>
-          </div>
-          <div className="p-6 space-y-5">
-            <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
-              <p className="text-gray-800 font-medium leading-relaxed">
-                {getDiscountDescription()}
-              </p>
-            </div>
-
-            <section className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Eligible Items
-              </h3>
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                  {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' ? 'Purchase Items:' : 'Applies to:'}
-                </h4>
-                {discount.addAllItemsToPurchase ? (
-                  <p className="text-gray-600 italic">All items in store</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {discount.purchaseItems?.map((item, idx) => (
-                      <div key={`purchase-${idx}`} className="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-medium">
-                        {item.name} <span className="text-blue-600">(${item.price})</span>
-                      </div>
-                    ))}
-                    {discount.purchaseCategories?.map((cat, idx) => (
-                      <div key={`purchase-cat-${idx}`} className="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-lg text-sm font-medium">
-                        {cat.name} <span className="text-purple-600">(Category)</span>
-                      </div>
-                    ))}
-                    {(!discount.purchaseItems || discount.purchaseItems.length === 0) && 
-                     (!discount.purchaseCategories || discount.purchaseCategories.length === 0) && (
-                      <p className="text-gray-500 italic">No specific items selected</p>
-                    )}
-                  </div>
-                )}
-              </div>
-              {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' && (
-                <div className="pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                    Discounted Items: {discount.copyEligibleItems && <span className="text-gray-500 font-normal">(same as purchase items)</span>}
-                  </h4>
-                  {discount.copyEligibleItems ? (
-                    <p className="text-gray-600 italic">Same items as purchase selection</p>
-                  ) : discount.addAllItemsToDiscount ? (
-                    <p className="text-gray-600 italic">All items in store</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {discount.discountTargetItems?.map((item, idx) => (
-                        <div key={`discount-${idx}`} className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg text-sm font-medium">
-                          {item.name} <span className="text-green-600">(${item.price})</span>
-                        </div>
-                      ))}
-                      {(!discount.discountTargetItems || discount.discountTargetItems.length === 0) && (
-                        <p className="text-gray-500 italic">No specific items selected</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
-            <section className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Validity Period
-              </h3>
-              
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Date Range:</h4>
-                {discount.setDateRange && (discount.dateRangeStart || discount.dateRangeEnd) ? (
-                  <div className="space-y-1">
-                    {discount.dateRangeStart && (
-                      <p className="text-gray-700">
-                        <span className="font-medium">From:</span> {formatDateShort(discount.dateRangeStart)}
-                      </p>
-                    )}
-                    {discount.dateRangeEnd && (
-                      <p className="text-gray-700">
-                        <span className="font-medium">Until:</span> {formatDateShort(discount.dateRangeEnd)}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 italic">No date restrictions</p>
-                )}
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Schedule:</h4>
-                {discount.setSchedule ? (
-                  <div className="space-y-1">
-                    <p className="text-gray-700">
-                      <span className="font-medium">Days:</span> {getScheduleDaysText()}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Time:</span> {discount.scheduleTimeStart || '00:00'} - {discount.scheduleTimeEnd || '23:59'}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-gray-600 italic">Available all day, every day</p>
-                )}
-              </div>
-            </section>
-            {(discount.minimumSubtotal > 0 || discount.maximumValue > 0 || discount.setMaximumValue || discount.setMinimumSpend) && (
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Terms & Limitations
-                </h3>
-                
-                <div className="space-y-3">
-                  {(discount.setMinimumSpend && discount.minimumSubtotal > 0) && (
-                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-700 font-medium">Minimum Spend Required:</span>
-                      <span className="text-gray-900 font-bold">${discount.minimumSubtotal}</span>
-                    </div>
-                  )}
-                  {(discount.setMaximumValue && discount.maximumValue > 0) && (
-                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-700 font-medium">Maximum Discount Value:</span>
-                      <span className="text-gray-900 font-bold">${discount.maximumValue}</span>
-                    </div>
-                  )}
-                  {discount.usageLimit > 0 && (
-                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-700 font-medium">Usage Limit:</span>
-                      <span className="text-gray-900 font-bold">{discount.usageLimit} times</span>
-                    </div>
-                  )}
-                  {!(discount.setMinimumSpend && discount.minimumSubtotal > 0) && 
-                   !(discount.setMaximumValue && discount.maximumValue > 0) && 
-                   !(discount.usageLimit > 0) && (
-                    <p className="text-gray-600 italic">No restrictions apply</p>
-                  )}
-                </div>
-              </section>
-            )}
-          </div>
-          <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="w-full py-3 px-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
+import {formatDateShort} from "@/utils/dateUtils";export default function DiscountDetailModal({ discount, onClose }) {  if (!discount) return null;  const getScheduleDaysText = () => {    if (!discount.setSchedule || !discount.scheduleDays) return 'All days';    const dayNames = {      monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday',      friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday'    };    const enabledDays = Object.keys(dayNames).filter(day => discount.scheduleDays[day]);    if (enabledDays.length === 7) return 'Every day';    if (enabledDays.length === 0) return 'No days selected';    if (enabledDays.length === 5 && enabledDays.every(day => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(day))) {        return 'Weekdays (Monday - Friday)';    }    if (enabledDays.length === 2 && enabledDays.every(day => ['saturday', 'sunday'].includes(day))) {        return 'Weekends (Saturday - Sunday)';    }    return enabledDays.map(day => dayNames[day]).join(', ');  };  const getDiscountTypeLabel = () => {    if (discount.discountApplyTo === 'item_category') {      return 'Direct Discount';    } else if (discount.discountApplyTo === 'quantity') {      if (discount.quantityRuleType === 'exact') {        return 'Quantity Discount (Exact)';      } else if (discount.quantityRuleType === 'minimum') {        return 'Quantity Discount (Minimum)';      } else if (discount.quantityRuleType === 'bogo') {        return 'Buy X Get Y (BOGO)';      }    }    return 'Special Offer';  };  const getDiscountDescription = () => {    const value = discount.amountType === 'percentage' ? `${discount.amount}%` : `$${discount.amount}`;    if (discount.discountApplyTo === 'item_category') {      let rule = '';      if (discount.quantityRuleType === 'exact') {        rule = `when you buy exactly ${discount.purchaseQuantity} items`;      } else if (discount.quantityRuleType === 'minimum') {        rule = `when you buy at least ${discount.purchaseQuantity} items`;      } else {        rule = 'on each eligible item';      }      return `Get ${value} off ${rule}.`;    } else if (discount.discountApplyTo === 'quantity') {      const discountQty = discount.discountQuantity || 1;      if (discount.quantityRuleType === 'bogo') {        return `Buy ${discount.purchaseQuantity} items and get ${discountQty} item${discountQty > 1 ? 's' : ''} at ${value} off (equal or lesser value).`;      } else if (discount.quantityRuleType === 'exact') {        return `Buy exactly ${discount.purchaseQuantity} items and get ${value} off your order.`;      } else if (discount.quantityRuleType === 'minimum') {        return `Buy at least ${discount.purchaseQuantity} items and get ${value} off your order.`;      }    }    return 'Special discount available.';  };  return (    <>      <div         className="fixed inset-0 bg-black/50 z-50"        onClick={onClose}      />      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">          <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-2xl">            <div className="flex items-start justify-between">              <div className="flex-1">                <div className="text-sm font-medium text-orange-100 mb-1">{getDiscountTypeLabel()}</div>                <h2 className="text-3xl font-bold mb-2">{discount.name}</h2>                {discount.description && (                  <p className="text-orange-100 text-sm italic">{discount.description}</p>                )}              </div>              <button                onClick={onClose}                className="ml-4 text-white hover:bg-white/20 p-2 rounded-lg transition-colors"              >                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />                </svg>              </button>            </div>            <div className="mt-4 inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-full font-bold text-2xl shadow-lg">              {discount.amountType === 'percentage' ? `${discount.amount}% OFF` : `$${discount.amount} OFF`}            </div>          </div>          <div className="p-6 space-y-5">            <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">              <p className="text-gray-800 font-medium leading-relaxed">                {getDiscountDescription()}              </p>            </div>            <section className="bg-white border border-gray-200 rounded-xl p-5">              <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">                Eligible Items              </h3>              <div className="mb-4">                <h4 className="text-sm font-semibold text-gray-700 mb-2">                  {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' ? 'Purchase Items:' : 'Applies to:'}                </h4>                {discount.addAllItemsToPurchase ? (                  <p className="text-gray-600 italic">All items in store</p>                ) : (                  <div className="flex flex-wrap gap-2">                    {discount.purchaseItems?.map((item, idx) => (                      <div key={`purchase-${idx}`} className="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-medium">                        {item.name} <span className="text-blue-600">(${item.price})</span>                      </div>                    ))}                    {discount.purchaseCategories?.map((cat, idx) => (                      <div key={`purchase-cat-${idx}`} className="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-lg text-sm font-medium">                        {cat.name} <span className="text-purple-600">(Category)</span>                      </div>                    ))}                    {(!discount.purchaseItems || discount.purchaseItems.length === 0) &&                      (!discount.purchaseCategories || discount.purchaseCategories.length === 0) && (                      <p className="text-gray-500 italic">No specific items selected</p>                    )}                  </div>                )}              </div>              {discount.discountApplyTo === 'quantity' && discount.quantityRuleType === 'bogo' && (                <div className="pt-4 border-t border-gray-200">                  <h4 className="text-sm font-semibold text-gray-700 mb-2">                    Discounted Items: {discount.copyEligibleItems && <span className="text-gray-500 font-normal">(same as purchase items)</span>}                  </h4>                  {discount.copyEligibleItems ? (                    <p className="text-gray-600 italic">Same items as purchase selection</p>                  ) : discount.addAllItemsToDiscount ? (                    <p className="text-gray-600 italic">All items in store</p>                  ) : (                    <div className="flex flex-wrap gap-2">                      {discount.discountTargetItems?.map((item, idx) => (                        <div key={`discount-${idx}`} className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg text-sm font-medium">                          {item.name} <span className="text-green-600">(${item.price})</span>                        </div>                      ))}                      {(!discount.discountTargetItems || discount.discountTargetItems.length === 0) && (                        <p className="text-gray-500 italic">No specific items selected</p>                      )}                    </div>                  )}                </div>              )}            </section>            <section className="bg-white border border-gray-200 rounded-xl p-5">              <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">                Validity Period              </h3>              <div className="mb-4">                <h4 className="text-sm font-semibold text-gray-700 mb-2">Date Range:</h4>                {discount.setDateRange && (discount.dateRangeStart || discount.dateRangeEnd) ? (                  <div className="space-y-1">                    {discount.dateRangeStart && (                      <p className="text-gray-700">                        <span className="font-medium">From:</span> {formatDateShort(discount.dateRangeStart)}                      </p>                    )}                    {discount.dateRangeEnd && (                      <p className="text-gray-700">                        <span className="font-medium">Until:</span> {formatDateShort(discount.dateRangeEnd)}                      </p>                    )}                  </div>                ) : (                  <p className="text-gray-600 italic">No date restrictions</p>                )}              </div>              <div className="pt-4 border-t border-gray-200">                <h4 className="text-sm font-semibold text-gray-700 mb-2">Schedule:</h4>                {discount.setSchedule ? (                  <div className="space-y-1">                    <p className="text-gray-700">                      <span className="font-medium">Days:</span> {getScheduleDaysText()}                    </p>                    <p className="text-gray-700">                      <span className="font-medium">Time:</span> {discount.scheduleTimeStart || '00:00'} - {discount.scheduleTimeEnd || '23:59'}                    </p>                  </div>                ) : (                  <p className="text-gray-600 italic">Available all day, every day</p>                )}              </div>            </section>            {(discount.minimumSubtotal > 0 || discount.maximumValue > 0 || discount.setMaximumValue || discount.setMinimumSpend) && (              <section className="bg-white border border-gray-200 rounded-xl p-5">                <h3 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">                  Terms & Limitations                </h3>                <div className="space-y-3">                  {(discount.setMinimumSpend && discount.minimumSubtotal > 0) && (                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">                      <span className="text-gray-700 font-medium">Minimum Spend Required:</span>                      <span className="text-gray-900 font-bold">${discount.minimumSubtotal}</span>                    </div>                  )}                  {(discount.setMaximumValue && discount.maximumValue > 0) && (                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">                      <span className="text-gray-700 font-medium">Maximum Discount Value:</span>                      <span className="text-gray-900 font-bold">${discount.maximumValue}</span>                    </div>                  )}                  {discount.usageLimit > 0 && (                    <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">                      <span className="text-gray-700 font-medium">Usage Limit:</span>                      <span className="text-gray-900 font-bold">{discount.usageLimit} times</span>                    </div>                  )}                  {!(discount.setMinimumSpend && discount.minimumSubtotal > 0) &&                    !(discount.setMaximumValue && discount.maximumValue > 0) &&                    !(discount.usageLimit > 0) && (                    <p className="text-gray-600 italic">No restrictions apply</p>                  )}                </div>              </section>            )}          </div>          <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">            <button              onClick={onClose}              className="w-full py-3 px-6 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"            >              Close            </button>          </div>        </div>      </div>    </>  );}

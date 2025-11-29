@@ -1,12 +1,1 @@
-const express = require('express');
-const router = express.Router({ mergeParams: true });
-const { verifyToken, verifyMembership } = require('../middleware/verifyToken');
-const { getCustomers, getCustomerOrders, getGuestOrders, exportCustomers } = require('../controllers/customersController');
-
-router.get('/', verifyToken, verifyMembership, getCustomers);
-router.get('/export', verifyToken, verifyMembership, exportCustomers);
-router.get('/orders', verifyToken, verifyMembership, getCustomerOrders);
-router.get('/:customerEmail/orders', verifyToken, verifyMembership, getCustomerOrders);
-router.get('/guest/:guestUuid/orders', getGuestOrders);
-
-module.exports = router;
+const express = require('express');const router = express.Router({ mergeParams: true });const { verifyToken, verifyMembership } = require('../middleware/verifyToken');const { getCustomers, getCustomerOrders, getGuestOrders, exportCustomers } = require('../controllers/customersController');router.get('/', verifyToken, verifyMembership, getCustomers);router.get('/export', verifyToken, verifyMembership, exportCustomers);router.get('/orders', verifyToken, verifyMembership, getCustomerOrders);router.get('/:customerEmail/orders', verifyToken, verifyMembership, getCustomerOrders);router.get('/guest/:guestUuid/orders', getGuestOrders);module.exports = router;

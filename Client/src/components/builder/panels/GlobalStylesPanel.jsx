@@ -1,154 +1,1 @@
-import { THEME_PRESETS } from '@/components/builder/config/themePresets';
-import { PALETTE_OPTIONS } from '@/components/builder/blockTypes';
-import { PALETTE_KEYS } from '@/constants/builderConstants';
-import { FONT_OPTIONS } from '@/components/builder/config/fonts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-
-export default function GlobalStylesPanel({ globalStyles, onChange }) {
-  const handleChange = (section, key, value) => {
-    onChange({
-      ...globalStyles,
-      [section]: {
-        ...globalStyles[section],
-        [key]: value
-      }
-    });
-  };
-
-  const handlePaletteChange = (key, hex) => {
-    const nextPalette = { ...(globalStyles.palette || {}), [key]: hex };
-    const nextColors = {
-      ...(globalStyles.colors || {}),
-      primary: nextPalette.primary,
-      onPrimary: nextPalette.onPrimary,
-      secondary: nextPalette.secondary,
-      onSecondary: nextPalette.onSecondary,
-      background: nextPalette.background,
-      text: nextPalette.text,
-      surface: nextPalette.surface,
-      muted: nextPalette.muted
-    };
-    onChange({ ...globalStyles, palette: nextPalette, colors: nextColors });
-  };
-
-  const applyPreset = (preset) => {
-    const presetPalette = preset.palette || {};
-    const nextPalette = {
-      primary: presetPalette.primary ?? globalStyles.palette?.primary,
-      onPrimary: presetPalette.onPrimary ?? globalStyles.palette?.onPrimary,
-      secondary: presetPalette.secondary ?? globalStyles.palette?.secondary,
-      onSecondary: presetPalette.onSecondary ?? globalStyles.palette?.onSecondary,
-      background: presetPalette.background ?? globalStyles.palette?.background,
-      surface: presetPalette.surface ?? globalStyles.palette?.surface,
-      text: presetPalette.text ?? globalStyles.palette?.text,
-      muted: presetPalette.muted ?? globalStyles.palette?.muted
-    };
-
-    const nextColors = {
-      background: nextPalette.background,
-      primary: nextPalette.primary,
-      onPrimary: nextPalette.onPrimary,
-      secondary: nextPalette.secondary,
-      onSecondary: nextPalette.onSecondary,
-      text: nextPalette.text,
-      surface: nextPalette.surface,
-      muted: nextPalette.muted
-    };
-
-    const nextTypography = { ...(globalStyles.typography || {}), headingFont: preset.font || globalStyles.typography?.headingFont };
-    onChange({ ...globalStyles, palette: nextPalette, colors: nextColors, typography: nextTypography });
-  };
-
-  return (
-    <div className="p-4 space-y-6">
-      <div className="border-b pb-4">
-        <h3 className="text-lg font-bold">Site Styles</h3>
-        <p className="text-sm text-gray-500">Global appearance settings</p>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Color Palette</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            {THEME_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => applyPreset(p)}
-                className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left group bg-white"
-              >
-                <span
-                  style={{ backgroundColor: p.color }}
-                  className="w-6 h-6 rounded-full border border-gray-200 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform"
-                />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 truncate">{p.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-3">
-            {PALETTE_KEYS.map((key) => {
-              const opt = PALETTE_OPTIONS.find(p => p.value === key);
-              const label = opt ? opt.label : key;
-              const hex = globalStyles.palette?.[key] || '';
-              return (
-                <div key={key}>
-                  <label className="block text-sm font-medium mb-1">{label}</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={hex}
-                      onChange={(e) => handlePaletteChange(key, e.target.value)}
-                      className="h-9 w-12 border rounded cursor-pointer p-0 overflow-hidden"
-                    />
-                    <Input
-                      value={hex}
-                      onChange={(e) => handlePaletteChange(key, e.target.value)}
-                      className="uppercase"
-                      maxLength={7}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Typography</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Heading Font</label>
-            <select
-              value={globalStyles.typography.headingFont}
-              onChange={(e) => handleChange('typography', 'headingFont', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {FONT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Body Font</label>
-            <select
-              value={globalStyles.typography.bodyFont}
-              onChange={(e) => handleChange('typography', 'bodyFont', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {FONT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+import { THEME_PRESETS } from '@/components/builder/config/themePresets';import { PALETTE_OPTIONS } from '@/components/builder/blockTypes';import { PALETTE_KEYS } from '@/constants/builderConstants';import { FONT_OPTIONS } from '@/components/builder/config/fonts';import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';import Button from '@/components/ui/Button';import Input from '@/components/ui/Input';export default function GlobalStylesPanel({ globalStyles, onChange }) {  const handleChange = (section, key, value) => {    onChange({      ...globalStyles,      [section]: {        ...globalStyles[section],        [key]: value      }    });  };  const handlePaletteChange = (key, hex) => {    const nextPalette = { ...(globalStyles.palette || {}), [key]: hex };    const nextColors = {      ...(globalStyles.colors || {}),      primary: nextPalette.primary,      onPrimary: nextPalette.onPrimary,      secondary: nextPalette.secondary,      onSecondary: nextPalette.onSecondary,      background: nextPalette.background,      text: nextPalette.text,      surface: nextPalette.surface,      muted: nextPalette.muted    };    onChange({ ...globalStyles, palette: nextPalette, colors: nextColors });  };  const applyPreset = (preset) => {    const presetPalette = preset.palette || {};    const nextPalette = {      primary: presetPalette.primary ?? globalStyles.palette?.primary,      onPrimary: presetPalette.onPrimary ?? globalStyles.palette?.onPrimary,      secondary: presetPalette.secondary ?? globalStyles.palette?.secondary,      onSecondary: presetPalette.onSecondary ?? globalStyles.palette?.onSecondary,      background: presetPalette.background ?? globalStyles.palette?.background,      surface: presetPalette.surface ?? globalStyles.palette?.surface,      text: presetPalette.text ?? globalStyles.palette?.text,      muted: presetPalette.muted ?? globalStyles.palette?.muted    };    const nextColors = {      background: nextPalette.background,      primary: nextPalette.primary,      onPrimary: nextPalette.onPrimary,      secondary: nextPalette.secondary,      onSecondary: nextPalette.onSecondary,      text: nextPalette.text,      surface: nextPalette.surface,      muted: nextPalette.muted    };    const nextTypography = { ...(globalStyles.typography || {}), headingFont: preset.font || globalStyles.typography?.headingFont };    onChange({ ...globalStyles, palette: nextPalette, colors: nextColors, typography: nextTypography });  };  return (    <div className="p-4 space-y-6">      <div className="border-b pb-4">        <h3 className="text-lg font-bold">Site Styles</h3>        <p className="text-sm text-gray-500">Global appearance settings</p>      </div>      <Card>        <CardHeader className="pb-2">          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Color Palette</CardTitle>        </CardHeader>        <CardContent className="space-y-4">          <div className="grid grid-cols-2 gap-2">            {THEME_PRESETS.map((p) => (              <button                key={p.id}                onClick={() => applyPreset(p)}                className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left group bg-white"              >                <span                  style={{ backgroundColor: p.color }}                  className="w-6 h-6 rounded-full border border-gray-200 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform"                />                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 truncate">{p.label}</span>              </button>            ))}          </div>          <div className="space-y-3">            {PALETTE_KEYS.map((key) => {              const opt = PALETTE_OPTIONS.find(p => p.value === key);              const label = opt ? opt.label : key;              const hex = globalStyles.palette?.[key] || '';              return (                <div key={key}>                  <label className="block text-sm font-medium mb-1">{label}</label>                  <div className="flex items-center gap-2">                    <input                      type="color"                      value={hex}                      onChange={(e) => handlePaletteChange(key, e.target.value)}                      className="h-9 w-12 border rounded cursor-pointer p-0 overflow-hidden"                    />                    <Input                      value={hex}                      onChange={(e) => handlePaletteChange(key, e.target.value)}                      className="uppercase"                      maxLength={7}                    />                  </div>                </div>              );            })}          </div>        </CardContent>      </Card>      <Card>        <CardHeader className="pb-2">          <CardTitle className="text-sm uppercase tracking-wider text-gray-500">Typography</CardTitle>        </CardHeader>        <CardContent className="space-y-3">          <div>            <label className="block text-sm font-medium mb-1">Heading Font</label>            <select              value={globalStyles.typography.headingFont}              onChange={(e) => handleChange('typography', 'headingFont', e.target.value)}              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"            >              {FONT_OPTIONS.map(opt => (                <option key={opt.value} value={opt.value}>{opt.label}</option>              ))}            </select>          </div>          <div>            <label className="block text-sm font-medium mb-1">Body Font</label>            <select              value={globalStyles.typography.bodyFont}              onChange={(e) => handleChange('typography', 'bodyFont', e.target.value)}              className="w-full px-3 py-2 border rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"            >              {FONT_OPTIONS.map(opt => (                <option key={opt.value} value={opt.value}>{opt.label}</option>              ))}            </select>          </div>        </CardContent>      </Card>    </div>  );}

@@ -1,17 +1,1 @@
-import { create } from "zustand";
-
-export const useAppStore = create((set) => ({
-  restaurantId: null,
-  setRestaurantId: (id) => {
-    set({ restaurantId: id });
-  },
-  restaurant: null,
-  setRestaurant: (restaurant) => {
-    set({ restaurant });
-  },
-
-  sidebarCollapsed: false,
-  setSidebarCollapsed: (val) => set({ sidebarCollapsed: !!val }),
-}));
-
-export default useAppStore;
+import { create } from "zustand";import { persist, createJSONStorage } from "zustand/middleware";export const useAppStore = create(  persist(    (set) => ({      restaurantId: null,      setRestaurantId: (id) => {        set({ restaurantId: id });      },      restaurant: null,      setRestaurant: (restaurant) => {        set({ restaurant });      },      sidebarCollapsed: false,      setSidebarCollapsed: (val) => set({ sidebarCollapsed: !!val }),    }),    {      name: "app-storage",       storage: createJSONStorage(() => sessionStorage),       partialize: (state) => ({ restaurantId: state.restaurantId, sidebarCollapsed: state.sidebarCollapsed }),     }  ));export default useAppStore;

@@ -1,657 +1,1 @@
-import { resolveColor } from '@/components/builder/utils/colorUtils';
-import StyledText from '@/components/builder/atoms/StyledText';
-
-export default function Location({
-  title,
-  showMap = true,
-  mapEmbedCode,
-  showAddress = true,
-  showContact = true,
-  layout = "luxury-split",
-  address,
-  phone,
-  email,
-  showDirectionsButton = true,
-  directionsText = "Get Directions",
-  directionsUrl = "#",
-  badgeText = "Visit Us",
-  showDecorativeElements = true,
-  backgroundColor = "background",
-  textColor = "text",
-  titleStyle = {},
-  addressStyle = {},
-  contactStyle = {},
-  globalStyles,
-  blockId,
-  isPublic = false,
-  anchorId
-}) {
-
-  const displayAddress = address || "123 Culinary Avenue\nFood District, NY 10012";
-  const displayPhone = phone || "(555) 123-4567";
-  const displayEmail = email || "hello@restaurant.com";
-
-  const getIframeSrc = (embedCode) => {
-    if (!embedCode) return "";
-    const iframeMatch = embedCode.match(
-      /<iframe[^>]+src=["']([^"']+)["'][^>]*>/i
-    );
-    if (iframeMatch) {
-      return iframeMatch[1];
-    }
-    if (embedCode.startsWith("http")) {
-      return embedCode;
-    }
-
-    return "";
-  };
-  const getColor = (colorKey) => {
-    return resolveColor(colorKey, globalStyles);
-  };
-
-  const iframeSrc = getIframeSrc(mapEmbedCode);
-
-  const renderLuxurySplit = () => (
-    <section id={anchorId || "location"} className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} >
-      {showDecorativeElements && (
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-20 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>
-          <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full blur-3xl opacity-30" style={{ backgroundColor: getColor('surface') }}></div>
-        </div>
-      )}
-
-      {showDecorativeElements && (
-        <>
-          <div className="absolute top-10 right-10 w-20 h-20 border-2 rounded-full opacity-20" style={{ borderColor: getColor('primary') }}></div>
-          <div className="absolute bottom-10 left-10 w-16 h-16 border rounded-full opacity-30" style={{ borderColor: getColor('secondary') }}></div>
-        </>
-      )}
-
-      <div className="max-w-7xl mx-auto relative">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-          {showMap && iframeSrc && (
-            <div className="order-1 lg:order-1 relative group" data-control="location-map" data-block-id={blockId}>
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-4" style={{ borderColor: getColor('surface') }}>
-                <iframe
-                  src={iframeSrc}
-                  width="100%"
-                  height="450"
-                  style={{ border: 0 }}
-                  allowFullScreen=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-3xl"
-                ></iframe>
-                {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: getColor('primary') + '10' }}></div>
-              </div>
-
-              <div className="absolute -top-6 -left-6 w-12 h-12 rounded-full opacity-80 shadow-lg animate-bounce" style={{ backgroundColor: getColor('primary') }}></div>
-              <div className="absolute -bottom-6 -right-6 w-8 h-8 rounded-full opacity-60 shadow-lg animate-bounce delay-1000" style={{ backgroundColor: getColor('secondary') }}></div>
-              <div className="absolute top-4 right-4 w-4 h-4 rounded-full opacity-70 shadow-md" style={{ backgroundColor: getColor('surface') }}></div>
-              <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full opacity-80 shadow-md" style={{ backgroundColor: getColor('primary') }}></div>
-            </div>
-          )}
-          <div className="order-2 lg:order-2" data-control="location-content" data-block-id={blockId}>
-            <div className="relative">
-              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg border" style={{ backgroundColor: getColor('surface'), color: getColor(textColor), borderColor: getColor('primary') }} data-control="location-badge" data-block-id={blockId}>
-                <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: getColor('primary') }}></div>
-                {badgeText}
-                <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: getColor('secondary') }}></div>
-              </div>
-
-              {title && (
-                <StyledText
-                  tag="h2"
-                  className="text-5xl lg:text-6xl font-bold mb-8 leading-tight"
-                  styleConfig={{
-                    ...titleStyle,
-                    color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
-                    fontFamily: globalStyles?.typography?.headingFont
-                  }}
-                  dataControl="location-title"
-                  dataBlockId={blockId}
-                >
-                  <span style={{ background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
-                    {title}
-                  </span>
-                </StyledText>
-              )}
-
-              <div className="space-y-8">
-                {showAddress && (
-                  <div className="flex items-start gap-6 p-8 rounded-2xl shadow-xl border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>
-                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: getColor('primary') + '20' }}>
-                      <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        style={{ color: getColor('primary') }}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <StyledText tag="h3" className="text-2xl font-bold mb-3" styleConfig={{ color: getColor(textColor) }}>
-                        Address
-                      </StyledText>
-                      <StyledText
-                        tag="p"
-                        className="whitespace-pre-line leading-relaxed text-lg"
-                        styleConfig={{
-                          ...addressStyle,
-                          color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')
-                        }}
-                        dataControl="location-address-text"
-                        dataBlockId={blockId}
-                      >
-                        {displayAddress}
-                      </StyledText>
-                    </div>
-                  </div>
-                )}
-
-                {showContact && (displayPhone || displayEmail) && (
-                  <div className="flex items-start gap-6 p-8 rounded-2xl shadow-xl border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>
-                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: getColor('secondary') + '20' }}>
-                      <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        style={{ color: getColor('secondary') }}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <StyledText tag="h3" className="text-2xl font-bold mb-3" styleConfig={{ color: getColor(textColor) }}>
-                        Contact
-                      </StyledText>
-                      <div className="space-y-2">
-                        {displayPhone && (
-                          <StyledText
-                            tag="a"
-                            href={`tel:${displayPhone}`}
-                            className="block hover:opacity-80 transition-colors text-lg font-medium"
-                            styleConfig={{
-                              ...contactStyle,
-                              color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                            }}
-                            dataControl="location-phone"
-                            dataBlockId={blockId}
-                          >
-                            {displayPhone}
-                          </StyledText>
-                        )}
-                        {displayEmail && (
-                          <StyledText
-                            tag="a"
-                            href={`mailto:${displayEmail}`}
-                            className="block hover:opacity-80 transition-colors text-lg"
-                            styleConfig={{
-                              ...contactStyle,
-                              color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                            }}
-                            dataControl="location-email"
-                            dataBlockId={blockId}
-                          >
-                            {displayEmail}
-                          </StyledText>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-              {showDirectionsButton && (
-                <div className="mt-12" data-control="location-cta" data-block-id={blockId}>
-                  <a
-                    href={directionsUrl}
-                    className="inline-flex items-center gap-4 px-10 py-5 font-bold rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 border-2"
-                    style={{
-                      background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,
-                      color: getColor('onPrimary'),
-                      borderColor: getColor('surface')
-                    }}
-                  >
-                    {directionsText}
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderElegantCentered = () => (
-    <section id={anchorId || "location"} className="py-32 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} >
-      {showDecorativeElements && (
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>
-        </div>
-      )}
-
-      {showDecorativeElements && (
-        <>
-          <div className="absolute top-20 left-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to bottom, ${getColor('primary')}, transparent)` }}></div>
-          <div className="absolute top-20 right-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to bottom, ${getColor('secondary')}, transparent)` }}></div>
-          <div className="absolute bottom-20 left-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to top, ${getColor('primary')}, transparent)` }}></div>
-          <div className="absolute bottom-20 right-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to top, ${getColor('secondary')}, transparent)` }}></div>
-        </>
-      )}
-
-      <div className="max-w-6xl mx-auto relative text-center">
-        <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full text-sm font-bold mb-12 shadow-xl border-2" style={{ backgroundColor: getColor('surface'), color: getColor(textColor), borderColor: getColor('primary') }} data-control="location-badge" data-block-id={blockId}>
-          <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: getColor('primary') }}></div>
-          <span className="text-lg"> {badgeText}</span>
-          <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: getColor('secondary') }}></div>
-        </div>
-
-        {title && (
-          <StyledText
-            tag="h2"
-            className="text-6xl lg:text-7xl font-bold mb-12 leading-tight"
-            styleConfig={{
-              ...titleStyle,
-              color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
-              fontFamily: globalStyles?.typography?.headingFont
-            }}
-            dataControl="location-title"
-            dataBlockId={blockId}
-          >
-            <span style={{ background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.1))' }}>
-              {title}
-            </span>
-          </StyledText>
-        )}
-
-        {showMap && iframeSrc && (
-          <div className="mb-16 relative group max-w-4xl mx-auto" data-control="location-map" data-block-id={blockId}>
-            <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-8" style={{ borderColor: getColor('surface') }}>
-              <iframe
-                src={iframeSrc}
-                width="100%"
-                height="400"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="rounded-3xl"
-              ></iframe>
-              {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </div>
-
-            {showDecorativeElements && (
-              <>
-                <div className="absolute -top-8 -left-8 w-16 h-16 rounded-full opacity-80 shadow-2xl animate-bounce" style={{ backgroundColor: getColor('primary') }}></div>
-                <div className="absolute -bottom-8 -right-8 w-12 h-12 rounded-full opacity-60 shadow-2xl animate-bounce delay-1000" style={{ backgroundColor: getColor('secondary') }}></div>
-                <div className="absolute top-6 right-6 w-6 h-6 rounded-full opacity-70 shadow-lg" style={{ backgroundColor: getColor('surface') }}></div>
-                <div className="absolute bottom-6 left-6 w-5 h-5 rounded-full opacity-80 shadow-lg" style={{ backgroundColor: getColor('primary') }}></div>
-              </>
-            )}
-          </div>
-        )}
-        <div className="flex flex-wrap justify-center gap-8 mb-16">
-          {showAddress && (
-            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('primary') + '20' }}>
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  style={{ color: getColor('primary') }}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </div>
-              <StyledText tag="h3" className="text-2xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Address</StyledText>
-              <StyledText
-                tag="p"
-                className="whitespace-pre-line leading-relaxed"
-                styleConfig={{
-                  ...addressStyle,
-                  color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')
-                }}
-                dataControl="location-address-text"
-                dataBlockId={blockId}
-              >
-                {displayAddress}
-              </StyledText>
-            </div>
-          )}
-
-          {showContact && (displayPhone || displayEmail) && (
-            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('secondary') + '20' }}>
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  style={{ color: getColor('secondary') }}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                  />
-                </svg>
-              </div>
-              <StyledText tag="h3" className="text-2xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Contact</StyledText>
-              <div className="space-y-2">
-                {displayPhone && (
-                  <StyledText
-                    tag="a"
-                    href={`tel:${displayPhone}`}
-                    className="block hover:opacity-80 transition-colors text-lg font-medium"
-                    styleConfig={{
-                      ...contactStyle,
-                      color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                    }}
-                    dataControl="location-phone"
-                    dataBlockId={blockId}
-                  >
-                    {displayPhone}
-                  </StyledText>
-                )}
-                {displayEmail && (
-                  <StyledText
-                    tag="a"
-                    href={`mailto:${displayEmail}`}
-                    className="block hover:opacity-80 transition-colors text-lg"
-                    styleConfig={{
-                      ...contactStyle,
-                      color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                    }}
-                    dataControl="location-email"
-                    dataBlockId={blockId}
-                  >
-                    {displayEmail}
-                  </StyledText>
-                )}
-              </div>
-            </div>
-          )}
-
-
-        </div>
-        {showDirectionsButton && (
-          <div className="flex justify-center" data-control="location-cta" data-block-id={blockId}>
-            <a
-              href={directionsUrl}
-              className="inline-flex items-center gap-4 px-12 py-6 font-bold text-lg rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 border-4"
-              style={{
-                background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,
-                color: getColor('onPrimary'),
-                borderColor: getColor('surface')
-              }}
-            >
-              <span>{directionsText}</span>
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-            </a>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-
-  const renderModernCard = () => (
-    <section id={anchorId || "location"} className="py-20 px-4 md:px-8" style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} >
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ backgroundColor: getColor('primary'), color: getColor('onPrimary') }} data-control="location-badge" data-block-id={blockId}>
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getColor('onPrimary') }}></span>
-            {badgeText}
-          </div>
-
-          {title && (
-            <StyledText
-              tag="h2"
-              className="text-4xl lg:text-5xl font-bold mb-8 leading-tight"
-              styleConfig={{
-                ...titleStyle,
-                color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),
-                fontFamily: globalStyles?.typography?.headingFont
-              }}
-              dataControl="location-title"
-              dataBlockId={blockId}
-            >
-              {title}
-            </StyledText>
-          )}
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-12">
-          {showMap && iframeSrc && (
-            <div className="rounded-2xl shadow-xl overflow-hidden border relative" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted') }} data-control="location-map" data-block-id={blockId}>
-              <iframe
-                src={iframeSrc}
-                width="100%"
-                height="400"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-              {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}
-            </div>
-          )}
-          <div className="rounded-2xl shadow-xl p-8 border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }}>
-            <div className="space-y-8">
-              {showAddress && (
-                <div className="flex items-start gap-4" data-control="location-address" data-block-id={blockId}>
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('primary') + '20' }}>
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      style={{ color: getColor('primary') }}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <StyledText tag="h3" className="text-xl font-semibold mb-2" styleConfig={{ color: getColor(textColor) }}>
-                      Address
-                    </StyledText>
-                    <StyledText
-                      tag="p"
-                      className="whitespace-pre-line leading-relaxed"
-                      styleConfig={{
-                        ...addressStyle,
-                        color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')
-                      }}
-                      dataControl="location-address-text"
-                      dataBlockId={blockId}
-                    >
-                      {displayAddress}
-                    </StyledText>
-                  </div>
-                </div>
-              )}
-
-              {showContact && (displayPhone || displayEmail) && (
-                <div className="flex items-start gap-4" data-control="location-contact" data-block-id={blockId}>
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('secondary') + '20' }}>
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      style={{ color: getColor('secondary') }}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <StyledText tag="h3" className="text-xl font-semibold mb-2" styleConfig={{ color: getColor(textColor) }}>
-                      Contact
-                    </StyledText>
-                    <div className="space-y-1">
-                      {displayPhone && (
-                        <StyledText
-                          tag="a"
-                          href={`tel:${displayPhone}`}
-                          className="block hover:opacity-80 transition-colors text-lg font-medium"
-                          styleConfig={{
-                            ...contactStyle,
-                            color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                          }}
-                          dataControl="location-phone"
-                          dataBlockId={blockId}
-                        >
-                          {displayPhone}
-                        </StyledText>
-                      )}
-                      {displayEmail && (
-                        <StyledText
-                          tag="a"
-                          href={`mailto:${displayEmail}`}
-                          className="block hover:opacity-80 transition-colors text-lg"
-                          styleConfig={{
-                            ...contactStyle,
-                            color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')
-                          }}
-                          dataControl="location-email"
-                          dataBlockId={blockId}
-                        >
-                          {displayEmail}
-                        </StyledText>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-
-            </div>
-
-            {showDirectionsButton && (
-              <div className="mt-8" data-control="location-cta" data-block-id={blockId}>
-                <a
-                  href={directionsUrl}
-                  className="inline-flex items-center gap-2 px-6 py-3 font-medium rounded-full transition-colors duration-200 shadow-lg hover:shadow-xl w-full justify-center"
-                  style={{
-                    backgroundColor: getColor('primary'),
-                    color: getColor('onPrimary')
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = getColor('primary') + '80'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = getColor('primary')}
-                >
-                  {directionsText}
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-
-
-  switch (layout) {
-    case "elegant-centered":
-    case "premium-showcase":
-      return renderElegantCentered();
-    case "modern-card":
-    case "minimal-contact":
-      return renderModernCard();
-    case "luxury-split":
-    case "classic-info":
-    default:
-      return renderLuxurySplit();
-  }
-}
+import { resolveColor } from '@/components/builder/utils/colorUtils';import StyledText from '@/components/builder/atoms/StyledText';export default function Location({  title,  showMap = true,  mapEmbedCode,  showAddress = true,  showContact = true,  layout = "luxury-split",  address,  phone,  email,  showDirectionsButton = true,  directionsText = "Get Directions",  directionsUrl = "#",  badgeText = "Visit Us",  showDecorativeElements = true,  backgroundColor = "background",  textColor = "text",  titleStyle = {},  addressStyle = {},  contactStyle = {},  globalStyles,  blockId,  isPublic = false,  anchorId}) {  const displayAddress = address || "123 Culinary Avenue\nFood District, NY 10012";  const displayPhone = phone || "(555) 123-4567";  const displayEmail = email || "hello@restaurant.com";  const getIframeSrc = (embedCode) => {    if (!embedCode) return "";    const iframeMatch = embedCode.match(      /<iframe[^>]+src=["']([^"']+)["'][^>]*>/i    );    if (iframeMatch) {      return iframeMatch[1];    }    if (embedCode.startsWith("http")) {      return embedCode;    }    return "";  };  const getColor = (colorKey) => {    return resolveColor(colorKey, globalStyles);  };  const iframeSrc = getIframeSrc(mapEmbedCode);  const renderLuxurySplit = () => (    <section id={anchorId || "location"} className="py-24 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} >      {showDecorativeElements && (        <div className="absolute inset-0 opacity-5">          <div className="absolute top-20 left-20 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>          <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full blur-3xl opacity-30" style={{ backgroundColor: getColor('surface') }}></div>        </div>      )}      {showDecorativeElements && (        <>          <div className="absolute top-10 right-10 w-20 h-20 border-2 rounded-full opacity-20" style={{ borderColor: getColor('primary') }}></div>          <div className="absolute bottom-10 left-10 w-16 h-16 border rounded-full opacity-30" style={{ borderColor: getColor('secondary') }}></div>        </>      )}      <div className="max-w-7xl mx-auto relative">        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">          {showMap && iframeSrc && (            <div className="order-1 lg:order-1 relative group" data-control="location-map" data-block-id={blockId}>              <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-4" style={{ borderColor: getColor('surface') }}>                <iframe                  src={iframeSrc}                  width="100%"                  height="450"                  style={{ border: 0 }}                  allowFullScreen=""                  loading="lazy"                  referrerPolicy="no-referrer-when-downgrade"                  className="rounded-3xl"                ></iframe>                {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: getColor('primary') + '10' }}></div>              </div>              <div className="absolute -top-6 -left-6 w-12 h-12 rounded-full opacity-80 shadow-lg animate-bounce" style={{ backgroundColor: getColor('primary') }}></div>              <div className="absolute -bottom-6 -right-6 w-8 h-8 rounded-full opacity-60 shadow-lg animate-bounce delay-1000" style={{ backgroundColor: getColor('secondary') }}></div>              <div className="absolute top-4 right-4 w-4 h-4 rounded-full opacity-70 shadow-md" style={{ backgroundColor: getColor('surface') }}></div>              <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full opacity-80 shadow-md" style={{ backgroundColor: getColor('primary') }}></div>            </div>          )}          <div className="order-2 lg:order-2" data-control="location-content" data-block-id={blockId}>            <div className="relative">              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg border" style={{ backgroundColor: getColor('surface'), color: getColor(textColor), borderColor: getColor('primary') }} data-control="location-badge" data-block-id={blockId}>                <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: getColor('primary') }}></div>                {badgeText}                <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: getColor('secondary') }}></div>              </div>              {title && (                <StyledText                  tag="h2"                  className="text-5xl lg:text-6xl font-bold mb-8 leading-tight"                  styleConfig={{                    ...titleStyle,                    color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),                    fontFamily: globalStyles?.typography?.headingFont                  }}                  dataControl="location-title"                  dataBlockId={blockId}                >                  <span style={{ background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>                    {title}                  </span>                </StyledText>              )}              <div className="space-y-8">                {showAddress && (                  <div className="flex items-start gap-6 p-8 rounded-2xl shadow-xl border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: getColor('primary') + '20' }}>                      <svg                        className="w-8 h-8"                        fill="none"                        stroke="currentColor"                        viewBox="0 0 24 24"                        style={{ color: getColor('primary') }}                      >                        <path                          strokeLinecap="round"                          strokeLinejoin="round"                          strokeWidth={2}                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"                        />                        <path                          strokeLinecap="round"                          strokeLinejoin="round"                          strokeWidth={2}                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"                        />                      </svg>                    </div>                    <div>                      <StyledText tag="h3" className="text-2xl font-bold mb-3" styleConfig={{ color: getColor(textColor) }}>                        Address                      </StyledText>                      <StyledText                        tag="p"                        className="whitespace-pre-line leading-relaxed text-lg"                        styleConfig={{                          ...addressStyle,                          color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')                        }}                        dataControl="location-address-text"                        dataBlockId={blockId}                      >                        {displayAddress}                      </StyledText>                    </div>                  </div>                )}                {showContact && (displayPhone || displayEmail) && (                  <div className="flex items-start gap-6 p-8 rounded-2xl shadow-xl border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: getColor('secondary') + '20' }}>                      <svg                        className="w-8 h-8"                        fill="none"                        stroke="currentColor"                        viewBox="0 0 24 24"                        style={{ color: getColor('secondary') }}                      >                        <path                          strokeLinecap="round"                          strokeLinejoin="round"                          strokeWidth={2}                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"                        />                      </svg>                    </div>                    <div>                      <StyledText tag="h3" className="text-2xl font-bold mb-3" styleConfig={{ color: getColor(textColor) }}>                        Contact                      </StyledText>                      <div className="space-y-2">                        {displayPhone && (                          <StyledText                            tag="a"                            href={`tel:${displayPhone}`}                            className="block hover:opacity-80 transition-colors text-lg font-medium"                            styleConfig={{                              ...contactStyle,                              color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                            }}                            dataControl="location-phone"                            dataBlockId={blockId}                          >                            {displayPhone}                          </StyledText>                        )}                        {displayEmail && (                          <StyledText                            tag="a"                            href={`mailto:${displayEmail}`}                            className="block hover:opacity-80 transition-colors text-lg"                            styleConfig={{                              ...contactStyle,                              color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                            }}                            dataControl="location-email"                            dataBlockId={blockId}                          >                            {displayEmail}                          </StyledText>                        )}                      </div>                    </div>                  </div>                )}              </div>              {showDirectionsButton && (                <div className="mt-12" data-control="location-cta" data-block-id={blockId}>                  <a                    href={directionsUrl}                    className="inline-flex items-center gap-4 px-10 py-5 font-bold rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 border-2"                    style={{                      background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,                      color: getColor('onPrimary'),                      borderColor: getColor('surface')                    }}                  >                    {directionsText}                    <svg                      className="w-6 h-6"                      fill="none"                      stroke="currentColor"                      viewBox="0 0 24 24"                    >                      <path                        strokeLinecap="round"                        strokeLinejoin="round"                        strokeWidth={2}                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"                      />                    </svg>                  </a>                </div>              )}            </div>          </div>        </div>      </div>    </section>  );  const renderElegantCentered = () => (    <section id={anchorId || "location"} className="py-32 px-4 md:px-8 relative overflow-hidden" style={{ backgroundColor: getColor(backgroundColor) }} >      {showDecorativeElements && (        <div className="absolute inset-0 opacity-10">          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>        </div>      )}      {showDecorativeElements && (        <>          <div className="absolute top-20 left-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to bottom, ${getColor('primary')}, transparent)` }}></div>          <div className="absolute top-20 right-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to bottom, ${getColor('secondary')}, transparent)` }}></div>          <div className="absolute bottom-20 left-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to top, ${getColor('primary')}, transparent)` }}></div>          <div className="absolute bottom-20 right-20 w-px h-32 opacity-30" style={{ background: `linear-gradient(to top, ${getColor('secondary')}, transparent)` }}></div>        </>      )}      <div className="max-w-6xl mx-auto relative text-center">        <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full text-sm font-bold mb-12 shadow-xl border-2" style={{ backgroundColor: getColor('surface'), color: getColor(textColor), borderColor: getColor('primary') }} data-control="location-badge" data-block-id={blockId}>          <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: getColor('primary') }}></div>          <span className="text-lg"> {badgeText}</span>          <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: getColor('secondary') }}></div>        </div>        {title && (          <StyledText            tag="h2"            className="text-6xl lg:text-7xl font-bold mb-12 leading-tight"            styleConfig={{              ...titleStyle,              color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),              fontFamily: globalStyles?.typography?.headingFont            }}            dataControl="location-title"            dataBlockId={blockId}          >            <span style={{ background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.1))' }}>              {title}            </span>          </StyledText>        )}        {showMap && iframeSrc && (          <div className="mb-16 relative group max-w-4xl mx-auto" data-control="location-map" data-block-id={blockId}>            <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 border-8" style={{ borderColor: getColor('surface') }}>              <iframe                src={iframeSrc}                width="100%"                height="400"                style={{ border: 0 }}                allowFullScreen=""                loading="lazy"                referrerPolicy="no-referrer-when-downgrade"                className="rounded-3xl"              ></iframe>              {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>            </div>            {showDecorativeElements && (              <>                <div className="absolute -top-8 -left-8 w-16 h-16 rounded-full opacity-80 shadow-2xl animate-bounce" style={{ backgroundColor: getColor('primary') }}></div>                <div className="absolute -bottom-8 -right-8 w-12 h-12 rounded-full opacity-60 shadow-2xl animate-bounce delay-1000" style={{ backgroundColor: getColor('secondary') }}></div>                <div className="absolute top-6 right-6 w-6 h-6 rounded-full opacity-70 shadow-lg" style={{ backgroundColor: getColor('surface') }}></div>                <div className="absolute bottom-6 left-6 w-5 h-5 rounded-full opacity-80 shadow-lg" style={{ backgroundColor: getColor('primary') }}></div>              </>            )}          </div>        )}        <div className="flex flex-wrap justify-center gap-8 mb-16">          {showAddress && (            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-address" data-block-id={blockId}>              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('primary') + '20' }}>                <svg                  className="w-8 h-8"                  fill="none"                  stroke="currentColor"                  viewBox="0 0 24 24"                  style={{ color: getColor('primary') }}                >                  <path                    strokeLinecap="round"                    strokeLinejoin="round"                    strokeWidth={2}                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"                  />                  <path                    strokeLinecap="round"                    strokeLinejoin="round"                    strokeWidth={2}                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"                  />                </svg>              </div>              <StyledText tag="h3" className="text-2xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Address</StyledText>              <StyledText                tag="p"                className="whitespace-pre-line leading-relaxed"                styleConfig={{                  ...addressStyle,                  color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')                }}                dataControl="location-address-text"                dataBlockId={blockId}              >                {displayAddress}              </StyledText>            </div>          )}          {showContact && (displayPhone || displayEmail) && (            <div className="w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1rem)] min-w-[300px] rounded-2xl shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }} data-control="location-contact" data-block-id={blockId}>              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg" style={{ backgroundColor: getColor('secondary') + '20' }}>                <svg                  className="w-8 h-8"                  fill="none"                  stroke="currentColor"                  viewBox="0 0 24 24"                  style={{ color: getColor('secondary') }}                >                  <path                    strokeLinecap="round"                    strokeLinejoin="round"                    strokeWidth={2}                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"                  />                </svg>              </div>              <StyledText tag="h3" className="text-2xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Contact</StyledText>              <div className="space-y-2">                {displayPhone && (                  <StyledText                    tag="a"                    href={`tel:${displayPhone}`}                    className="block hover:opacity-80 transition-colors text-lg font-medium"                    styleConfig={{                      ...contactStyle,                      color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                    }}                    dataControl="location-phone"                    dataBlockId={blockId}                  >                    {displayPhone}                  </StyledText>                )}                {displayEmail && (                  <StyledText                    tag="a"                    href={`mailto:${displayEmail}`}                    className="block hover:opacity-80 transition-colors text-lg"                    styleConfig={{                      ...contactStyle,                      color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                    }}                    dataControl="location-email"                    dataBlockId={blockId}                  >                    {displayEmail}                  </StyledText>                )}              </div>            </div>          )}        </div>        {showDirectionsButton && (          <div className="flex justify-center" data-control="location-cta" data-block-id={blockId}>            <a              href={directionsUrl}              className="inline-flex items-center gap-4 px-12 py-6 font-bold text-lg rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 border-4"              style={{                background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,                color: getColor('onPrimary'),                borderColor: getColor('surface')              }}            >              <span>{directionsText}</span>              <svg                className="w-6 h-6"                fill="none"                stroke="currentColor"                viewBox="0 0 24 24"              >                <path                  strokeLinecap="round"                  strokeLinejoin="round"                  strokeWidth={2}                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"                />              </svg>            </a>          </div>        )}      </div>    </section>  );  const renderModernCard = () => (    <section id={anchorId || "location"} className="py-20 px-4 md:px-8" style={{ background: `linear-gradient(to bottom right, ${getColor('background')}, ${getColor('surface')})` }} >      <div className="max-w-6xl mx-auto">        <div className="text-center mb-16">          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style={{ backgroundColor: getColor('primary'), color: getColor('onPrimary') }} data-control="location-badge" data-block-id={blockId}>            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getColor('onPrimary') }}></span>            {badgeText}          </div>          {title && (            <StyledText              tag="h2"              className="text-4xl lg:text-5xl font-bold mb-8 leading-tight"              styleConfig={{                ...titleStyle,                color: titleStyle.color ? resolveColor(titleStyle.color, globalStyles) : getColor(textColor),                fontFamily: globalStyles?.typography?.headingFont              }}              dataControl="location-title"              dataBlockId={blockId}            >              {title}            </StyledText>          )}        </div>        <div className="grid lg:grid-cols-2 gap-12">          {showMap && iframeSrc && (            <div className="rounded-2xl shadow-xl overflow-hidden border relative" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted') }} data-control="location-map" data-block-id={blockId}>              <iframe                src={iframeSrc}                width="100%"                height="400"                style={{ border: 0 }}                allowFullScreen=""                loading="lazy"                referrerPolicy="no-referrer-when-downgrade"              ></iframe>              {!isPublic && <div className="absolute inset-0 z-10" data-control="location-map" data-block-id={blockId}></div>}            </div>          )}          <div className="rounded-2xl shadow-xl p-8 border" style={{ backgroundColor: getColor('surface'), borderColor: getColor('muted'), color: getColor(textColor) }}>            <div className="space-y-8">              {showAddress && (                <div className="flex items-start gap-4" data-control="location-address" data-block-id={blockId}>                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('primary') + '20' }}>                    <svg                      className="w-6 h-6"                      fill="none"                      stroke="currentColor"                      viewBox="0 0 24 24"                      style={{ color: getColor('primary') }}                    >                      <path                        strokeLinecap="round"                        strokeLinejoin="round"                        strokeWidth={2}                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"                      />                      <path                        strokeLinecap="round"                        strokeLinejoin="round"                        strokeWidth={2}                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"                      />                    </svg>                  </div>                  <div>                    <StyledText tag="h3" className="text-xl font-semibold mb-2" styleConfig={{ color: getColor(textColor) }}>                      Address                    </StyledText>                    <StyledText                      tag="p"                      className="whitespace-pre-line leading-relaxed"                      styleConfig={{                        ...addressStyle,                        color: addressStyle.color ? resolveColor(addressStyle.color, globalStyles) : getColor('muted')                      }}                      dataControl="location-address-text"                      dataBlockId={blockId}                    >                      {displayAddress}                    </StyledText>                  </div>                </div>              )}              {showContact && (displayPhone || displayEmail) && (                <div className="flex items-start gap-4" data-control="location-contact" data-block-id={blockId}>                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('secondary') + '20' }}>                    <svg                      className="w-6 h-6"                      fill="none"                      stroke="currentColor"                      viewBox="0 0 24 24"                      style={{ color: getColor('secondary') }}                    >                      <path                        strokeLinecap="round"                        strokeLinejoin="round"                        strokeWidth={2}                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"                      />                    </svg>                  </div>                  <div>                    <StyledText tag="h3" className="text-xl font-semibold mb-2" styleConfig={{ color: getColor(textColor) }}>                      Contact                    </StyledText>                    <div className="space-y-1">                      {displayPhone && (                        <StyledText                          tag="a"                          href={`tel:${displayPhone}`}                          className="block hover:opacity-80 transition-colors text-lg font-medium"                          styleConfig={{                            ...contactStyle,                            color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                          }}                          dataControl="location-phone"                          dataBlockId={blockId}                        >                          {displayPhone}                        </StyledText>                      )}                      {displayEmail && (                        <StyledText                          tag="a"                          href={`mailto:${displayEmail}`}                          className="block hover:opacity-80 transition-colors text-lg"                          styleConfig={{                            ...contactStyle,                            color: contactStyle.color ? resolveColor(contactStyle.color, globalStyles) : getColor('secondary')                          }}                          dataControl="location-email"                          dataBlockId={blockId}                        >                          {displayEmail}                        </StyledText>                      )}                    </div>                  </div>                </div>              )}            </div>            {showDirectionsButton && (              <div className="mt-8" data-control="location-cta" data-block-id={blockId}>                <a                  href={directionsUrl}                  className="inline-flex items-center gap-2 px-6 py-3 font-medium rounded-full transition-colors duration-200 shadow-lg hover:shadow-xl w-full justify-center"                  style={{                    backgroundColor: getColor('primary'),                    color: getColor('onPrimary')                  }}                  onMouseEnter={(e) => e.target.style.backgroundColor = getColor('primary') + '80'}                  onMouseLeave={(e) => e.target.style.backgroundColor = getColor('primary')}                >                  {directionsText}                  <svg                    className="w-4 h-4"                    fill="none"                    stroke="currentColor"                    viewBox="0 0 24 24"                  >                    <path                      strokeLinecap="round"                      strokeLinejoin="round"                      strokeWidth={2}                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"                    />                  </svg>                </a>              </div>            )}          </div>        </div>      </div>    </section>  );  switch (layout) {    case "elegant-centered":    case "premium-showcase":      return renderElegantCentered();    case "modern-card":    case "minimal-contact":      return renderModernCard();    case "luxury-split":    case "classic-info":    default:      return renderLuxurySplit();  }}

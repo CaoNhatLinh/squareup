@@ -1,188 +1,1 @@
-import { BLOCK_TYPES } from '@/components/builder/blockTypes';
-import { ICON_MAP } from '@/components/builder/config/icons';
-import GlobalStylesPanel from '@/components/builder/panels/GlobalStylesPanel';
-import { Button, Input } from '@/components/ui';
-import {
-  HiArrowNarrowLeft,
-  HiArrowNarrowRight,
-} from 'react-icons/hi';
-import {
-  HiSquaresPlus,
-  HiPaintBrush,
-  HiBolt,
-} from 'react-icons/hi2';
-
-const BuilderToolbar = ({
-  activeTab,
-  setActiveTab,
-  slug,
-  setSlug,
-  slugError,
-  handleGenerateSlug,
-  handleAddBlock,
-  handleSaveDraft,
-  handlePublish,
-  handleUndo,
-  handleRedo,
-  canUndo,
-  canRedo,
-  saving,
-  globalStyles,
-  setGlobalStyles,
-}) => {
-  return (
-    <div className="w-80 bg-white border-r flex flex-col z-20 shadow-sm transition-all duration-200 relative h-full">
-      <div className="flex border-b flex-shrink-0 bg-white">
-        <button
-          onClick={() => setActiveTab("blocks")}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "blocks"
-            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
-            : "text-gray-500 hover:bg-gray-50"
-            }`}
-        >
-          <HiSquaresPlus className="w-5 h-5" />
-          Blocks
-        </button>
-        <button
-          onClick={() => setActiveTab("styles")}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "styles"
-            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"
-            : "text-gray-500 hover:bg-gray-50"
-            }`}
-        >
-          <HiPaintBrush className="w-5 h-5" />
-          Styles
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 min-h-0">
-        {activeTab === "blocks" ? (
-          <>
-            <h2 className="text-xl font-bold mb-4">Website Builder</h2>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500">
-                Site Settings
-              </h3>
-              <div className="mb-3">
-                <Input
-                  label="Custom Slug"
-                  value={slug}
-                  onChange={(e) =>
-                    setSlug(
-                      e.target.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9-]/g, "")
-                    )
-                  }
-                  placeholder="my-restaurant"
-                  error={slugError}
-                  rightElement={
-                    <Button
-                      onClick={handleGenerateSlug}
-                      variant="ghost"
-                      size="small"
-                      className="p-1 h-auto hover:bg-gray-100"
-                      title="Generate from restaurant name"
-                    >
-                      <HiBolt className="w-4 h-4 text-gray-500" />
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500">
-                Add Blocks
-              </h3>
-              <div className="space-y-2">
-                {BLOCK_TYPES.filter(
-                  (b) => !["HEADER", "FOOTER"].includes(b.type)
-                ).map((blockType) => (
-                  <button
-                    key={blockType.type}
-                    onClick={() => handleAddBlock(blockType)}
-                    className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-md transition border border-gray-200 hover:border-orange-300 group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl text-gray-500 group-hover:text-orange-500 transition-colors">
-                        {(() => {
-                          if (!blockType?.icon) return "📦";
-                          const Icon = ICON_MAP[blockType.icon] || null;
-                          return Icon ? (
-                            <Icon className="w-6 h-6" />
-                          ) : (
-                            blockType.icon
-                          );
-                        })()}
-                      </span>
-                      <div>
-                        <div className="font-medium text-sm text-gray-900">
-                          {blockType.label}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {blockType.description}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <GlobalStylesPanel
-            globalStyles={globalStyles}
-            onChange={setGlobalStyles}
-          />
-        )}
-      </div>
-
-      <div className="p-4 mt-auto border-t space-y-2 bg-gray-50 flex-shrink-0">
-        <div className="flex gap-2 mb-2">
-          <Button
-            variant="secondary"
-            onClick={handleUndo}
-            disabled={!canUndo}
-            className="flex-1"
-            size="small"
-            icon={HiArrowNarrowLeft}
-          >
-            Undo
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="flex-1"
-            size="small"
-            icon={HiArrowNarrowRight}
-            iconPosition="right"
-          >
-            Redo
-          </Button>
-        </div>
-        <Button
-          variant="secondary"
-          onClick={handleSaveDraft}
-          disabled={saving}
-          loading={saving}
-          fullWidth
-        >
-          {saving ? "Saving..." : "Save Draft"}
-        </Button>
-        <Button
-          variant="primary"
-          onClick={handlePublish}
-          disabled={saving}
-          loading={saving}
-          fullWidth
-          className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-500"
-        >
-          {saving ? "Publishing..." : "Publish Live"}
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-export default BuilderToolbar;
+import { BLOCK_TYPES } from '@/components/builder/blockTypes';import { ICON_MAP } from '@/components/builder/config/icons';import GlobalStylesPanel from '@/components/builder/panels/GlobalStylesPanel';import { Button, Input } from '@/components/ui';import {  HiArrowNarrowLeft,  HiArrowNarrowRight,} from 'react-icons/hi';import {  HiSquaresPlus,  HiPaintBrush,  HiBolt,} from 'react-icons/hi2';const BuilderToolbar = ({  activeTab,  setActiveTab,  slug,  setSlug,  slugError,  handleGenerateSlug,  handleAddBlock,  handleSaveDraft,  handlePublish,  handleUndo,  handleRedo,  canUndo,  canRedo,  saving,  canEdit = true,  globalStyles,  setGlobalStyles,}) => {  return (    <div className="w-80 bg-white border-r flex flex-col z-20 shadow-sm transition-all duration-200 relative h-full">      <div className="flex border-b flex-shrink-0 bg-white">        <button          onClick={() => setActiveTab("blocks")}          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "blocks"            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"            : "text-gray-500 hover:bg-gray-50"            }`}        >          <HiSquaresPlus className="w-5 h-5" />          Blocks        </button>        <button          onClick={() => setActiveTab("styles")}          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === "styles"            ? "text-orange-600 border-b-2 border-orange-600 bg-orange-50"            : "text-gray-500 hover:bg-gray-50"            }`}        >          <HiPaintBrush className="w-5 h-5" />          Styles        </button>      </div>      <div className="flex-1 overflow-y-auto p-4 min-h-0">        {activeTab === "blocks" ? (          <>            <h2 className="text-xl font-bold mb-4">Website Builder</h2>            <div className="mb-6">              <h3 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500">                Site Settings              </h3>              <div className="mb-3">                <Input                  label="Custom Slug"                  value={slug}                  onChange={(e) =>                    setSlug(                      e.target.value                        .toLowerCase()                        .replace(/[^a-z0-9-]/g, "")                    )                  }                  placeholder="my-restaurant"                  error={slugError}                  disabled={!canEdit}                  rightElement={                    <Button                      onClick={handleGenerateSlug}                      variant="ghost"                      size="small"                      className="p-1 h-auto hover:bg-gray-100"                      title="Generate from restaurant name"                      disabled={!canEdit}                    >                      <HiBolt className="w-4 h-4 text-gray-500" />                    </Button>                  }                />              </div>            </div>            <div>              <h3 className="font-semibold mb-2 text-sm uppercase tracking-wider text-gray-500">                Add Blocks              </h3>              <div className="space-y-2">                {BLOCK_TYPES.filter(                  (b) => !["HEADER", "FOOTER"].includes(b.type)                ).map((blockType) => (                  <button                    key={blockType.type}                    onClick={() => handleAddBlock(blockType)}                    disabled={!canEdit}                    className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-md transition border border-gray-200 hover:border-orange-300 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-50 disabled:hover:border-gray-200"                  >                    <div className="flex items-center gap-3">                      <span className="text-xl text-gray-500 group-hover:text-orange-500 transition-colors">                        {(() => {                          if (!blockType?.icon) return "📦";                          const Icon = ICON_MAP[blockType.icon] || null;                          return Icon ? (                            <Icon className="w-6 h-6" />                          ) : (                            blockType.icon                          );                        })()}                      </span>                      <div>                        <div className="font-medium text-sm text-gray-900">                          {blockType.label}                        </div>                        <div className="text-xs text-gray-500">                          {blockType.description}                        </div>                      </div>                    </div>                  </button>                ))}              </div>            </div>          </>        ) : (          <GlobalStylesPanel            globalStyles={globalStyles}            onChange={setGlobalStyles}            disabled={!canEdit}          />        )}      </div>      <div className="p-4 mt-auto border-t space-y-2 bg-gray-50 flex-shrink-0">        {!canEdit && (          <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-2">            🔒 View-only mode. You need update permission to save changes.          </div>        )}        <div className="flex gap-2 mb-2">          <Button            variant="secondary"            onClick={handleUndo}            disabled={!canUndo || !canEdit}            className="flex-1"            size="small"            icon={HiArrowNarrowLeft}          >            Undo          </Button>          <Button            variant="secondary"            onClick={handleRedo}            disabled={!canRedo || !canEdit}            className="flex-1"            size="small"            icon={HiArrowNarrowRight}            iconPosition="right"          >            Redo          </Button>        </div>        <Button          variant="secondary"          onClick={handleSaveDraft}          disabled={saving || !canEdit}          loading={saving}          fullWidth        >          {saving ? "Saving..." : "Save Draft"}        </Button>        <Button          variant="primary"          onClick={handlePublish}          disabled={saving || !canEdit}          loading={saving}          fullWidth          className="bg-orange-600 hover:bg-orange-700 focus:ring-orange-500"        >          {saving ? "Publishing..." : "Publish Live"}        </Button>      </div>    </div>  );};export default BuilderToolbar;

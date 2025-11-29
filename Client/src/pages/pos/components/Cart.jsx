@@ -1,142 +1,1 @@
-import { useMemo } from "react";import { normalizeSelectedOptions } from "@/utils/normalizeOptions";
-
-import Input from "@/components/ui/Input";
-import { Button } from "@/components/ui";
-import Badge from '@/components/ui/Badge';
-
-export default function Cart({
-  cart = [],
-  onUpdateQuantity = () => {},
-  onRemove = () => {},
-  onClear = () => {},
-  total = 0,
-  discountResult = {},
-  taxAmount = 0,
-  taxRate = 0,
-  customerInfo = {},
-  onCustomerInfoChange = () => {},
-  couponCode = '',
-  setCouponCode = () => {},
-  loyaltyCard = '',
-  setLoyaltyCard = () => {},
-  appliedCoupon = null,
-  setAppliedCoupon = () => {},
-  onCheckout = () => {},
-  onSplitBill = () => {},
-  discountLoading = false,
-  isCreatingOrder = false,
-}) {
-  const subtotal = useMemo(() => cart.reduce((s, i) => s + ((Number(i.price ?? 0) + Number(i.modifierTotal ?? 0)) * Number(i.quantity ?? 0)), 0), [cart]);
-
-  const handleApplyCoupon = () => { if (couponCode?.trim()) setAppliedCoupon({ code: couponCode.trim(), discount: 0 }); };
-  const handleRemoveCoupon = () => { setAppliedCoupon(null); setCouponCode(''); };
-
-  return (
-    <>
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">Order</h2>
-          {cart.length > 0 && (
-            <Button onClick={onClear} variant="ghost" size="small" className="text-sm text-red-600 hover:text-red-700 font-medium">Clear all</Button>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Input label="Customer name (optional)" placeholder="Customer name (optional)" value={customerInfo?.name || ''} onChange={(e) => onCustomerInfoChange({ ...customerInfo, name: e.target.value })} />
-          <Input label="Phone Number (optional)" placeholder="Phone Number (optional)" value={customerInfo?.phone || ''} onChange={(e) => onCustomerInfoChange({ ...customerInfo, phone: e.target.value })} />
-          <Input label="Loyalty Card" placeholder="Loyalty card code" value={loyaltyCard || ''} onChange={(e) => setLoyaltyCard(e.target.value)} />
-          <div className="flex gap-2">
-            <Input placeholder="Coupon code" value={couponCode || ''} onChange={(e) => setCouponCode(e.target.value)} />
-            <Button onClick={handleApplyCoupon} variant="primary" disabled={!couponCode?.trim()}>Apply</Button>
-          </div>
-          {appliedCoupon && (
-            <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg">
-              <span className="text-sm text-green-700">Coupon: {appliedCoupon.code}</span>
-              <Button onClick={handleRemoveCoupon} variant="ghost">Remove</Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {cart.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            <p className="text-sm">No items in cart</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {cart.map(item => {
-              const so = normalizeSelectedOptions(item.selectedOptions || []);
-              return (
-                <div key={item.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <div className="flex gap-3">
-                    {item.image && <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm mb-1">{item.name}</h4>
-                      {so.length > 0 && (
-                        <div className="text-xs text-gray-600 mb-2">{so.map((opt, idx) => <div key={idx}><span>+ {opt.name}</span> <span className="text-gray-600">{'$' + Number(opt.price ?? 0).toFixed(2)}</span></div>)}</div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">-</Button>
-                          <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">+</Button>
-                        </div>
-                        <div className="text-right">
-                              <div className="text-sm font-bold text-gray-900">{'$' + Number(((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0))).toFixed(2)}</div>
-                              {discountResult?.itemDiscounts?.[item.id] && (
-                                <div className="text-xs text-green-600 mt-1 flex items-center gap-2">
-                                  <span>{' - $' + Number(discountResult.itemDiscounts[item.id].discountAmount ?? 0).toFixed(2)}</span>
-                                  {discountResult?.itemDiscounts?.[item.id]?.discountPercentage !== undefined && (
-                                    <Badge variant="outline">{`${discountResult.itemDiscounts[item.id].discountPercentage}% OFF`}</Badge>
-                                  )}
-                                </div>
-                              )}
-                          <Button variant="link" onClick={() => onRemove(item.id)} className="text-xs text-red-600 hover:text-red-700">Remove</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Subtotal:</span><span className="text-lg font-bold text-gray-900">{'$' + Number(subtotal).toFixed(2)}</span></div>
-          {discountResult?.totalDiscount > 0 && (
-            <div className="flex items-start justify-between text-green-700">
-              <div className="flex-1">
-                <div className="text-sm font-medium">Discount</div>
-                {Array.isArray(discountResult.discountBreakdown) && discountResult.discountBreakdown.length > 0 && (
-                  <div className="mt-1 text-xs text-green-700">
-                    {discountResult.discountBreakdown.map((d) => (
-                      <div key={d.discountId} className="flex items-center gap-2">
-                        <span className="font-medium">{d.discountName}</span>
-                        <span className="text-xs">({d.discountType === 'percentage' ? `${d.discountValue}%` : `$${d.discountValue}` })</span>
-                        <span className="text-xs text-green-700">- ${Number(d.discountAmount || 0).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="text-sm">{'-$' + Number(discountResult.totalDiscount).toFixed(2)}</div>
-            </div>
-          )}
-          {taxAmount > 0 && <div className="flex items-center justify-between text-gray-700"><span className="text-sm font-medium">Tax {taxRate > 0 ? `(${(taxRate*100).toFixed(2)}%)` : ''}</span><span className="text-sm">{'$' + Number(taxAmount).toFixed(2)}</span></div>}
-          {discountLoading && <div className="flex items-center gap-2 text-sm text-gray-500"><div className="loader w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"></div><div>Applying discounts...</div></div>}
-          <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Total:</span><span className="text-2xl font-bold text-red-600">{'$' + Number(total ?? 0).toFixed(2)}</span></div>
-
-          <div className="flex items-center gap-2">
-            <Button onClick={onSplitBill} disabled={cart.length === 0} variant="ghost">Split</Button>
-            <Button onClick={onCheckout} disabled={cart.length === 0 || discountLoading || isCreatingOrder} variant="primary" className="flex-1">{isCreatingOrder ? 'Processing...' : 'Checkout'}</Button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
+import { useMemo } from "react";import { normalizeSelectedOptions } from "@/utils/normalizeOptions";import Input from "@/components/ui/Input";import { Button } from "@/components/ui";import Badge from '@/components/ui/Badge';export default function Cart({  cart = [],  onUpdateQuantity = () => {},  onRemove = () => {},  onClear = () => {},  total = 0,  discountResult = {},  taxAmount = 0,  taxRate = 0,  customerInfo = {},  onCustomerInfoChange = () => {},  couponCode = '',  setCouponCode = () => {},  loyaltyCard = '',  setLoyaltyCard = () => {},  appliedCoupon = null,  setAppliedCoupon = () => {},  onCheckout = () => {},  onSplitBill = () => {},  discountLoading = false,  isCreatingOrder = false,}) {  const subtotal = useMemo(() => cart.reduce((s, i) => s + ((Number(i.price ?? 0) + Number(i.modifierTotal ?? 0)) * Number(i.quantity ?? 0)), 0), [cart]);  const handleApplyCoupon = () => { if (couponCode?.trim()) setAppliedCoupon({ code: couponCode.trim(), discount: 0 }); };  const handleRemoveCoupon = () => { setAppliedCoupon(null); setCouponCode(''); };  return (    <>      <div className="p-4 border-b border-gray-200">        <div className="flex items-center justify-between mb-4">          <h2 className="text-lg font-bold text-gray-900">Order</h2>          {cart.length > 0 && (            <Button onClick={onClear} variant="ghost" size="small" className="text-sm text-red-600 hover:text-red-700 font-medium">Clear all</Button>          )}        </div>        <div className="space-y-2">          <Input label="Customer name (optional)" placeholder="Customer name (optional)" value={customerInfo?.name || ''} onChange={(e) => onCustomerInfoChange({ ...customerInfo, name: e.target.value })} />          <Input label="Phone Number (optional)" placeholder="Phone Number (optional)" value={customerInfo?.phone || ''} onChange={(e) => onCustomerInfoChange({ ...customerInfo, phone: e.target.value })} />          <Input label="Loyalty Card" placeholder="Loyalty card code" value={loyaltyCard || ''} onChange={(e) => setLoyaltyCard(e.target.value)} />          <div className="flex gap-2">            <Input placeholder="Coupon code" value={couponCode || ''} onChange={(e) => setCouponCode(e.target.value)} />            <Button onClick={handleApplyCoupon} variant="primary" disabled={!couponCode?.trim()}>Apply</Button>          </div>          {appliedCoupon && (            <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg">              <span className="text-sm text-green-700">Coupon: {appliedCoupon.code}</span>              <Button onClick={handleRemoveCoupon} variant="ghost">Remove</Button>            </div>          )}        </div>      </div>      <div className="flex-1 overflow-y-auto p-4">        {cart.length === 0 ? (          <div className="flex flex-col items-center justify-center h-full text-gray-400">            <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>            <p className="text-sm">No items in cart</p>          </div>        ) : (          <div className="space-y-3">            {cart.map(item => {              const so = normalizeSelectedOptions(item.selectedOptions || []);              return (                <div key={item.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">                  <div className="flex gap-3">                    {item.image && <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />}                    <div className="flex-1 min-w-0">                      <h4 className="font-medium text-gray-900 text-sm mb-1">{item.name}</h4>                      {so.length > 0 && (                        <div className="text-xs text-gray-600 mb-2">{so.map((opt, idx) => <div key={idx}><span>+ {opt.name}</span> <span className="text-gray-600">{'$' + Number(opt.price ?? 0).toFixed(2)}</span></div>)}</div>                      )}                      <div className="flex items-center justify-between">                        <div className="flex items-center gap-2">                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">-</Button>                          <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>                          <Button size="small" variant="ghost" onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 px-0 py-0 bg-white text-gray-700 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50">+</Button>                        </div>                        <div className="text-right">                              <div className="text-sm font-bold text-gray-900">{'$' + Number(((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0))).toFixed(2)}</div>                              {discountResult?.itemDiscounts?.[item.id] && (                                <div className="text-xs text-green-600 mt-1 flex items-center gap-2">                                  <span>{' - $' + Number(discountResult.itemDiscounts[item.id].discountAmount ?? 0).toFixed(2)}</span>                                  {discountResult?.itemDiscounts?.[item.id]?.discountPercentage !== undefined && (                                    <Badge variant="outline">{`${discountResult.itemDiscounts[item.id].discountPercentage}% OFF`}</Badge>                                  )}                                </div>                              )}                          <Button variant="link" onClick={() => onRemove(item.id)} className="text-xs text-red-600 hover:text-red-700">Remove</Button>                        </div>                      </div>                    </div>                  </div>                </div>              );            })}          </div>        )}      </div>      <div className="border-t border-gray-200 p-4 bg-white">        <div className="space-y-3">          <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Subtotal:</span><span className="text-lg font-bold text-gray-900">{'$' + Number(subtotal).toFixed(2)}</span></div>          {discountResult?.totalDiscount > 0 && (            <div className="flex items-start justify-between text-green-700">              <div className="flex-1">                <div className="text-sm font-medium">Discount</div>                {Array.isArray(discountResult.discountBreakdown) && discountResult.discountBreakdown.length > 0 && (                  <div className="mt-1 text-xs text-green-700">                    {discountResult.discountBreakdown.map((d) => (                      <div key={d.discountId} className="flex items-center gap-2">                        <span className="font-medium">{d.discountName}</span>                        <span className="text-xs">({d.discountType === 'percentage' ? `${d.discountValue}%` : `$${d.discountValue}` })</span>                        <span className="text-xs text-green-700">- ${Number(d.discountAmount || 0).toFixed(2)}</span>                      </div>                    ))}                  </div>                )}              </div>              <div className="text-sm">{'-$' + Number(discountResult.totalDiscount).toFixed(2)}</div>            </div>          )}          {taxAmount > 0 && <div className="flex items-center justify-between text-gray-700"><span className="text-sm font-medium">Tax {taxRate > 0 ? `(${(taxRate*100).toFixed(2)}%)` : ''}</span><span className="text-sm">{'$' + Number(taxAmount).toFixed(2)}</span></div>}          {discountLoading && <div className="flex items-center gap-2 text-sm text-gray-500"><div className="loader w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"></div><div>Applying discounts...</div></div>}          <div className="flex items-center justify-between"><span className="text-lg font-bold text-gray-900">Total:</span><span className="text-2xl font-bold text-red-600">{'$' + Number(total ?? 0).toFixed(2)}</span></div>          <div className="flex items-center gap-2">            <Button onClick={onSplitBill} disabled={cart.length === 0} variant="ghost">Split</Button>            <Button onClick={onCheckout} disabled={cart.length === 0 || discountLoading || isCreatingOrder} variant="primary" className="flex-1">{isCreatingOrder ? 'Processing...' : 'Checkout'}</Button>          </div>        </div>      </div>    </>  );}

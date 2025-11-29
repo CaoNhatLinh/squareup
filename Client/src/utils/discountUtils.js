@@ -1,77 +1,1 @@
-
-
-
-export const getDiscountStatus = (discount) => {
-  const now = Date.now();
-  if (discount.setDateRange) {
-    const startTime = discount.dateRangeStart ? new Date(discount.dateRangeStart + 'T00:00:00').getTime() : 0;
-    const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd + 'T23:59:59').getTime() : Infinity;
-
-    if (now < startTime) {
-      return 'upcoming';
-    }
-    if (now > endTime) {
-      return 'expired';
-    }
-  }
-
-  if (discount.setSchedule) {
-    const currentDate = new Date();
-    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const currentTime = currentDate.toTimeString().slice(0, 5);
-    const isDayEnabled = discount.scheduleDays?.[dayName];
-
-    const isTimeInRange = currentTime >= (discount.scheduleTimeStart || '00:00') &&
-                         currentTime <= (discount.scheduleTimeEnd || '23:59');
-    if (!isDayEnabled || !isTimeInRange) {
-      return 'inactive';
-    }
-  }
-
-  return 'active';
-};
-
-
-export const getAppliedToText = (discount) => {
-  if (discount.discountApplyTo === 'item_category') {
-    if (discount.addAllItemsToPurchase) {
-      return 'All Items';
-    }
-    const items = discount.purchaseItems || [];
-    const categories = discount.purchaseCategories || [];
-    const count = items.length + categories.length;
-    return `Applied to ${count} item(s)`;
-  } else if (discount.discountApplyTo === 'quantity') {
-    const purchaseQty = discount.purchaseQuantity || 1;
-    const discountText = discount.amountType === 'percentage'
-      ? `${discount.amount}% off`
-      : `$${discount.amount} off`;
-
-    if (discount.quantityRuleType === 'exact') {
-      return `Buy exactly ${purchaseQty}, Get ${discountText}`;
-    } else if (discount.quantityRuleType === 'minimum') {
-      return `Buy ${purchaseQty}+, Get ${discountText}`;
-    } else if (discount.quantityRuleType === 'bogo') {
-      const discountQty = discount.discountQuantity || 1;
-      return `Buy ${purchaseQty}, Get ${discountQty} at ${discountText}`;
-    }
-  }
-  return 'Special Offer';
-};
-
-
-export const getTimeText = (discount) => {
-  if (discount.setSchedule && discount.scheduleTimeStart && discount.scheduleTimeEnd) {
-    return `${discount.scheduleTimeStart} - ${discount.scheduleTimeEnd}`;
-  }
-  return 'All Day';
-};
-
-
-export const getAmountDisplay = (discount) => {
-  if (discount.amountType === 'percentage') {
-    return `${discount.amount}%`;
-  } else {
-    return `$${discount.amount}`;
-  }
-};
+export const getDiscountStatus = (discount) => {  const now = Date.now();  if (discount.setDateRange) {    const startTime = discount.dateRangeStart ? new Date(discount.dateRangeStart + 'T00:00:00').getTime() : 0;    const endTime = discount.dateRangeEnd ? new Date(discount.dateRangeEnd + 'T23:59:59').getTime() : Infinity;    if (now < startTime) {      return 'upcoming';    }    if (now > endTime) {      return 'expired';    }  }  if (discount.setSchedule) {    const currentDate = new Date();    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();    const currentTime = currentDate.toTimeString().slice(0, 5);    const isDayEnabled = discount.scheduleDays?.[dayName];    const isTimeInRange = currentTime >= (discount.scheduleTimeStart || '00:00') &&      currentTime <= (discount.scheduleTimeEnd || '23:59');    if (!isDayEnabled || !isTimeInRange) {      return 'inactive';    }  }  return 'active';};export const getAppliedToText = (discount) => {  if (discount.discountApplyTo === 'item_category') {    if (discount.addAllItemsToPurchase) {      return 'All Items';    }    const items = discount.purchaseItems || [];    const categories = discount.purchaseCategories || [];    const count = items.length + categories.length;    return `Applied to ${count} item(s)`;  } else if (discount.discountApplyTo === 'quantity') {    const purchaseQty = discount.purchaseQuantity || 1;    const discountText = discount.amountType === 'percentage'      ? `${discount.amount}% off`      : `$${discount.amount} off`;    if (discount.quantityRuleType === 'exact') {      return `Buy exactly ${purchaseQty}, Get ${discountText}`;    } else if (discount.quantityRuleType === 'minimum') {      return `Buy ${purchaseQty}+, Get ${discountText}`;    } else if (discount.quantityRuleType === 'bogo') {      const discountQty = discount.discountQuantity || 1;      return `Buy ${purchaseQty}, Get ${discountQty} at ${discountText}`;    }  }  return 'Special Offer';};export const getTimeText = (discount) => {  if (discount.setSchedule && discount.scheduleTimeStart && discount.scheduleTimeEnd) {    return `${discount.scheduleTimeStart} - ${discount.scheduleTimeEnd}`;  }  return 'All Day';};export const getAmountDisplay = (discount) => {  if (discount.amountType === 'percentage') {    return `${discount.amount}%`;  } else {    return `$${discount.amount}`;  }};export function calculateItemDiscount(discount, itemPrice, quantity) {  if (discount.amountType === 'percentage') {    return (itemPrice * quantity * discount.amount) / 100;  } else if (discount.amountType === 'fixed') {    return discount.amount * quantity;  }  return 0;}export function calculateQuantityDiscount(discount, cartItems) {  let discountAmount = 0;  const itemDiscounts = {};  const affectedItems = [];  const eligibleItems = cartItems.filter(item => {    if (discount.addAllItemsToPurchase) return true;    const matchesCategory = discount.purchaseCategories?.some(cat => cat.id === item.categoryId);    const matchesItem = discount.purchaseItems?.some(i => i.id === item.itemId);    return matchesCategory || matchesItem;  });  const totalEligibleQuantity = eligibleItems.reduce((sum, item) => sum + item.quantity, 0);  if (discount.quantityRuleType === 'exact') {    if (totalEligibleQuantity === discount.purchaseQuantity) {      const discountQty = discount.discountQuantity || discount.purchaseQuantity;      let discountTargetItems = [];      if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {        discountTargetItems = [...eligibleItems];      } else if (discount.discountTargetCategories?.length > 0 || discount.discountTargetItems?.length > 0) {        discountTargetItems = eligibleItems.filter(item => {          const matchesCategory = discount.discountTargetCategories?.some(cat => cat.id === item.categoryId);          const matchesItem = discount.discountTargetItems?.some(i => i.id === item.itemId);          return matchesCategory || matchesItem;        });      } else {        discountTargetItems = [...eligibleItems];      }      const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);      let remainingDiscountQty = discountQty;      for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {        const item = sortedItems[i];        const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);        const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);        discountAmount += itemDiscount;        itemDiscounts[item.groupKey] = {          originalPrice: item.price,          discountAmount: itemDiscount / qtyToDiscount,          finalPrice: item.price - (itemDiscount / qtyToDiscount),          quantityDiscounted: qtyToDiscount,          discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)        };        affectedItems.push({          itemId: item.itemId,          itemName: item.name,          quantity: qtyToDiscount,          discountPerItem: itemDiscount / qtyToDiscount        });        remainingDiscountQty -= qtyToDiscount;      }    }  } else if (discount.quantityRuleType === 'minimum') {    if (totalEligibleQuantity >= discount.purchaseQuantity) {      const discountQty = discount.discountQuantity || totalEligibleQuantity;      let discountTargetItems = [];      if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {        discountTargetItems = [...eligibleItems];      } else if (discount.discountTargetCategories?.length > 0 || discount.discountTargetItems?.length > 0) {        discountTargetItems = eligibleItems.filter(item => {          const matchesCategory = discount.discountTargetCategories?.some(cat => cat.id === item.categoryId);          const matchesItem = discount.discountTargetItems?.some(i => i.id === item.itemId);          return matchesCategory || matchesItem;        });      } else {        discountTargetItems = [...eligibleItems];      }      const sortedItems = [...discountTargetItems].sort((a, b) => a.price - b.price);      let remainingDiscountQty = discountQty;      for (let i = 0; i < sortedItems.length && remainingDiscountQty > 0; i++) {        const item = sortedItems[i];        const qtyToDiscount = Math.min(item.quantity, remainingDiscountQty);        const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);        discountAmount += itemDiscount;        itemDiscounts[item.groupKey] = {          originalPrice: item.price,          discountAmount: itemDiscount / qtyToDiscount,          finalPrice: item.price - (itemDiscount / qtyToDiscount),          quantityDiscounted: qtyToDiscount,          discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)        };        affectedItems.push({          itemId: item.itemId,          itemName: item.name,          quantity: qtyToDiscount,          discountPerItem: itemDiscount / qtyToDiscount        });        remainingDiscountQty -= qtyToDiscount;      }    }  } else if (discount.quantityRuleType === 'bogo') {    const purchaseQty = discount.purchaseQuantity || 1;    const discountQty = discount.discountQuantity || 1;    if (totalEligibleQuantity >= purchaseQty + discountQty) {      let discountTargetItems = [];      if (discount.copyEligibleItems || discount.addAllItemsToDiscount) {        discountTargetItems = [...eligibleItems];      } else {        discountTargetItems = cartItems.filter(item => {          const matchesCategory = discount.discountTargetCategories?.some(cat => cat.id === item.categoryId);          const matchesItem = discount.discountTargetItems?.some(i => i.id === item.itemId);          return matchesCategory || matchesItem;        });      }      const sortedItems = [...discountTargetItems].sort((a, b) => b.price - a.price);      const bogoSets = Math.floor(totalEligibleQuantity / (purchaseQty + discountQty));      let itemsToDiscount = bogoSets * discountQty;      for (let i = sortedItems.length - 1; i >= 0 && itemsToDiscount > 0; i--) {        const item = sortedItems[i];        const qtyToDiscount = Math.min(item.quantity, itemsToDiscount);        const itemDiscount = calculateItemDiscount(discount, item.price, qtyToDiscount);        discountAmount += itemDiscount;        itemDiscounts[item.groupKey] = {          originalPrice: item.price,          discountAmount: itemDiscount / qtyToDiscount,          finalPrice: item.price - (itemDiscount / qtyToDiscount),          quantityDiscounted: qtyToDiscount,          discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / qtyToDiscount / item.price) * 100)        };        affectedItems.push({          itemId: item.itemId,          itemName: item.name,          quantity: qtyToDiscount,          discountPerItem: itemDiscount / qtyToDiscount        });        itemsToDiscount -= qtyToDiscount;      }    }  }  return {    discountAmount,    itemDiscounts,    affectedItems  };}export function calculateSingleDiscount(discount, cartItems) {  if (!discount.automaticDiscount) return null;  let discountAmount = 0;  const itemDiscounts = {};  const affectedItems = [];  if (discount.discountApplyTo === 'item_category') {    const eligibleItems = cartItems.filter(item => {      if (discount.addAllItemsToPurchase) return true;      const matchesCategory = discount.purchaseCategories?.some(cat => cat.id === item.categoryId);      const matchesItem = discount.purchaseItems?.some(i => i.id === item.itemId);      return matchesCategory || matchesItem;    });    eligibleItems.forEach(item => {      const itemDiscount = calculateItemDiscount(discount, item.price, item.quantity);      discountAmount += itemDiscount;      itemDiscounts[item.groupKey] = {        originalPrice: item.price,        discountAmount: itemDiscount / item.quantity,        finalPrice: item.price - (itemDiscount / item.quantity),        quantityDiscounted: item.quantity,        discountPercentage: discount.amountType === 'percentage' ? discount.amount : Math.round((itemDiscount / item.quantity / item.price) * 100)      };      affectedItems.push({        itemId: item.itemId,        itemName: item.name,        quantity: item.quantity,        discountPerItem: itemDiscount / item.quantity      });    });  } else if (discount.discountApplyTo === 'quantity') {    const result = calculateQuantityDiscount(discount, cartItems);    discountAmount = result.discountAmount;    Object.assign(itemDiscounts, result.itemDiscounts);    affectedItems.push(...result.affectedItems);  }  const cartSubtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);  if (discount.setMinimumSpend && cartSubtotal < discount.minimumSubtotal) {    return null;  }  if (discount.setMaximumValue && discountAmount > discount.maximumValue) {    discountAmount = discount.maximumValue;  }  return {    discount,    discountAmount,    itemDiscounts,    affectedItems  };}

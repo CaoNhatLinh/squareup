@@ -1,213 +1,1 @@
-import { useState } from "react";
-
-export default function BillSplitModal({ cart, total, onClose, onSplit }) {
-  const [splitType, setSplitType] = useState("equal"); 
-  const [numPeople, setNumPeople] = useState(2);
-  const [itemAssignments, setItemAssignments] = useState({});
-  const [personNames, setPersonNames] = useState(["Người 1", "Người 2"]);
-
-  const handleEqualSplit = () => {
-    const perPerson = total / numPeople;
-    const splits = personNames.slice(0, numPeople).map((name, idx) => ({
-      person: name || `Người ${idx + 1}`,
-      amount: perPerson,
-      items: []
-    }));
-    onSplit(splits);
-  };
-
-  const handleItemSplit = () => {
-    const splits = personNames.slice(0, numPeople).map((name, idx) => ({
-      person: name || `Người ${idx + 1}`,
-      amount: 0,
-      items: []
-    }));
-
-    cart.forEach((item) => {
-      const assignedTo = itemAssignments[item.id] || 0;
-      const itemTotal = (Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0);
-      splits[assignedTo].amount += itemTotal;
-      splits[assignedTo].items.push(item);
-    });
-
-    onSplit(splits);
-  };
-
-  const handleSplit = () => {
-    if (splitType === "equal") {
-      handleEqualSplit();
-    } else {
-      handleItemSplit();
-    }
-  };
-
-  const updateNumPeople = (num) => {
-    setNumPeople(num);
-    setPersonNames((prev) => {
-      const newNames = [...prev];
-      while (newNames.length < num) {
-        newNames.push(`Người ${newNames.length + 1}`);
-      }
-      return newNames.slice(0, num);
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Tách hóa đơn</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Phương thức tách
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setSplitType("equal")}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  splitType === "equal"
-                    ? "border-red-600 bg-red-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="text-2xl mb-2">⚖️</div>
-                <div className="font-medium text-gray-900">Chia đều</div>
-                <div className="text-xs text-gray-500">Chia số tiền bằng nhau</div>
-              </button>
-              <button
-                onClick={() => setSplitType("by-item")}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  splitType === "by-item"
-                    ? "border-red-600 bg-red-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="text-2xl mb-2">🍽️</div>
-                <div className="font-medium text-gray-900">Theo món</div>
-                <div className="text-xs text-gray-500">Phân bổ từng món ăn</div>
-              </button>
-            </div>
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Số người
-            </label>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => updateNumPeople(Math.max(2, numPeople - 1))}
-                className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
-              >
-                -
-              </button>
-              <span className="text-2xl font-bold text-gray-900 w-12 text-center">
-                {numPeople}
-              </span>
-              <button
-                onClick={() => updateNumPeople(Math.min(10, numPeople + 1))}
-                className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Tên người (tùy chọn)
-            </label>
-            <div className="space-y-2">
-              {personNames.slice(0, numPeople).map((name, idx) => (
-                <input
-                  key={idx}
-                  type="text"
-                  value={name}
-                  onChange={(e) => {
-                    const newNames = [...personNames];
-                    newNames[idx] = e.target.value;
-                    setPersonNames(newNames);
-                  }}
-                  placeholder={`Người ${idx + 1}`}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              ))}
-            </div>
-          </div>
-          {splitType === "by-item" && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Phân bổ món ăn
-              </label>
-              <div className="space-y-2">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{item.name}</div>
-                      <div className="text-xs text-gray-500">
-                        ${((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0)).toFixed(2)}
-                      </div>
-                    </div>
-                    <select
-                      value={itemAssignments[item.id] || 0}
-                      onChange={(e) => setItemAssignments({ ...itemAssignments, [item.id]: parseInt(e.target.value) })}
-                      className="px-3 py-1 border border-gray-300 rounded text-sm"
-                    >
-                      {personNames.slice(0, numPeople).map((name, idx) => (
-                        <option key={idx} value={idx}>
-                          {name || `Người ${idx + 1}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-sm font-medium text-blue-900 mb-2">Xem trước</div>
-            {splitType === "equal" ? (
-              <div className="space-y-1">
-                {personNames.slice(0, numPeople).map((name, idx) => (
-                  <div key={idx} className="flex justify-between text-sm text-blue-800">
-                    <span>{name || `Người ${idx + 1}`}</span>
-                    <span className="font-semibold">${(total / numPeople).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-blue-800">
-                Vui lòng phân bổ tất cả món ăn cho từng người
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="border-t border-gray-200 p-6 bg-white">
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
-            >
-              Hủy
-            </button>
-            <button
-              onClick={handleSplit}
-              className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700"
-            >
-              Tách hóa đơn
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useState } from "react";export default function BillSplitModal({ cart, total, onClose, onSplit }) {  const [splitType, setSplitType] = useState("equal");  const [numPeople, setNumPeople] = useState(2);  const [itemAssignments, setItemAssignments] = useState({});  const [personNames, setPersonNames] = useState(["Person 1", "Person 2"]);  const handleEqualSplit = () => {    const perPerson = total / numPeople;    const splits = personNames.slice(0, numPeople).map((name, idx) => ({      person: name || `Person ${idx + 1}`,      amount: perPerson,      items: []    }));    onSplit(splits);  };  const handleItemSplit = () => {    const splits = personNames.slice(0, numPeople).map((name, idx) => ({      person: name || `Person ${idx + 1}`,      amount: 0,      items: []    }));    cart.forEach((item) => {      const assignedTo = itemAssignments[item.id] || 0;      const itemTotal = (Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0);      splits[assignedTo].amount += itemTotal;      splits[assignedTo].items.push(item);    });    onSplit(splits);  };  const handleSplit = () => {    if (splitType === "equal") {      handleEqualSplit();    } else {      handleItemSplit();    }  };  const updateNumPeople = (num) => {    setNumPeople(num);    setPersonNames((prev) => {      const newNames = [...prev];      while (newNames.length < num) {        newNames.push(`Person ${newNames.length + 1}`);      }      return newNames.slice(0, num);    });  };  return (    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">        <div className="p-6 border-b border-gray-200">          <div className="flex items-center justify-between">            <h2 className="text-2xl font-bold text-gray-900">Split Bill</h2>            <button              onClick={onClose}              className="text-gray-400 hover:text-gray-600"            >              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />              </svg>            </button>          </div>        </div>        <div className="flex-1 overflow-y-auto p-6">          <div className="mb-6">            <label className="block text-sm font-medium text-gray-700 mb-3">              Split Method            </label>            <div className="grid grid-cols-2 gap-3">              <button                onClick={() => setSplitType("equal")}                className={`p-4 rounded-xl border-2 transition-all ${splitType === "equal"                    ? "border-red-600 bg-red-50"                    : "border-gray-200 hover:border-gray-300"                  }`}              >                <div className="text-2xl mb-2">⚖️</div>                <div className="font-medium text-gray-900">Split Equally</div>                <div className="text-xs text-gray-500">Divide total amount equally</div>              </button>              <button                onClick={() => setSplitType("by-item")}                className={`p-4 rounded-xl border-2 transition-all ${splitType === "by-item"                    ? "border-red-600 bg-red-50"                    : "border-gray-200 hover:border-gray-300"                  }`}              >                <div className="text-2xl mb-2">🍽️</div>                <div className="font-medium text-gray-900">Split by Item</div>                <div className="text-xs text-gray-500">Assign items to each person</div>              </button>            </div>          </div>          <div className="mb-6">            <label className="block text-sm font-medium text-gray-700 mb-3">              Number of People            </label>            <div className="flex items-center gap-4">              <button                onClick={() => updateNumPeople(Math.max(2, numPeople - 1))}                className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"              >                -              </button>              <span className="text-2xl font-bold text-gray-900 w-12 text-center">                {numPeople}              </span>              <button                onClick={() => updateNumPeople(Math.min(10, numPeople + 1))}                className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200"              >                +              </button>            </div>          </div>          <div className="mb-6">            <label className="block text-sm font-medium text-gray-700 mb-3">              Names (Optional)            </label>            <div className="space-y-2">              {personNames.slice(0, numPeople).map((name, idx) => (                <input                  key={idx}                  type="text"                  value={name}                  onChange={(e) => {                    const newNames = [...personNames];                    newNames[idx] = e.target.value;                    setPersonNames(newNames);                  }}                  placeholder={`Person ${idx + 1}`}                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"                />              ))}            </div>          </div>          {splitType === "by-item" && (            <div className="mb-6">              <label className="block text-sm font-medium text-gray-700 mb-3">                Assign Items              </label>              <div className="space-y-2">                {cart.map((item) => (                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">                    <div className="flex-1">                      <div className="font-medium text-sm">{item.name}</div>                      <div className="text-xs text-gray-500">                        ${((Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) * Number(item.quantity ?? 0)).toFixed(2)}                      </div>                    </div>                    <select                      value={itemAssignments[item.id] || 0}                      onChange={(e) => setItemAssignments({ ...itemAssignments, [item.id]: parseInt(e.target.value) })}                      className="px-3 py-1 border border-gray-300 rounded text-sm"                    >                      {personNames.slice(0, numPeople).map((name, idx) => (                        <option key={idx} value={idx}>                          {name || `Person ${idx + 1}`}                        </option>                      ))}                    </select>                  </div>                ))}              </div>            </div>          )}          <div className="bg-blue-50 rounded-lg p-4">            <div className="text-sm font-medium text-blue-900 mb-2">Preview</div>            {splitType === "equal" ? (              <div className="space-y-1">                {personNames.slice(0, numPeople).map((name, idx) => (                  <div key={idx} className="flex justify-between text-sm text-blue-800">                    <span>{name || `Person ${idx + 1}`}</span>                    <span className="font-semibold">${(total / numPeople).toFixed(2)}</span>                  </div>                ))}              </div>            ) : (              <div className="text-sm text-blue-800">                Please assign all items to people              </div>            )}          </div>        </div>        <div className="border-t border-gray-200 p-6 bg-white">          <div className="flex gap-3">            <button              onClick={onClose}              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"            >              Cancel            </button>            <button              onClick={handleSplit}              className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700"            >              Split Bill            </button>          </div>        </div>      </div>    </div>  );}

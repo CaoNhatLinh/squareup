@@ -1,28 +1,1 @@
-import * as client from '@/api/apiClient'
-
-export async function verifySession() {
-  const res = await client.get('/auth/verifySession');
-
-  return res.data;
-}
-
-export async function sessionLogin(idToken) {
-  try {
-    const res = await client.post('/auth/sessionLogin', { idToken }, { headers: { 'Content-Type': 'application/json' } });
-    return res.data;
-  } catch (error) {
-    console.error('sessionLogin failed:', error)
-    throw error
-  }
-}
-
-export async function sessionLogout() {
-  try {
-    const res = await client.post('/auth/sessionLogout', {});
-    return res.data;
-  } catch (error) {
-    console.error('sessionLogout failed:', error)
-
-    return { ok: false }
-  }
-}
+import * as client from '@/api/apiClient'export async function verifySession() {  const res = await client.get('/auth/verifySession');  return res.data;}export async function sessionLogin(idToken) {  try {    const res = await client.post('/auth/sessionLogin', { idToken }, { headers: { 'Content-Type': 'application/json' } });    return res.data;  } catch (error) {    console.error('sessionLogin failed:', error)    throw error  }}export async function sessionLogout() {  try {    const res = await client.post('/auth/sessionLogout', {});    return res.data;  } catch (error) {    console.error('sessionLogout failed:', error)    return { ok: false }  }}export async function createSessionForUser(userOrIdToken) {  try {    let idToken = userOrIdToken;    if (userOrIdToken && typeof userOrIdToken.getIdToken === 'function') {      idToken = await userOrIdToken.getIdToken(true);    }    if (!idToken || typeof idToken !== 'string') {      throw new Error('No idToken provided for session creation');    }    await sessionLogin(idToken);    const sessionRaw = await verifySession();    const sessionData = sessionRaw && sessionRaw.data !== undefined ? sessionRaw.data : sessionRaw;    return sessionData;  } catch (err) {    console.error('createSessionForUser failed:', err);    throw err;  }}

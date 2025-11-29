@@ -1,323 +1,1 @@
-import { useEffect, useState } from "react";
-import { useRestaurant } from "@/hooks/useRestaurant";
-import {
-  fetchSpecialClosures,
-  addSpecialClosure,
-  removeSpecialClosure,
-} from "@/api/specialClosures";
-import {
-  HiPlus,
-  HiTrash,
-  HiCalendar,
-  HiCheckCircle,
-  HiExclamationCircle,
-  HiStar,
-} from "react-icons/hi";
-import DatePicker from "react-datepicker";
-import PageHeader from "@/components/common/PageHeader";
-export default function SpecialClosures() {
-  const { restaurant } = useRestaurant();
-  const restaurantId = restaurant?.id;
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const [closures, setClosures] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newClosure, setNewClosure] = useState({
-    date: null,
-    reason: "",
-  });
-
-  useEffect(() => {
-    const loadClosures = async () => {
-      if (!restaurantId) return;
-
-      setLoading(true);
-      try {
-        const data = await fetchSpecialClosures(restaurantId);
-        const sortedData = (data || []).sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
-        );
-        setClosures(sortedData);
-      } catch (err) {
-        console.error("Error loading special closures:", err);
-        setMessage("Failed to load special closures");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadClosures();
-  }, [restaurantId, refreshKey]);
-
-  const handleAddClosure = async () => {
-    if (!newClosure.date) {
-      setMessage("Please select a date");
-      return;
-    }
-    const dateString = newClosure.date.toISOString().split("T")[0];
-    const exists = closures.find((c) => c.date === dateString);
-    if (exists) {
-      setMessage("This date is already marked as closed");
-      return;
-    }
-
-    if (isPastDate(dateString)) {
-      setMessage("Cannot add a date in the past.");
-      return;
-    }
-
-    setSaving(true);
-    setMessage("");
-
-    try {
-      await addSpecialClosure(restaurantId, {
-        ...newClosure,
-        date: dateString,
-      });
-
-      setRefreshKey((prev) => prev + 1);
-
-      setNewClosure({ date: null, reason: "" });
-      setShowAddForm(false);
-      setMessage("Special closure added successfully!");
-      setTimeout(() => setMessage(""), 4000);
-    } catch (err) {
-      console.error("Error adding special closure:", err);
-      setMessage("Failed to add special closure");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleRemoveClosure = async (closureId) => {
-    if (
-      !window.confirm("Are you sure you want to remove this special closure?")
-    )
-      return;
-
-    setSaving(true);
-    setMessage("");
-
-    try {
-      await removeSpecialClosure(restaurantId, closureId);
-
-      setRefreshKey((prev) => prev + 1);
-
-      setMessage("Special closure removed successfully!");
-      setTimeout(() => setMessage(""), 4000);
-    } catch (err) {
-      console.error("Error removing special closure:", err);
-      setMessage("Failed to remove special closure");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const isPastDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-5xl mx-auto">
-        <PageHeader
-          title="Special Closures Management"
-          subtitle="Manage dates when your restaurant will be closed for holidays or special events."
-          Icon={HiStar}
-        />
-        {message && (
-          <div
-            className={`mb-6 p-4 rounded-xl flex items-start gap-3 shadow-md ${
-              message.includes("success")
-                ? "bg-green-50 text-green-800 border-l-4 border-green-500"
-                : "bg-red-50 text-red-800 border-l-4 border-red-500"
-            }`}
-          >
-            {message.includes("success") ? (
-              <HiCheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
-            ) : (
-              <HiExclamationCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
-            )}
-            <div>{message}</div>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600 font-medium">
-              Loading special closures...
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            {showAddForm ? (
-              <div className="p-8 border-b bg-red-50/50 rounded-t-2xl">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <HiCalendar className="w-6 h-6 text-red-600" />
-                  Add Special Closure
-                </h3>
-                <div className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Closure Date <span className="text-red-500">*</span>
-                      </label>
-                      <DatePicker
-                        selected={newClosure.date}
-                        onChange={(date) =>
-                          setNewClosure((prev) => ({ ...prev, date }))
-                        }
-                        minDate={new Date()}
-                        dateFormat="MM/dd/yyyy"
-                        placeholderText="Select a date"
-                        className="w-full px-4 py-3 appearance-none bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Reason (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={newClosure.reason}
-                        onChange={(e) =>
-                          setNewClosure((prev) => ({
-                            ...prev,
-                            reason: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700"
-                        placeholder="e.g., Christmas Holiday, Annual Maintenance, Private Event"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 justify-end pt-2">
-                    <button
-                      onClick={handleAddClosure}
-                      disabled={saving}
-                      className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all"
-                    >
-                      {saving ? "Adding..." : "Add Closure"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setNewClosure({ date: null, reason: "" });
-                        setMessage("");
-                      }}
-                      disabled={saving}
-                      className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 disabled:opacity-50 transition-all"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 border-b bg-gray-50">
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-md transition-all"
-                >
-                  <HiPlus className="w-5 h-5" />
-                  Add Special Closure
-                </button>
-              </div>
-            )}
-
-            <div className="divide-y divide-gray-100">
-              {closures.length === 0 ? (
-                <div className="p-16 text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">
-                    <HiCalendar className="w-10 h-10 text-red-500" />
-                  </div>
-                  <p className="text-gray-900 font-semibold text-lg mb-1">
-                    No special closures scheduled
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Use the "Add Special Closure" button to schedule a date.
-                  </p>
-                </div>
-              ) : (
-                closures.map((closure) => (
-                  <div
-                    key={closure.id || closure.date}
-                    className={`p-6 flex items-center justify-between transition-all ${
-                      isPastDate(closure.date)
-                        ? "bg-gray-50/50 opacity-70"
-                        : "hover:bg-red-50/50"
-                    }`}
-                  >
-                    <div className="flex-1 flex items-center gap-4">
-                      <div
-                        className={`flex items-center justify-center w-12 h-12 rounded-xl ${
-                          isPastDate(closure.date)
-                            ? "bg-gray-100"
-                            : "bg-red-100"
-                        }`}
-                      >
-                        <HiCalendar
-                          className={`w-6 h-6 ${
-                            isPastDate(closure.date)
-                              ? "text-gray-400"
-                              : "text-red-600"
-                          }`}
-                        />
-                      </div>
-
-                      <div>
-                        <div className="font-bold text-gray-900 text-lg">
-                          {formatDate(closure.date)}
-                        </div>
-                        {closure.reason && (
-                          <div className="text-sm text-gray-700 mt-0.5 flex items-center gap-1">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                            {closure.reason}
-                          </div>
-                        )}
-                        {isPastDate(closure.date) && (
-                          <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full font-medium">
-                            Past date
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {!isPastDate(closure.date) && (
-                      <button
-                        onClick={() => handleRemoveClosure(closure.id)}
-                        disabled={saving}
-                        className="p-3 text-red-600 hover:bg-red-100 rounded-full transition-all disabled:opacity-50 active:scale-95"
-                        title="Remove closure"
-                      >
-                        <HiTrash className="w-6 h-6" />
-                      </button>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import { useEffect, useState } from "react";import { useRestaurant } from "@/hooks/useRestaurant";import {  fetchSpecialClosures,  addSpecialClosure,  removeSpecialClosure,} from "@/api/specialClosures";import {  HiPlus,  HiTrash,  HiCalendar,  HiCheckCircle,  HiExclamationCircle,  HiStar,} from "react-icons/hi";import DatePicker from "react-datepicker";import PageHeader from "@/components/common/PageHeader";export default function SpecialClosures() {  const { restaurant } = useRestaurant();  const restaurantId = restaurant?.id;  const [refreshKey, setRefreshKey] = useState(0);  const [closures, setClosures] = useState([]);  const [loading, setLoading] = useState(true);  const [saving, setSaving] = useState(false);  const [message, setMessage] = useState("");  const [showAddForm, setShowAddForm] = useState(false);  const [newClosure, setNewClosure] = useState({    date: null,    reason: "",  });  useEffect(() => {    const loadClosures = async () => {      if (!restaurantId) return;      setLoading(true);      try {        const data = await fetchSpecialClosures(restaurantId);        const sortedData = (data || []).sort(          (a, b) => new Date(a.date) - new Date(b.date)        );        setClosures(sortedData);      } catch (err) {        console.error("Error loading special closures:", err);        setMessage("Failed to load special closures");      } finally {        setLoading(false);      }    };    loadClosures();  }, [restaurantId, refreshKey]);  const handleAddClosure = async () => {    if (!newClosure.date) {      setMessage("Please select a date");      return;    }    const dateString = newClosure.date.toISOString().split("T")[0];    const exists = closures.find((c) => c.date === dateString);    if (exists) {      setMessage("This date is already marked as closed");      return;    }    if (isPastDate(dateString)) {      setMessage("Cannot add a date in the past.");      return;    }    setSaving(true);    setMessage("");    try {      await addSpecialClosure(restaurantId, {        ...newClosure,        date: dateString,      });      setRefreshKey((prev) => prev + 1);      setNewClosure({ date: null, reason: "" });      setShowAddForm(false);      setMessage("Special closure added successfully!");      setTimeout(() => setMessage(""), 4000);    } catch (err) {      console.error("Error adding special closure:", err);      setMessage("Failed to add special closure");    } finally {      setSaving(false);    }  };  const handleRemoveClosure = async (closureId) => {    if (      !window.confirm("Are you sure you want to remove this special closure?")    )      return;    setSaving(true);    setMessage("");    try {      await removeSpecialClosure(restaurantId, closureId);      setRefreshKey((prev) => prev + 1);      setMessage("Special closure removed successfully!");      setTimeout(() => setMessage(""), 4000);    } catch (err) {      console.error("Error removing special closure:", err);      setMessage("Failed to remove special closure");    } finally {      setSaving(false);    }  };  const formatDate = (dateString) => {    const date = new Date(dateString);    return date.toLocaleDateString("en-US", {      weekday: "long",      year: "numeric",      month: "long",      day: "numeric",    });  };  const isPastDate = (dateString) => {    const date = new Date(dateString);    const today = new Date();    today.setHours(0, 0, 0, 0);    return date < today;  };  return (    <div className="min-h-screen bg-gray-50 p-8">      <div className="max-w-5xl mx-auto">        <PageHeader          title="Special Closures Management"          subtitle="Manage dates when your restaurant will be closed for holidays or special events."          Icon={HiStar}        />        {message && (          <div            className={`mb-6 p-4 rounded-xl flex items-start gap-3 shadow-md ${              message.includes("success")                ? "bg-green-50 text-green-800 border-l-4 border-green-500"                : "bg-red-50 text-red-800 border-l-4 border-red-500"            }`}          >            {message.includes("success") ? (              <HiCheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />            ) : (              <HiExclamationCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />            )}            <div>{message}</div>          </div>        )}        {loading ? (          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent"></div>            <p className="mt-4 text-gray-600 font-medium">              Loading special closures...            </p>          </div>        ) : (          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">            {showAddForm ? (              <div className="p-8 border-b bg-red-50/50 rounded-t-2xl">                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">                  <HiCalendar className="w-6 h-6 text-red-600" />                  Add Special Closure                </h3>                <div className="space-y-5">                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                    <div>                      <label className="block text-sm font-semibold text-gray-700 mb-2">                        Closure Date <span className="text-red-500">*</span>                      </label>                      <DatePicker                        selected={newClosure.date}                        onChange={(date) =>                          setNewClosure((prev) => ({ ...prev, date }))                        }                        minDate={new Date()}                        dateFormat="MM/dd/yyyy"                        placeholderText="Select a date"                        className="w-full px-4 py-3 appearance-none bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700 font-medium"                      />                    </div>                    <div>                      <label className="block text-sm font-semibold text-gray-700 mb-2">                        Reason (Optional)                      </label>                      <input                        type="text"                        value={newClosure.reason}                        onChange={(e) =>                          setNewClosure((prev) => ({                            ...prev,                            reason: e.target.value,                          }))                        }                        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all text-gray-700"                        placeholder="e.g., Christmas Holiday, Annual Maintenance, Private Event"                      />                    </div>                  </div>                  <div className="flex gap-3 justify-end pt-2">                    <button                      onClick={handleAddClosure}                      disabled={saving}                      className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all"                    >                      {saving ? "Adding..." : "Add Closure"}                    </button>                    <button                      onClick={() => {                        setShowAddForm(false);                        setNewClosure({ date: null, reason: "" });                        setMessage("");                      }}                      disabled={saving}                      className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 disabled:opacity-50 transition-all"                    >                      Cancel                    </button>                  </div>                </div>              </div>            ) : (              <div className="p-8 border-b bg-gray-50">                <button                  onClick={() => setShowAddForm(true)}                  className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-md transition-all"                >                  <HiPlus className="w-5 h-5" />                  Add Special Closure                </button>              </div>            )}            <div className="divide-y divide-gray-100">              {closures.length === 0 ? (                <div className="p-16 text-center">                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">                    <HiCalendar className="w-10 h-10 text-red-500" />                  </div>                  <p className="text-gray-900 font-semibold text-lg mb-1">                    No special closures scheduled                  </p>                  <p className="text-gray-500 text-sm">                    Use the "Add Special Closure" button to schedule a date.                  </p>                </div>              ) : (                closures.map((closure) => (                  <div                    key={closure.id || closure.date}                    className={`p-6 flex items-center justify-between transition-all ${                      isPastDate(closure.date)                        ? "bg-gray-50/50 opacity-70"                        : "hover:bg-red-50/50"                    }`}                  >                    <div className="flex-1 flex items-center gap-4">                      <div                        className={`flex items-center justify-center w-12 h-12 rounded-xl ${                          isPastDate(closure.date)                            ? "bg-gray-100"                            : "bg-red-100"                        }`}                      >                        <HiCalendar                          className={`w-6 h-6 ${                            isPastDate(closure.date)                              ? "text-gray-400"                              : "text-red-600"                          }`}                        />                      </div>                      <div>                        <div className="font-bold text-gray-900 text-lg">                          {formatDate(closure.date)}                        </div>                        {closure.reason && (                          <div className="text-sm text-gray-700 mt-0.5 flex items-center gap-1">                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>                            {closure.reason}                          </div>                        )}                        {isPastDate(closure.date) && (                          <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full font-medium">                            Past date                          </span>                        )}                      </div>                    </div>                    {!isPastDate(closure.date) && (                      <button                        onClick={() => handleRemoveClosure(closure.id)}                        disabled={saving}                        className="p-3 text-red-600 hover:bg-red-100 rounded-full transition-all disabled:opacity-50 active:scale-95"                        title="Remove closure"                      >                        <HiTrash className="w-6 h-6" />                      </button>                    )}                  </div>                ))              )}            </div>          </div>        )}      </div>    </div>  );}

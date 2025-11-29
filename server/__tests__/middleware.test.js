@@ -8,7 +8,6 @@ jest.mock('firebase-admin', () => {
     getUser: jest.fn()
   };
 
-  // database ref map for path-based responses
   const dbRefMap = new Map();
   const database = () => ({
     ref: (path) => ({
@@ -22,7 +21,6 @@ jest.mock('firebase-admin', () => {
         if (!val) return { exists: () => false };
         return { exists: () => true, val: () => val };
       },
-      // allow tests and controllers to call update/set/remove/push
       update: async (partial) => {
         const existing = dbRefMap.get(path) || {};
         const updated = { ...existing, ...partial };
@@ -38,7 +36,6 @@ jest.mock('firebase-admin', () => {
         return null;
       },
       push: () => {
-        // create a random key and return an object with key and set
         const key = `random-${Math.random().toString(36).slice(2,8)}`;
         return {
           key,
@@ -47,7 +44,6 @@ jest.mock('firebase-admin', () => {
       }
     })
   });
-  // not needed - get/once implemented directly above
 
   const admin = {
     auth: () => auth,
@@ -88,9 +84,7 @@ describe('Middleware integration tests', () => {
   });
 
   test('verifyOwner: should return 403 if not owner', async () => {
-    // token with uid user2
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'user2', admin: false, role: 'owner' });
-    // stub DB: users/user2/restaurants/restaurant1 doesn't exist
     admin.__helpers.dbRefMap.set('users/user2/restaurants/restaurant1', null);
 
     const res = await request(app).put('/api/restaurants/restaurant1').set('Authorization', 'Bearer token').send({ name: 'Updated' });
@@ -99,18 +93,14 @@ describe('Middleware integration tests', () => {
 
   test('verifyOwner: should allow owner', async () => {
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'owner1', admin: false, role: 'owner' });
-    // stub DB: users/owner1/restaurants/restaurant2 exists
     admin.__helpers.dbRefMap.set('users/owner1/restaurants/restaurant2', { role: 'owner' });
     const res = await request(app).put('/api/restaurants/restaurant2').set('Authorization', 'Bearer token').send({ name: 'Updated' });
-    // route uses verifyRestaurantOwnership then updateRestaurant which returns json; status 200
     expect(res.status).toBe(200);
   });
 
   test('verifyPermission: items route - deny staff without permission', async () => {
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'staff1', admin: false, role: 'staff' });
-    // staff membership exists
     admin.__helpers.dbRefMap.set('restaurants/rest1/staff/staff1', { roleId: 'roleX' });
-    // role does not grant items.read
     admin.__helpers.dbRefMap.set('restaurants/rest1/roles/roleX', { permissions: { items: { read: false } } });
 
     const res = await request(app).get('/api/restaurants/rest1/items').set('Authorization', 'Bearer token');
@@ -119,13 +109,10 @@ describe('Middleware integration tests', () => {
 
   test('verifyPermission: items route - allow staff with permission', async () => {
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'staff2', admin: false, role: 'staff' });
-    // staff membership exists
     admin.__helpers.dbRefMap.set('restaurants/rest1/staff/staff2', { roleId: 'roleY' });
-    // role grants items.read
     admin.__helpers.dbRefMap.set('restaurants/rest1/roles/roleY', { permissions: { items: { read: true } } });
 
     const res = await request(app).get('/api/restaurants/rest1/items').set('Authorization', 'Bearer token');
-    // 200 ok (the controller returns data or 200)
     expect(res.status).not.toBe(403);
   });
 });

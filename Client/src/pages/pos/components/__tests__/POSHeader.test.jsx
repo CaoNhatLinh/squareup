@@ -1,15 +1,1 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import POSHeader from '@/pages/pos/components/POSHeader';
-import { describe, expect,it ,jest} from 'vitest';
-
-describe('POSHeader', () => {
-  it('calls onSearch and onQueryChange when typing', () => {
-    const onSearch = jest.fn();
-    const onQueryChange = jest.fn();
-    render(<POSHeader restaurantName="Test" onSearch={onSearch} onQueryChange={onQueryChange} />);
-    const input = screen.getByPlaceholderText('Search items...');
-    fireEvent.change(input, { target: { value: 'Burger' } });
-    expect(onSearch).toHaveBeenCalledWith('Burger');
-    expect(onQueryChange).toHaveBeenCalledWith('Burger');
-  });
-});
+import { render, screen, fireEvent } from '@testing-library/react';import POSHeader from '@/pages/pos/components/POSHeader';import { describe, expect,it ,jest} from 'vitest';describe('POSHeader', () => {  it('calls onSearch and onQueryChange when typing', () => {    const onSearch = jest.fn();    const onQueryChange = jest.fn();    render(<POSHeader restaurantName="Test" onSearch={onSearch} onQueryChange={onQueryChange} />);    const input = screen.getByPlaceholderText('Search items...');    fireEvent.change(input, { target: { value: 'Burger' } });    expect(onSearch).toHaveBeenCalledWith('Burger');    expect(onQueryChange).toHaveBeenCalledWith('Burger');  });});

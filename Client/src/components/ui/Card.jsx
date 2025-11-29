@@ -1,92 +1,1 @@
-const Card = ({
-  children,
-  variant = 'default',
-  padding = 'medium',
-  shadow = 'sm',
-  hover = false,
-  onClick,
-  className = '',
-  ...props
-}) => {
-  const baseStyles = 'bg-white rounded-lg border border-gray-200 transition-all duration-200';
-
-  const variantStyles = {
-    default: '',
-    bordered: 'border-2',
-    elevated: 'border-0',
-  };
-
-  const paddingStyles = {
-    none: 'p-0',
-    small: 'p-3',
-    medium: 'p-4',
-    large: 'p-6',
-  };
-
-  const shadowStyles = {
-    none: '',
-    sm: 'shadow-sm',
-    md: 'shadow-md',
-    lg: 'shadow-lg',
-    xl: 'shadow-xl',
-  };
-
-  const hoverStyles = hover ? 'hover:shadow-md hover:border-gray-300 cursor-pointer' : '';
-  const clickableStyles = onClick ? 'cursor-pointer' : '';
-
-  return (
-    <div
-      className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${shadowStyles[shadow]} ${hoverStyles} ${clickableStyles} ${className}`}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
-
-const CardHeader = ({ children, className = '' }) => (
-  <div className={`border-b border-gray-200 pb-4 mb-4 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
-    {children}
-  </h3>
-);
-
-const CardBody = ({ children, className = '' }) => (
-  <div className={className}>
-    {children}
-  </div>
-);
-
-const CardFooter = ({ children, className = '' }) => (
-  <div className={`border-t border-gray-200 pt-4 mt-4 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardContent = ({ children, className = '' }) => (
-  <div className={className}>
-    {children}
-  </div>
-);
-
-const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-sm text-gray-600 ${className}`}>
-    {children}
-  </p>
-);
-
-Card.Header = CardHeader;
-Card.Title = CardTitle;
-Card.Body = CardBody;
-Card.Footer = CardFooter;
-Card.Content = CardContent;
-Card.Description = CardDescription;
-
-export default Card;
-export { Card, CardHeader, CardTitle, CardBody, CardFooter, CardContent, CardDescription };
+const Card = ({  children,  variant = 'default',  padding = 'medium',  shadow = 'sm',  hover = false,  onClick,  className = '',  ...props}) => {  const baseStyles = 'bg-white rounded-lg border border-gray-200 transition-all duration-200';  const variantStyles = {    default: '',    bordered: 'border-2',    elevated: 'border-0',  };  const paddingStyles = {    none: 'p-0',    small: 'p-3',    medium: 'p-4',    large: 'p-6',  };  const shadowStyles = {    none: '',    sm: 'shadow-sm',    md: 'shadow-md',    lg: 'shadow-lg',    xl: 'shadow-xl',  };  const hoverStyles = hover ? 'hover:shadow-md hover:border-gray-300 cursor-pointer' : '';  const clickableStyles = onClick ? 'cursor-pointer' : '';  return (    <div      className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${shadowStyles[shadow]} ${hoverStyles} ${clickableStyles} ${className}`}      onClick={onClick}      {...props}    >      {children}    </div>  );};const CardHeader = ({ children, className = '' }) => (  <div className={`border-b border-gray-200 pb-4 mb-4 ${className}`}>    {children}  </div>);const CardTitle = ({ children, className = '' }) => (  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>    {children}  </h3>);const CardBody = ({ children, className = '' }) => (  <div className={className}>    {children}  </div>);const CardFooter = ({ children, className = '' }) => (  <div className={`border-t border-gray-200 pt-4 mt-4 ${className}`}>    {children}  </div>);const CardContent = ({ children, className = '' }) => (  <div className={className}>    {children}  </div>);const CardDescription = ({ children, className = '' }) => (  <p className={`text-sm text-gray-600 ${className}`}>    {children}  </p>);Card.Header = CardHeader;Card.Title = CardTitle;Card.Body = CardBody;Card.Footer = CardFooter;Card.Content = CardContent;Card.Description = CardDescription;export default Card;export { Card, CardHeader, CardTitle, CardBody, CardFooter, CardContent, CardDescription };

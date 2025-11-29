@@ -1,26 +1,1 @@
-export default function ButtonStyleControl({ value = {}, onChange }) {
-  const handle = (key, val) => onChange({ ...value, [key]: val });
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <label className="block text-xs text-gray-600 mb-1">Style</label>
-        <select value={value.style || 'filled'} onChange={(e) => handle('style', e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">
-          <option value="filled">Filled</option>
-          <option value="outline">Outline</option>
-          <option value="text">Text</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-600 mb-1">Color</label>
-        <input type="color" value={value.color || '#F97316'} onChange={(e) => handle('color', e.target.value)} className="h-9 w-16" />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input type="checkbox" checked={!!value.rounded} onChange={(e) => handle('rounded', e.target.checked)} />
-        <label className="text-xs text-gray-600">Rounded</label>
-      </div>
-    </div>
-  );
-}
+export default function ButtonStyleControl({ value = {}, onChange }) {  const handle = (key, val) => onChange({ ...value, [key]: val });  return (    <div className="space-y-3">      <div>        <label className="block text-xs text-gray-600 mb-1">Style</label>        <select value={value.style || 'filled'} onChange={(e) => handle('style', e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">          <option value="filled">Filled</option>          <option value="outline">Outline</option>          <option value="text">Text</option>        </select>      </div>      <div>        <label className="block text-xs text-gray-600 mb-1">Color</label>        <input type="color" value={value.color || '#F97316'} onChange={(e) => handle('color', e.target.value)} className="h-9 w-16" />      </div>      <div className="flex items-center gap-2">        <input type="checkbox" checked={!!value.rounded} onChange={(e) => handle('rounded', e.target.checked)} />        <label className="text-xs text-gray-600">Rounded</label>      </div>    </div>  );}

@@ -1,93 +1,1 @@
-import { useState } from "react";
-import { useMemo } from "react";
-import ProductCard from "@/pages/pos/components/ProductCard";
-import ProductModal from "@/pages/pos/components/ProductModal";
-
-export default function ProductGrid({
-  categories = [],
-  items = {},
-  selectedCategory,
-  query = '',
-  onAddToCart,
-  modifiers,
-}) {
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const filteredItems = useMemo(() => {
-    const itemsArray = Object.values(items || {});
-    const searchQuery = (query || '').toLowerCase().trim();
-    if (selectedCategory === "all" && !searchQuery) return itemsArray;
-    const category = Array.isArray(categories) ? categories.find((cat) => cat.id === selectedCategory) : null;
-    if (!category) return [];
-
-    const categoryItemIds = Array.isArray(category.itemIds)
-      ? category.itemIds
-      : category.itemIds
-      ? Object.values(category.itemIds)
-      : [];
-
-    let filtered = itemsArray.filter((item) => categoryItemIds.includes(item.id));
-    if (searchQuery) {
-      filtered = filtered.filter(i => (i.name || '').toLowerCase().includes(searchQuery));
-    }
-    return filtered;
-  }, [items, categories, selectedCategory, query]);
-
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
-  };
-
-  const handleQuickAdd = (item) => {
-    if (item.modifierIds && item.modifierIds.length > 0) {
-      handleItemClick(item);
-    } else {
-      onAddToCart(item, [], 1);
-    }
-  };
-
-  const handleAddToCart = (item, selectedOptions, quantity) => {
-    onAddToCart(item, selectedOptions, quantity);
-    setIsModalOpen(false);
-    setSelectedItem(null);
-  };
-
-  if (filteredItems.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-gray-500">
-          <p className="text-lg">No items found</p>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <>
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredItems.map((item) => (
-            <ProductCard
-              key={item.id}
-              item={item}
-              onClick={() => handleItemClick(item)}
-              onQuickAdd={() => handleQuickAdd(item)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {isModalOpen && selectedItem && (
-        <ProductModal
-          item={selectedItem}
-          modifiers={modifiers}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedItem(null);
-          }}
-          onAddToCart={handleAddToCart}
-        />
-      )}
-    </>
-  );
-}
+import { useState } from "react";import { useMemo } from "react";import ProductCard from "@/pages/pos/components/ProductCard";import ProductModal from "@/pages/pos/components/ProductModal";export default function ProductGrid({  categories = [],  items = {},  selectedCategory,  query = '',  onAddToCart,  modifiers,}) {  const [selectedItem, setSelectedItem] = useState(null);  const [isModalOpen, setIsModalOpen] = useState(false);  const filteredItems = useMemo(() => {    const itemsArray = Object.values(items || {});    const searchQuery = (query || '').toLowerCase().trim();    if (selectedCategory === "all" && !searchQuery) return itemsArray;    const category = Array.isArray(categories) ? categories.find((cat) => cat.id === selectedCategory) : null;    if (!category) return [];    const categoryItemIds = Array.isArray(category.itemIds)      ? category.itemIds      : category.itemIds      ? Object.values(category.itemIds)      : [];    let filtered = itemsArray.filter((item) => categoryItemIds.includes(item.id));    if (searchQuery) {      filtered = filtered.filter(i => (i.name || '').toLowerCase().includes(searchQuery));    }    return filtered;  }, [items, categories, selectedCategory, query]);  const handleItemClick = (item) => {    setSelectedItem(item);    setIsModalOpen(true);  };  const handleQuickAdd = (item) => {    if (item.modifierIds && item.modifierIds.length > 0) {      handleItemClick(item);    } else {      onAddToCart(item, [], 1);    }  };  const handleAddToCart = (item, selectedOptions, quantity) => {    onAddToCart(item, selectedOptions, quantity);    setIsModalOpen(false);    setSelectedItem(null);  };  if (filteredItems.length === 0) {    return (      <div className="flex-1 flex items-center justify-center">        <div className="text-center text-gray-500">          <p className="text-lg">No items found</p>        </div>      </div>    );  }  return (    <>      <div className="flex-1 overflow-y-auto p-6">        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">          {filteredItems.map((item) => (            <ProductCard              key={item.id}              item={item}              onClick={() => handleItemClick(item)}              onQuickAdd={() => handleQuickAdd(item)}            />          ))}        </div>      </div>      {isModalOpen && selectedItem && (        <ProductModal          item={selectedItem}          modifiers={modifiers}          onClose={() => {            setIsModalOpen(false);            setSelectedItem(null);          }}          onAddToCart={handleAddToCart}        />      )}    </>  );}

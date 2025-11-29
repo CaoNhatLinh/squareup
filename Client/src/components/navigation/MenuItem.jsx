@@ -1,136 +1,1 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { HiChevronRight } from "react-icons/hi";
-import { useOrderNotification } from "@/hooks/useOrderNotification";
-
-export default function MenuItem({ item, level = 0, collapsed = false }) {
-  const location = useLocation();
-  const [expanded, setExpanded] = useState(false);
-  const Icon = item.icon;
-  const { newOrderIds, newPosOrderIds } = useOrderNotification(); 
-  const hasActiveChild = useMemo(() => {
-    if (!item.children) return false;
-    const checkActive = (children) => {
-      return children.some((child) => {
-        if (child.to && location.pathname.startsWith(child.to)) return true;
-        if (child.children) return checkActive(child.children);
-        return false;
-      });
-    };
-    return checkActive(item.children);
-  }, [item.children, location.pathname]); 
-  useEffect(() => {
-    if (hasActiveChild) {
-      setExpanded(true);
-    }
-  }, [hasActiveChild]);
-  const hasChildren = item.children && item.children.length > 0;
-  const paddingLeft = `${(level + 1) * 16}px`;
-  if (!hasChildren && item.to) {
-    
-    const isOrdersPath = item.to && (item.to.endsWith('/orders') || item.to.includes('/orders'));
-    const isPosPath = item.to && (item.to.endsWith('/pos') || item.to.includes('/pos'));
-    const badgeCount = (isOrdersPath && item.badge) ? newOrderIds.length : (isPosPath && item.badge ? newPosOrderIds.length : 0);
-    return (
-      <NavLink
-        to={item.to}
-        onClick={item.onClick}
-        className={({ isActive }) =>
-          `${collapsed ? 'flex items-center justify-center px-0 py-2' : 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium'} transition-all duration-200 ${
-            isActive
-              ? collapsed ? 'bg-blue-50 text-blue-700' : 'bg-blue-50 text-blue-700 border-l-4 border-blue-500'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-          }`
-        }
-        style={{ paddingLeft: collapsed ? undefined : paddingLeft }}
-        title={collapsed ? item.label : undefined}
-      >
-        {Icon && (
-          <Icon
-            className={`w-5 h-5 flex-shrink-0 ${
-              item.to && location.pathname.startsWith(item.to)
-                ? 'text-blue-600'
-                : 'text-gray-400'
-            }`}
-          />
-        )}
-        {!collapsed && <span className="flex-1">{item.label}</span>}
-        {!collapsed && badgeCount > 0 && (
-          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold bg-red-500 text-white rounded-full">
-            {badgeCount}
-          </span>
-        )}
-      </NavLink>
-    );
-  }
-  if (hasChildren) {
-    
-    const popoverTimer = useRef(null);
-    const [popoverOpen, setPopoverOpen] = useState(false);
-    const openPopover = () => {
-      if (popoverTimer.current) {
-        clearTimeout(popoverTimer.current);
-        popoverTimer.current = null;
-      }
-      setPopoverOpen(true);
-    };
-    const closePopover = () => {
-      
-      popoverTimer.current = setTimeout(() => setPopoverOpen(false), 150);
-    };
-
-    return (
-      <div className="relative" onMouseEnter={collapsed ? openPopover : undefined} onMouseLeave={collapsed ? closePopover : undefined}>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          onFocus={collapsed ? openPopover : undefined}
-          onBlur={collapsed ? closePopover : undefined}
-          className={`${collapsed ? 'w-full flex items-center justify-center px-0 py-2' : 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium'} transition-all duration-200 ${
-            hasActiveChild
-              ? collapsed ? 'bg-blue-50 text-blue-700' : 'bg-blue-50 text-blue-700 border-l-4 border-blue-500'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-          }`}
-          style={{ paddingLeft: collapsed ? undefined : paddingLeft }}
-          title={collapsed ? item.label : undefined}
-        >
-          {Icon && (
-            <Icon
-              className={`w-5 h-5 flex-shrink-0 ${
-                hasActiveChild ? 'text-blue-600' : 'text-gray-400'
-              }`}
-            />
-          )}
-          {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-          {!collapsed && (
-            <HiChevronRight
-              className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 text-gray-400 ${
-                expanded ? 'rotate-90' : ''
-              }`}
-            />
-          )}
-        </button>
-
-        {collapsed && popoverOpen && (
-          <div className="absolute left-full top-0 ml-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-            <div className="p-2">
-              {item.children.map((child, idx) => (
-                <div key={idx} className="mb-1">
-                  <MenuItem item={child} level={level + 1} collapsed={false} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!collapsed && expanded && (
-          <div className="mt-2 ml-4 space-y-1">
-            {item.children.map((child, idx) => (
-              <MenuItem key={idx} item={child} level={level + 1} collapsed={collapsed} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-  return null;
-}
+import { useEffect, useMemo, useRef, useState } from "react";import { NavLink, useLocation } from "react-router-dom";import { HiChevronRight } from "react-icons/hi";import { useOrderNotification } from "@/hooks/useOrderNotification";export default function MenuItem({ item, level = 0, collapsed = false }) {  const location = useLocation();  const [expanded, setExpanded] = useState(false);  const Icon = item.icon;  const { newOrderIds, newPosOrderIds } = useOrderNotification();   const hasActiveChild = useMemo(() => {    if (!item.children) return false;    const checkActive = (children) => {      return children.some((child) => {        if (child.to && location.pathname.startsWith(child.to)) return true;        if (child.children) return checkActive(child.children);        return false;      });    };    return checkActive(item.children);  }, [item.children, location.pathname]);   useEffect(() => {    if (hasActiveChild) {      setExpanded(true);    }  }, [hasActiveChild]);  const hasChildren = item.children && item.children.length > 0;  const paddingLeft = `${(level + 1) * 16}px`;  if (!hasChildren && item.to) {    const isOrdersPath = item.to && (item.to.endsWith('/orders') || item.to.includes('/orders'));    const isPosPath = item.to && (item.to.endsWith('/pos') || item.to.includes('/pos'));    const badgeCount = (isOrdersPath && item.badge) ? newOrderIds.length : (isPosPath && item.badge ? newPosOrderIds.length : 0);    return (      <NavLink        to={item.to}        onClick={item.onClick}        className={({ isActive }) =>          `${collapsed ? 'flex items-center justify-center px-0 py-2' : 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium'} transition-all duration-200 ${            isActive              ? collapsed ? 'bg-blue-50 text-blue-700' : 'bg-blue-50 text-blue-700 border-l-4 border-blue-500'              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'          }`        }        style={{ paddingLeft: collapsed ? undefined : paddingLeft }}        title={collapsed ? item.label : undefined}      >        {Icon && (          <Icon            className={`w-5 h-5 flex-shrink-0 ${              item.to && location.pathname.startsWith(item.to)                ? 'text-blue-600'                : 'text-gray-400'            }`}          />        )}        {!collapsed && <span className="flex-1">{item.label}</span>}        {!collapsed && badgeCount > 0 && (          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold bg-red-500 text-white rounded-full">            {badgeCount}          </span>        )}      </NavLink>    );  }  if (hasChildren) {    const popoverTimer = useRef(null);    const [popoverOpen, setPopoverOpen] = useState(false);    const openPopover = () => {      if (popoverTimer.current) {        clearTimeout(popoverTimer.current);        popoverTimer.current = null;      }      setPopoverOpen(true);    };    const closePopover = () => {      popoverTimer.current = setTimeout(() => setPopoverOpen(false), 150);    };    return (      <div className="relative" onMouseEnter={collapsed ? openPopover : undefined} onMouseLeave={collapsed ? closePopover : undefined}>        <button          onClick={() => setExpanded(!expanded)}          onFocus={collapsed ? openPopover : undefined}          onBlur={collapsed ? closePopover : undefined}          className={`${collapsed ? 'w-full flex items-center justify-center px-0 py-2' : 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium'} transition-all duration-200 ${            hasActiveChild              ? collapsed ? 'bg-blue-50 text-blue-700' : 'bg-blue-50 text-blue-700 border-l-4 border-blue-500'              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'          }`}          style={{ paddingLeft: collapsed ? undefined : paddingLeft }}          title={collapsed ? item.label : undefined}        >          {Icon && (            <Icon              className={`w-5 h-5 flex-shrink-0 ${                hasActiveChild ? 'text-blue-600' : 'text-gray-400'              }`}            />          )}          {!collapsed && <span className="flex-1 text-left">{item.label}</span>}          {!collapsed && (            <HiChevronRight              className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 text-gray-400 ${                expanded ? 'rotate-90' : ''              }`}            />          )}        </button>        {collapsed && popoverOpen && (          <div className="absolute left-full top-0 ml-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">            <div className="p-2">              {item.children.map((child, idx) => (                <div key={idx} className="mb-1">                  <MenuItem item={child} level={level + 1} collapsed={false} />                </div>              ))}            </div>          </div>        )}        {!collapsed && expanded && (          <div className="mt-2 ml-4 space-y-1">            {item.children.map((child, idx) => (              <MenuItem key={idx} item={child} level={level + 1} collapsed={collapsed} />            ))}          </div>        )}      </div>    );  }  return null;}

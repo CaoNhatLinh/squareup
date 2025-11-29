@@ -1,95 +1,1 @@
-import { BLOCK_TYPES } from "@/components/builder/blockTypes";
-import SchemaField from "@/components/builder/inputs/SchemaField";
-import { getByPath } from "@/utils/objectUtils";
-
-export default function ControlToolkit({ activeControl, block, onControlChange, globalStyles }) {
-  if (!activeControl || !block) return null;
-  const { controlId } = activeControl;
-  
-  const blockType = BLOCK_TYPES.find(t => t.type === block.type);
-  if (!blockType) return null;
-  let matchedSchema = null;
-  let sourceFields = [];
-  let parentPath = '';
-  let isList = false;
-
-  const checkEntry = (entry) => {
-    if (entry.elementSchema && controlId.startsWith(entry.elementSchema.controlIdPrefix)) {
-      
-      if (!matchedSchema || entry.elementSchema.controlIdPrefix.length > matchedSchema.controlIdPrefix.length) {
-        matchedSchema = entry.elementSchema;
-        if (entry.type === 'list') {
-          sourceFields = entry.itemSchema || [];
-          parentPath = entry.name;
-          isList = true;
-        } else {
-          sourceFields = entry.fields || [entry]; 
-          parentPath = ''; 
-          isList = false;
-        }
-      }
-      return true; 
-    }
-    
-    if (entry.fields) {
-      for (const f of entry.fields) {
-        if (f.elementSchema && controlId.startsWith(f.elementSchema.controlIdPrefix)) {
-          if (!matchedSchema || f.elementSchema.controlIdPrefix.length > matchedSchema.controlIdPrefix.length) {
-            matchedSchema = f.elementSchema;
-            sourceFields = f.itemSchema || [];
-            parentPath = f.name;
-            isList = true;
-          }
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  for (const entry of blockType.schema) {
-    checkEntry(entry);
-  }
-
-  if (!matchedSchema) {
-    return <div className="text-sm text-gray-500 p-4">No toolkit available for this control.</div>;
-  }
-  const idxMatch = controlId.match(/-(\d+)$/);
-  const index = (isList && idxMatch) ? Number(idxMatch[1]) : null;
-
-  return (
-    <div className="space-y-4 p-4">
-      <div className="mb-2 border-b pb-2">
-        <h5 className="text-sm font-semibold">Edit Element</h5>
-        <p className="text-xs text-gray-500">
-          {isList ? `Item ${index + 1}` : 'Settings'}
-        </p>
-      </div>
-
-      {matchedSchema.fields.map(fieldName => {
-        const fieldDef = sourceFields.find(f => f.name === fieldName);
-        if (!fieldDef) return null;
-        let fullPath = fieldDef.name;
-        if (isList && index !== null) {
-           fullPath = `${parentPath}.${index}.${fieldDef.name}`;
-        }
-
-        const value = getByPath(block.props, fullPath);
-
-        return (
-          <div key={`${fieldName}-${isList ? index : 'single'}`} className="space-y-1">
-            <SchemaField
-              field={fieldDef}
-              value={value}
-              onChange={(val) => {
-                onControlChange(fullPath, val);
-              }}
-              globalStyles={globalStyles}
-              block={block}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+import { BLOCK_TYPES } from "@/components/builder/blockTypes";import SchemaField from "@/components/builder/inputs/SchemaField";import { getByPath } from "@/utils/objectUtils";export default function ControlToolkit({ activeControl, block, onControlChange, globalStyles }) {  if (!activeControl || !block) return null;  const { controlId } = activeControl;  const blockType = BLOCK_TYPES.find(t => t.type === block.type);  if (!blockType) return null;  let matchedSchema = null;  let sourceFields = [];  let parentPath = '';  let isList = false;  const checkEntry = (entry) => {    if (entry.elementSchema && controlId.startsWith(entry.elementSchema.controlIdPrefix)) {      if (!matchedSchema || entry.elementSchema.controlIdPrefix.length > matchedSchema.controlIdPrefix.length) {        matchedSchema = entry.elementSchema;        if (entry.type === 'list') {          sourceFields = entry.itemSchema || [];          parentPath = entry.name;          isList = true;        } else {          sourceFields = entry.fields || [entry];           parentPath = '';           isList = false;        }      }      return true;     }    if (entry.fields) {      for (const f of entry.fields) {        if (f.elementSchema && controlId.startsWith(f.elementSchema.controlIdPrefix)) {          if (!matchedSchema || f.elementSchema.controlIdPrefix.length > matchedSchema.controlIdPrefix.length) {            matchedSchema = f.elementSchema;            sourceFields = f.itemSchema || [];            parentPath = f.name;            isList = true;          }          return true;        }      }    }    return false;  };  for (const entry of blockType.schema) {    checkEntry(entry);  }  if (!matchedSchema) {    return <div className="text-sm text-gray-500 p-4">No toolkit available for this control.</div>;  }  const idxMatch = controlId.match(/-(\d+)$/);  const index = (isList && idxMatch) ? Number(idxMatch[1]) : null;  return (    <div className="space-y-4 p-4">      <div className="mb-2 border-b pb-2">        <h5 className="text-sm font-semibold">Edit Element</h5>        <p className="text-xs text-gray-500">          {isList ? `Item ${index + 1}` : 'Settings'}        </p>      </div>      {matchedSchema.fields.map(fieldName => {        const fieldDef = sourceFields.find(f => f.name === fieldName);        if (!fieldDef) return null;        let fullPath = fieldDef.name;        if (isList && index !== null) {           fullPath = `${parentPath}.${index}.${fieldDef.name}`;        }        const value = getByPath(block.props, fullPath);        return (          <div key={`${fieldName}-${isList ? index : 'single'}`} className="space-y-1">            <SchemaField              field={fieldDef}              value={value}              onChange={(val) => {                onControlChange(fullPath, val);              }}              globalStyles={globalStyles}              block={block}            />          </div>        );      })}    </div>  );}

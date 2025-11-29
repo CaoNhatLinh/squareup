@@ -1,38 +1,1 @@
-import * as client from '@/api/apiClient'
-
-
-export async function fetchTransactions(restaurantId, params = {}) {
-  const queryParams = new URLSearchParams();
-  if (params.limit) queryParams.append('limit', params.limit);
-  if (params.starting_after) queryParams.append('starting_after', params.starting_after);
-  if (params.ending_before) queryParams.append('ending_before', params.ending_before);
-  if (params.status) queryParams.append('status', params.status);
-  if (params.dateFrom) queryParams.append('date_from', params.dateFrom);
-  if (params.dateTo) queryParams.append('date_to', params.dateTo);
-  if (params.customerEmail) queryParams.append('customer_email', params.customerEmail);
-  if (params.transactionId) queryParams.append('transaction_id', params.transactionId);
-  
-  const queryString = queryParams.toString();
-  const url = `/transactions/${restaurantId}${queryString ? `?${queryString}` : ''}`;
-  
-  const res = await client.get(url);
-  return { transactions: res.data || [], meta: res.meta || {}, has_more: res.has_more };
-}
-
-
-export async function fetchTransactionDetails(restaurantId, paymentIntentId) {
-  const res = await client.get(`/transactions/${restaurantId}/${paymentIntentId}`);
-  return res.data;
-}
-
-
-export async function fetchTransactionStats(restaurantId) {
-  const res = await client.get(`/transactions/${restaurantId}/stats`);
-  return res.data;
-}
-
-
-export async function refundTransaction(restaurantId, paymentIntentId, data = {}) {
-  const res = await client.post(`/transactions/${restaurantId}/${paymentIntentId}/refund`, data);
-  return res.data;
-}
+import * as client from '@/api/apiClient'export async function fetchTransactions(restaurantId, params = {}) {  const queryParams = new URLSearchParams();  if (params.limit) queryParams.append('limit', params.limit);  if (params.starting_after) queryParams.append('starting_after', params.starting_after);  if (params.ending_before) queryParams.append('ending_before', params.ending_before);  if (params.status) queryParams.append('status', params.status);  if (params.dateFrom) queryParams.append('date_from', params.dateFrom);  if (params.dateTo) queryParams.append('date_to', params.dateTo);  if (params.customerEmail) queryParams.append('customer_email', params.customerEmail);  if (params.transactionId) queryParams.append('transaction_id', params.transactionId);  const queryString = queryParams.toString();  const url = `/transactions/${restaurantId}${queryString ? `?${queryString}` : ''}`;  const res = await client.get(url);  return { transactions: res.data || [], meta: res.meta || {}, has_more: res.has_more };}export async function fetchTransactionDetails(restaurantId, paymentIntentId) {  const res = await client.get(`/transactions/${restaurantId}/${paymentIntentId}`);  return res.data;}export async function fetchTransactionStats(restaurantId) {  const res = await client.get(`/transactions/${restaurantId}/stats`);  return res.data;}export async function refundTransaction(restaurantId, paymentIntentId, data = {}) {  const res = await client.post(`/transactions/${restaurantId}/${paymentIntentId}/refund`, data);  return res.data;}

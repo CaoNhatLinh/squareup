@@ -6,23 +6,14 @@ import {
   HiUserGroup,
   HiShoppingCart,
 } from "react-icons/hi";
-
 export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') => {
   const menuItems = [];
-
-  
   const hasAnyPermission = (resource) => {
     if (!permissions[resource]) return false;
     return Object.values(permissions[resource]).some(perm => perm === true);
   };
-
-  
   const isOwner = userRole !== 'staff';
-
-  
   menuItems.push({ to: `/restaurant/dashboard`, label: "Home", icon: HiHome });
-
-  
   if (isOwner || hasAnyPermission('pos')) {
     menuItems.push({ 
       to: `/restaurant/pos`, 
@@ -30,8 +21,6 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       icon: HiShoppingCart 
     });
   }
-
-  
   const itemsChildren = [];
   if (hasAnyPermission('items')) {
     itemsChildren.push({ to: `/restaurant/items`, label: "Item library" });
@@ -45,7 +34,6 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
   if (hasAnyPermission('discounts')) {
     itemsChildren.push({ to: `/restaurant/discounts`, label: "Discounts" });
   }
-
   if (itemsChildren.length > 0) {
     menuItems.push({
       label: "Items & services",
@@ -53,29 +41,23 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       children: itemsChildren,
     });
   }
-
-  
   const paymentsChildren = [];
   const ordersSubChildren = [];
-  
   if (hasAnyPermission('orders')) {
     ordersSubChildren.push({ to: `/restaurant/orders`, label: "All orders", badge: true });
   }
   if (hasAnyPermission('reviews')) {
     ordersSubChildren.push({ to: `/restaurant/reviews`, label: "Reviews" });
   }
-  
   if (ordersSubChildren.length > 0) {
     paymentsChildren.push({
       label: "Orders",
       children: ordersSubChildren,
     });
   }
-  
   if (hasAnyPermission('transactions')) {
     paymentsChildren.push({ to: `/restaurant/transactions`, label: "Transactions" });
   }
-
   if (paymentsChildren.length > 0) {
     menuItems.push({
       label: "Payments & invoices",
@@ -83,8 +65,6 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       children: paymentsChildren,
     });
   }
-
-  
   if (hasAnyPermission('orders') || hasAnyPermission('customers') || isOwner) {
     menuItems.push({
       label: "Customers",
@@ -92,12 +72,8 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       to: `/restaurant/customers`,
     });
   }
-
-  
   const settingsChildren = [];
   const businessSubChildren = [];
-  
-  
   if (isOwner) {
       businessSubChildren.push(
       {
@@ -115,22 +91,22 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       {
         to: `/restaurant/settings/restaurant`,
         label: "Restaurant Settings",
-      },
-      {
-        to: `/restaurant/settings/website-builder`,
-        label: "Website Builder",
       }
     );
   }
 
+  if (isOwner || (permissions['web_builder'] && permissions['web_builder']['access'])) {
+    businessSubChildren.push({
+      to: `/restaurant/settings/website-builder`,
+      label: "Website Builder",
+    });
+  }
   if (businessSubChildren.length > 0) {
     settingsChildren.push({
       label: "My business",
       children: businessSubChildren,
     });
   }
-
-  
   if (hasAnyPermission('staff')) {
     settingsChildren.push({
       label: "Staff & Roles",
@@ -146,8 +122,6 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       ],
     });
   }
-
-  
   if (isOwner) {
     settingsChildren.push({
       label: "Developer",
@@ -159,7 +133,6 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       ],
     });
   }
-
   if (settingsChildren.length > 0) {
     menuItems.push({
       label: "Settings",
@@ -167,6 +140,5 @@ export const getMenuItems = (restaurantId, permissions = {}, userRole = 'user') 
       children: settingsChildren,
     });
   }
-
   return menuItems;
 };

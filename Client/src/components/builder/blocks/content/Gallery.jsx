@@ -10,7 +10,6 @@ import { resolveColor } from "@/components/builder/utils/colorUtils";
 import { getValidImageSrc } from "@/components/builder/utils/imageUtils";
 import StyledText from "@/components/builder/atoms/StyledText";
 import { useContainerQuery } from "@/components/builder/hooks/useContainerQuery";
-
 export default function Gallery({
   title,
   images = [],
@@ -42,7 +41,6 @@ export default function Gallery({
   const [focusedImageIndex, setFocusedImageIndex] = useState(-1);
   const autoPlayRef = useRef(null);
   const { containerRef, isMobile, isTablet } = useContainerQuery();
-
   const getColor = (colorKey) => {
     return resolveColor(colorKey, globalStyles);
   };
@@ -55,51 +53,42 @@ export default function Gallery({
     allLabel,
     ...processedFilters.filter((f) => f !== allLabel),
   ];
-
   const getGridCols = (cols) => {
     if (isMobile) return 'grid-cols-1';
     if (isTablet) return cols >= 2 ? 'grid-cols-2' : 'grid-cols-1';
-    // Desktop
     if (cols === 2) return 'grid-cols-2';
     if (cols === 3) return 'grid-cols-3';
     if (cols === 4) return 'grid-cols-4';
     return 'grid-cols-3';
   };
-
   const getMasonryCols = (cols) => {
     if (isMobile) return 'columns-1';
     if (isTablet) return cols >= 2 ? 'columns-2' : 'columns-1';
-    // Desktop
     if (cols === 2) return 'columns-2';
     if (cols === 3) return 'columns-3';
     if (cols === 4) return 'columns-4';
     return 'columns-3';
   };
-
   const gapClasses = {
     small: "gap-2",
     medium: "gap-4",
     large: "gap-6",
   };
-
   const navSpacingClasses = {
     small: "gap-2",
     medium: "gap-4",
     large: "gap-6",
   };
-
   const gapSpaceY = {
     small: "space-y-2",
     medium: "space-y-4",
     large: "space-y-6",
   };
-
   const gapPx = {
     small: 16,
     medium: 24,
     large: 32,
   };
-
   const getCarouselBreakpoints = (cols, gapSize) => {
     const space = gapPx[gapSize];
     return {
@@ -109,7 +98,6 @@ export default function Gallery({
       1280: { slidesPerView: cols, spaceBetween: space },
     };
   };
-
   const filteredImages =
     activeFilter === allLabel
       ? images
@@ -117,7 +105,6 @@ export default function Gallery({
         const imgCategory = img.category || allLabel;
         return imgCategory === activeFilter;
       });
-
   useEffect(() => {
     if (
       layout === "cinematic-slider" &&
@@ -132,24 +119,20 @@ export default function Gallery({
         clearInterval(autoPlayRef.current);
       }
     }
-
     return () => {
       if (autoPlayRef.current) {
         clearInterval(autoPlayRef.current);
       }
     };
   }, [layout, isAutoPlaying, filteredImages.length]);
-
   useEffect(() => {
     setCurrentSlide(0);
   }, [layout, activeFilter]);
-
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (layout === "premium-grid" && filteredImages.length > 0) {
         const maxIndex = filteredImages.length - 1;
         let newIndex = focusedImageIndex;
-
         switch (event.key) {
           case "ArrowRight":
             event.preventDefault();
@@ -186,13 +169,11 @@ export default function Gallery({
           default:
             return;
         }
-
         if (newIndex !== focusedImageIndex) {
           setFocusedImageIndex(newIndex);
         }
       }
     };
-
     if (layout === "premium-grid") {
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
@@ -205,7 +186,6 @@ export default function Gallery({
     enableLightbox,
     onItemClick,
   ]);
-
   const handleItemClick = (img, index) => {
     if (onItemClick) {
       onItemClick(`gallery-image-${index}`);
@@ -213,34 +193,27 @@ export default function Gallery({
       openLightbox(img);
     }
   };
-
   const handleItemFocus = (index) => {
     setFocusedImageIndex(index);
   };
-
   const handleItemBlur = () => {
     setFocusedImageIndex(-1);
   };
-
   const openLightbox = (image) => {
     if (enableLightbox) {
       setSelectedImage(image);
     }
   };
-
   const closeLightbox = () => {
     setSelectedImage(null);
   };
-
   const renderNavigation = () => {
     if (!showNavigation || !showFilters || filters.length <= 1) return null;
-
     const navClasses = {
       tabs: `inline-flex items-center gap-1 p-1 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-opacity-20`,
       pills: `flex flex-wrap gap-3`,
       minimal: `flex flex-wrap gap-2`,
     };
-
     const buttonClasses = {
       tabs: (isActive) =>
         `px-6 py-3 rounded-full font-medium transition-all duration-300 ${isActive
@@ -256,13 +229,11 @@ export default function Gallery({
         `px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isActive ? `text-white` : `text-gray-600 hover:bg-gray-50`
         }`,
     };
-
     const alignmentClasses = {
       left: "justify-start",
       center: "justify-center",
       right: "justify-end",
     };
-
     return (
       <div
         className={`flex ${alignmentClasses[navAlignment]} mb-8`}
@@ -300,7 +271,6 @@ export default function Gallery({
       </div>
     );
   };
-
   const renderPremiumGrid = () => (
     <section
       ref={containerRef}
@@ -334,7 +304,6 @@ export default function Gallery({
           ></div>
         </>
       )}
-
       <div className="max-w-7xl mx-auto relative">
         <div className="text-center mb-16">
           {showBadge && (
@@ -371,7 +340,6 @@ export default function Gallery({
               ></div>
             </div>
           )}
-
           {title && (
             <StyledText
               tag="h2"
@@ -398,7 +366,6 @@ export default function Gallery({
               </span>
             </StyledText>
           )}
-
           {navPosition === "top" && renderNavigation()}
           {layout === "premium-grid" && (
             <div className="text-center mb-8">
@@ -420,7 +387,6 @@ export default function Gallery({
             </div>
           )}
         </div>
-
         <div
           className={`grid place-items-center ${getGridCols(columns)} ${gapClasses[gap]}`}
           data-control="gallery-images"
@@ -601,7 +567,6 @@ export default function Gallery({
       )}
     </section>
   );
-
   const renderElegantMasonry = () => (
     <section
       ref={containerRef}
@@ -646,7 +611,6 @@ export default function Gallery({
               </span>
             </StyledText>
           )}
-
           {showFilters && filters.length > 1 && (
             <div
               className="flex flex-wrap justify-center gap-3 mb-12"
@@ -668,7 +632,6 @@ export default function Gallery({
             </div>
           )}
         </div>
-
         <div
           className={`${getMasonryCols(columns)} ${gapClasses[gap]} ${gapSpaceY[gap]}`}
           data-control="gallery-images"
@@ -758,7 +721,6 @@ export default function Gallery({
       )}
     </section>
   );
-
   const renderLuxuryCarousel = () => {
     return (
       <section
@@ -789,7 +751,6 @@ export default function Gallery({
                 <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
               </div>
             )}
-
             {title && (
               <StyledText
                 tag="h2"
@@ -805,7 +766,6 @@ export default function Gallery({
                 </span>
               </StyledText>
             )}
-
             {showFilters && filters.length > 1 && (
               <div
                 className="flex flex-wrap justify-center gap-3 mb-12"
@@ -860,7 +820,7 @@ export default function Gallery({
                   >
                     <div className="aspect-square overflow-hidden">
                       <img
-                        src={img.url || "https://placehold.co/800x600?text=No+Image"}
+                        src={img.url || "/assets/image/no-image.png"}
                         alt={img.caption || `Gallery image ${index + 1}`}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -910,7 +870,6 @@ export default function Gallery({
                 </SwiperSlide>
               ))}
             </Swiper>
-
             {filteredImages.length > 3 && (
               <div className="flex justify-center mt-6">
                 <div className="bg-gray-200 rounded-full h-2 w-32 overflow-hidden">
@@ -996,7 +955,6 @@ export default function Gallery({
               </StyledText>
             )}
           </div>
-
           {showFilters && filters.length > 1 && (
             <div className="flex flex-wrap gap-2" data-control="gallery-navigation" data-block-id={blockId}>
               {allFilters.map((filter) => (
@@ -1015,7 +973,6 @@ export default function Gallery({
             </div>
           )}
         </div>
-
         <div className={`grid ${getGridCols(columns)} gap-8`} data-control="gallery-images" data-block-id={blockId}>
           {filteredImages.map((img, index) => (
             <div
@@ -1033,7 +990,6 @@ export default function Gallery({
                 />
               </div>
               <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
-
               {showCaptions && img.caption && (
                 <div className="absolute bottom-0 left-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="bg-white p-4 shadow-xl max-w-[calc(100%-2rem)]">
@@ -1063,7 +1019,6 @@ export default function Gallery({
       )}
     </section>
   );
-
   const renderClassicPortfolio = () => (
     <section
       ref={containerRef}
@@ -1088,7 +1043,6 @@ export default function Gallery({
             </StyledText>
           )}
           <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
-
           {showFilters && filters.length > 1 && (
             <div className="flex justify-center gap-8 mt-10" data-control="gallery-navigation" data-block-id={blockId}>
               {allFilters.map((filter) => (
@@ -1107,7 +1061,6 @@ export default function Gallery({
             </div>
           )}
         </div>
-
         <div className={`grid ${getGridCols(columns)} gap-12`} data-control="gallery-images" data-block-id={blockId}>
           {filteredImages.map((img, index) => (
             <div
@@ -1125,7 +1078,6 @@ export default function Gallery({
                 />
                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors duration-300"></div>
               </div>
-
               <div className="text-center">
                 {showCaptions && img.caption && (
                   <StyledText tag="h3" className="text-xl font-medium mb-2" styleConfig={{ color: getColor(textColor) }}>
@@ -1158,22 +1110,18 @@ export default function Gallery({
       )}
     </section>
   );
-
   const renderCinematicSlider = () => {
     const nextSlide = () => {
       setCurrentSlide((prev) => (prev + 1) % filteredImages.length);
     };
-
     const prevSlide = () => {
       setCurrentSlide(
         (prev) => (prev - 1 + filteredImages.length) % filteredImages.length
       );
     };
-
     const goToSlide = (index) => {
       setCurrentSlide(index);
     };
-
     return (
       <section
         ref={containerRef}
@@ -1195,9 +1143,7 @@ export default function Gallery({
             style={{ backgroundColor: "#333" }}
           ></div>
         </div>
-
         <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSBiYXNlRnJlcXVlbmN5PSIwLjkiIG51bU9jdGF2ZXM9IjQiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xIi8+PC9zdmc+')]"></div>
-
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-16">
             {showBadge && (
@@ -1290,7 +1236,7 @@ export default function Gallery({
                   data-block-id={blockId}
                 >
                   <img
-                    src={img.url || "https://placehold.co/800x600?text=No+Image"}
+                    src={img.url || "/assets/image/no-image.png"}
                     alt={img.caption || `Gallery image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
@@ -1330,7 +1276,6 @@ export default function Gallery({
                   />
                 </svg>
               </button>
-
               <button
                 onClick={nextSlide}
                 className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-4 transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-110 border border-orange-500/30"
@@ -1458,7 +1403,6 @@ export default function Gallery({
       </section>
     );
   };
-
   switch (layout) {
     case "elegant-masonry":
       return renderElegantMasonry();

@@ -1,41 +1,1 @@
-
-
-
-export function generateGoogleMapsEmbedUrl(query) {
-  if (!query || query.trim() === '') {
-    return '';
-  }
-
-  
-  const encodedQuery = encodeURIComponent(query.trim());
-
-  
-  
-  return `https://maps.google.com/maps?q=${encodedQuery}&output=embed`;
-}
-
-
-export function generateGoogleMapsDirectionsUrl(destination, origin = '') {
-  const baseUrl = 'https://www.google.com/maps/dir/';
-  const encodedDestination = encodeURIComponent(destination);
-
-  if (origin) {
-    const encodedOrigin = encodeURIComponent(origin);
-    return `${baseUrl}${encodedOrigin}/${encodedDestination}`;
-  }
-
-  return `${baseUrl}${encodedDestination}`;
-}
-
-
-export function isValidGoogleMapsEmbedUrl(url) {
-  if (!url) return false;
-
-  try {
-    const urlObj = new URL(url);
-    return (urlObj.hostname === 'www.google.com' && urlObj.pathname.startsWith('/maps/embed/')) ||
-           (urlObj.hostname === 'maps.google.com' && urlObj.pathname === '/maps' && urlObj.searchParams.has('output') && urlObj.searchParams.get('output') === 'embed');
-  } catch {
-    return false;
-  }
-}
+export function generateGoogleMapsEmbedUrl(query) {  if (!query || query.trim() === '') {    return '';  }  const encodedQuery = encodeURIComponent(query.trim());  return `https://maps.google.com/maps?q=${encodedQuery}&output=embed`;}export function generateGoogleMapsDirectionsUrl(destination, origin = '') {  const baseUrl = 'https://www.google.com/maps/dir/';  const encodedDestination = encodeURIComponent(destination);  if (origin) {    const encodedOrigin = encodeURIComponent(origin);    return `${baseUrl}${encodedOrigin}/${encodedDestination}`;  }  return `${baseUrl}${encodedDestination}`;}export function isValidGoogleMapsEmbedUrl(url) {  if (!url) return false;  try {    const urlObj = new URL(url);    return (urlObj.hostname === 'www.google.com' && urlObj.pathname.startsWith('/maps/embed/')) ||           (urlObj.hostname === 'maps.google.com' && urlObj.pathname === '/maps' && urlObj.searchParams.has('output') && urlObj.searchParams.get('output') === 'embed');  } catch {    return false;  }}

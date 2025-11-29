@@ -1,49 +1,1 @@
-import * as apiClient from '@/api/apiClient';
-
-
-export const getTables = async (restaurantId) => {
-  const response = await apiClient.get(`/restaurants/${restaurantId}/tables`);
-  return response.data;
-};
-
-
-export const getTableById = async (restaurantId, tableId) => {
-  const response = await apiClient.get(`/restaurants/${restaurantId}/tables/${tableId}`);
-  return response.data;
-};
-
-
-export const createTable = async (restaurantId, tableData) => {
-  const response = await apiClient.post(`/restaurants/${restaurantId}/tables`, tableData);
-  return response.data;
-};
-
-
-export const updateTable = async (restaurantId, tableId, tableData, options = {}) => {
-  const payload = { ...tableData };
-  if (options.expectedUpdatedAt !== undefined) payload.expectedUpdatedAt = options.expectedUpdatedAt;
-  const response = await apiClient.put(`/restaurants/${restaurantId}/tables/${tableId}`, payload);
-  return response.data;
-};
-
-
-export const deleteTable = async (restaurantId, tableId) => {
-  const response = await apiClient.del(`/restaurants/${restaurantId}/tables/${tableId}`);
-  return response.data;
-};
-
-
-export const mergeTables = async (restaurantId, mergeData, options = {}) => {
-  const payload = { ...mergeData };
-  if (options.expectedUpdatedAt) payload.expectedUpdatedAt = options.expectedUpdatedAt;
-  const response = await apiClient.post(`/restaurants/${restaurantId}/tables/merge`, payload);
-  return response.data;
-};
-
-
-export const clearTable = async (restaurantId, tableId, options = {}) => {
-  const payload = {};
-  if (options.expectedUpdatedAt !== undefined) payload.expectedUpdatedAt = options.expectedUpdatedAt;
-  const response = await apiClient.post(`/restaurants/${restaurantId}/tables/${tableId}/clear`, payload);
-  return response.data;
-};
+import * as apiClient from '@/api/apiClient';export const getTables = async (restaurantId) => {  const response = await apiClient.get(`/restaurants/${restaurantId}/tables`);  return response.data;};export const getTableById = async (restaurantId, tableId) => {  const response = await apiClient.get(`/restaurants/${restaurantId}/tables/${tableId}`);  return response.data;};export const createTable = async (restaurantId, tableData) => {  const response = await apiClient.post(`/restaurants/${restaurantId}/tables`, tableData);  return response.data;};export const updateTable = async (restaurantId, tableId, tableData, options = {}) => {  const payload = { ...tableData };  if (options.expectedUpdatedAt !== undefined) payload.expectedUpdatedAt = options.expectedUpdatedAt;  const response = await apiClient.put(`/restaurants/${restaurantId}/tables/${tableId}`, payload);  return response.data;};export const deleteTable = async (restaurantId, tableId) => {  const response = await apiClient.del(`/restaurants/${restaurantId}/tables/${tableId}`);  return response.data;};export const mergeTables = async (restaurantId, mergeData, options = {}) => {  const payload = { ...mergeData };  if (options.expectedUpdatedAt) payload.expectedUpdatedAt = options.expectedUpdatedAt;  const response = await apiClient.post(`/restaurants/${restaurantId}/tables/merge`, payload);  return response.data;};export const clearTable = async (restaurantId, tableId, options = {}) => {  const payload = {};  if (options.expectedUpdatedAt !== undefined) payload.expectedUpdatedAt = options.expectedUpdatedAt;  const response = await apiClient.post(`/restaurants/${restaurantId}/tables/${tableId}/clear`, payload);  return response.data;};

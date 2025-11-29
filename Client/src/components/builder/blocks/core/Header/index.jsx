@@ -1,357 +1,1 @@
-import { useMemo, useState, useRef, useEffect } from "react";
-import { HiMenu } from "react-icons/hi";
-import { resolveColor } from "@/components/builder/utils/colorUtils";
-import StyledButton from "@/components/builder/atoms/StyledButton";
-import StyledText from "@/components/builder/atoms/StyledText";
-import Input from "@/components/ui/Input";
-import Navbar from "@/components/builder/blocks/core/Header/Navbar";
-import { useShop } from "@/context/ShopContext";
-
-export default function HeaderPreview({
-  config,
-  globalStyles,
-  blockId,
-  globalUseRealData = false,
-  onElementClick,
-  slug,
-  isPublic = false,
-}) {
-  const { restaurant } = useShop();
-  const headerRef = useRef(null);
-  const [containerWidth, setContainerWidth] = useState(1200);
-
-  useEffect(() => {
-    if (!headerRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-
-    observer.observe(headerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const isMobileView = containerWidth < 768;
-
-  const cfg = config && typeof config === "object" ? config : {};
-
-  const layout = (cfg.layout || cfg.variant || "standard").toString();
-  const variant = ["logo-center", "center", "centered"].includes(layout)
-    ? "centered"
-    : ["minimal", "compact"].includes(layout)
-    ? "minimal"
-    : "standard";
-
-  const sticky = cfg.isSticky ?? cfg.sticky ?? false;
-
-  const paddingY = cfg.paddingY || cfg.padding || "medium";
-
-  const logoCfg = cfg.logo || {
-    showLogo: cfg.showLogo ?? true,
-    showTitle: cfg.showTitle ?? true,
-    logoUrl: cfg.logoUrl || cfg.logoImage || "",
-  };
-
-  const title =
-    globalUseRealData && restaurant?.name
-      ? restaurant.name
-      : cfg.title || cfg.siteTitle || "My Restaurant";
-
-  const navigation = useMemo(
-    () =>
-      cfg.navigation || {
-        links: Array.isArray(cfg.links)
-          ? cfg.links
-          : cfg.navigation?.links || [],
-
-        spacing: cfg.navSpacing ?? cfg.navGap ?? cfg.navigation?.spacing ?? 24,
-        color: cfg.navigation?.color ?? "text",
-        fontSize: cfg.navigation?.fontSize ?? 14,
-        fontWeight: cfg.navigation?.fontWeight ?? 600,
-        bold: cfg.navigation?.bold ?? false,
-        italic: cfg.navigation?.italic ?? false,
-        underline: cfg.navigation?.underline ?? false,
-      },
-    [cfg.navigation, cfg.links, cfg.navSpacing, cfg.navGap]
-  );
-
-  // Determine the correct order URL based on context
-  const orderUrl =
-    isPublic && slug ? `/${slug}/order` : slug ? `/${slug}/order` : "/shop";
-
-  const showButton = cfg.showCtaButton ?? true;
-
-  const ctaButton = {
-    show: showButton,
-    label: "Order Now",
-    url: orderUrl,
-    style: "filled",
-    color: "primary",
-    textColor: "onPrimary",
-    rounded: true,
-    radius: 8,
-    ...(cfg.ctaButton || {}),
-  };
-
-  const { palette, colors, typography } = globalStyles || {
-    palette: {},
-    colors: {
-      primary: "#F97316",
-      onPrimary: "#ffffff",
-      secondary: "#3b82f6",
-      onSecondary: "#ffffff",
-      text: "#1f2937",
-      background: "#ffffff",
-    },
-    typography: {
-      headingFont: "Inter, sans-serif",
-      bodyFont: "Inter, sans-serif",
-    },
-  };
-
-  const resolve = (v) => resolveColor(v, globalStyles) || v;
-
-  const paddingClasses = {
-    small: "py-2",
-    medium: "py-4",
-    large: "py-6",
-    xl: "py-8",
-  };
-
-  const defaultLinks = [
-    { label: "Menu", url: "#menu" },
-    { label: "About", url: "#about" },
-    { label: "Locations", url: "#location" },
-  ];
-
-  const displayLinks =
-    navigation.links && navigation.links.length > 0
-      ? navigation.links
-      : defaultLinks;
-
-  const navGap = navigation.spacing ?? 24;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const baseBg =
-    cfg.background?.color ??
-    (colors.background || palette?.background || "#ffffff");
-  const headerBgColor = resolve(baseBg);
-  const headerBgImage = cfg.background?.image || null;
-
-  const Logo = () => (
-    <div className="flex items-center gap-2">
-      {logoCfg && logoCfg.showLogo && logoCfg.logoUrl ? (
-        <img
-          src={logoCfg.logoUrl}
-          alt="logo"
-          className="h-10 w-auto object-contain"
-        />
-      ) : logoCfg && logoCfg.showTitle ? (
-        <StyledText
-          tag="span"
-          className="font-bold tracking-tight"
-          dataControl="logo-title"
-          dataBlockId={blockId}
-          styleConfig={{
-            color: resolve(logoCfg?.titleColor || colors.text),
-            fontFamily: typography.headingFont,
-            fontSize: logoCfg.titleFontSize || 18,
-          }}
-        >
-          {title}
-        </StyledText>
-      ) : null}
-    </div>
-  );
-
-  const NavLinks = ({ mobile = false }) => (
-    <Navbar
-      links={displayLinks}
-      navGap={navGap}
-      navigation={navigation}
-      globalStyles={globalStyles}
-      blockId={blockId}
-      mobile={mobile}
-      isMobileView={isMobileView}
-    />
-  );
-
-  const Actions = () => {
-    if (!ctaButton.show) return null;
-
-    const style = ctaButton.style || "filled";
-    const btnColor =
-      resolve(
-        ctaButton.color || colors.primary || palette?.primary,
-        globalStyles
-      ) ||
-      ctaButton.color ||
-      colors.primary ||
-      palette?.primary;
-
-    const defaultTextColor =
-      style === "filled"
-        ? palette?.onPrimary || colors.onPrimary || "#ffffff"
-        : palette?.text || colors.text || "#111827";
-
-    const textColor =
-      resolve(ctaButton.textColor || defaultTextColor, globalStyles) ||
-      ctaButton.textColor ||
-      defaultTextColor;
-    const rounded = ctaButton.rounded ? "rounded-full" : "rounded-md";
-    const styleConfig = {
-      style,
-      color: btnColor,
-      textColor,
-      rounded: ctaButton.rounded,
-      radius: ctaButton?.radius,
-      shadow: ctaButton?.shadow,
-    };
-
-    const onClick = (e) => {
-      if (onElementClick && !isPublic) {
-        e.stopPropagation();
-        onElementClick("cta-button");
-        return;
-      }
-      if (ctaButton.url) {
-        window.location.href = ctaButton.url;
-      }
-    };
-
-    return (
-      <div className="flex items-center gap-6">
-        <StyledButton
-          data-control="cta-button"
-          data-block-id={blockId}
-          onClick={onClick}
-          className={`${rounded} text-sm flex items-center gap-2 focus:ring-blue-500 transition-all duration-200`}
-          styleConfig={styleConfig}
-        >
-          {ctaButton.label && <span>{ctaButton.label}</span>}
-        </StyledButton>
-
-        {cfg.showSearch && !isMobileView && (
-          <div className="w-56">
-            <Input size="small" placeholder="Search" />
-          </div>
-        )}
-
-        {isMobileView && (
-          <button className="p-2" onClick={() => setMenuOpen((prev) => !prev)}>
-            <HiMenu
-              className="w-6 h-6"
-              style={{ color: resolve(colors.text) }}
-            />
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <header
-      ref={headerRef}
-      className={`w-full bg-white border-b border-gray-100 z-40 transition-all duration-300 ${
-        sticky ? "sticky top-0 shadow-sm" : "relative"
-      } ${paddingClasses[paddingY] || "py-4"}`}
-      style={{
-        backgroundColor: headerBgColor,
-        backgroundImage: headerBgImage ? `url(${headerBgImage})` : undefined,
-        backgroundSize: headerBgImage ? "cover" : undefined,
-        backgroundRepeat: headerBgImage ? "no-repeat" : undefined,
-        fontFamily: typography.bodyFont,
-      }}
-      data-block-id={blockId}
-    >
-      <div className="max-w-7xl mx-auto px-6 relative">
-        {variant === "standard" && (
-          <div className="flex items-center justify-between">
-            <Logo />
-            <div className="flex items-center gap-8">
-              <NavLinks />
-              {!isMobileView && <div className="h-6 w-px bg-gray-200"></div>}
-              <Actions />
-            </div>
-          </div>
-        )}
-
-        {variant === "centered" && (
-          <div className="grid grid-cols-3 items-center">
-            <div className="flex justify-start">
-              <NavLinks />
-
-              {isMobileView && (
-                <div>
-                  <button onClick={() => setMenuOpen((prev) => !prev)}>
-                    <HiMenu
-                      className="w-6 h-6"
-                      style={{ color: resolve(colors.text) }}
-                    />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center">
-              <Logo />
-            </div>
-
-            <div className="flex justify-end">
-              <Actions />
-            </div>
-          </div>
-        )}
-
-        {variant === "minimal" && (
-          <div className="flex items-center justify-between">
-            <Logo />
-
-            <div className="flex items-center gap-4">
-              <Actions />
-
-              {!isMobileView && (
-                <button
-                  className="inline-flex p-2 rounded-md hover:bg-gray-100"
-                  onClick={() => setMenuOpen((prev) => !prev)}
-                >
-                  <HiMenu
-                    className="w-7 h-7"
-                    style={{ color: resolve(colors.text) }}
-                  />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {menuOpen && isMobileView && (
-          <div className="absolute left-0 right-0 top-full bg-white border-t shadow-md z-50">
-            <NavLinks mobile />
-          </div>
-        )}
-
-        {variant === "minimal" && menuOpen && !isMobileView && (
-          <div className="absolute right-6 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-            <div className="p-2">
-              {displayLinks.map((link, i) => (
-                <a
-                  key={i}
-                  href={link.url}
-                  className="block text-sm font-medium px-4 py-2 hover:bg-gray-50"
-                  style={{
-                    color: resolve(colors.text),
-                    fontFamily: typography.bodyFont,
-                  }}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </header>
-  );
-}
+import { useMemo, useState, useRef, useEffect } from "react";import { HiMenu } from "react-icons/hi";import { resolveColor } from "@/components/builder/utils/colorUtils";import StyledButton from "@/components/builder/atoms/StyledButton";import StyledText from "@/components/builder/atoms/StyledText";import Input from "@/components/ui/Input";import Navbar from "@/components/builder/blocks/core/Header/Navbar";import { useShop } from "@/context/ShopContext";export default function HeaderPreview({  config,  globalStyles,  blockId,  globalUseRealData = false,  onElementClick,  slug,  isPublic = false,}) {  const { restaurant } = useShop();  const headerRef = useRef(null);  const [containerWidth, setContainerWidth] = useState(1200);  useEffect(() => {    if (!headerRef.current) return;    const observer = new ResizeObserver((entries) => {      for (const entry of entries) {        setContainerWidth(entry.contentRect.width);      }    });    observer.observe(headerRef.current);    return () => observer.disconnect();  }, []);  const isMobileView = containerWidth < 768;  const cfg = config && typeof config === "object" ? config : {};  const layout = (cfg.layout || cfg.variant || "standard").toString();  const variant = ["logo-center", "center", "centered"].includes(layout)    ? "centered"    : ["minimal", "compact"].includes(layout)    ? "minimal"    : "standard";  const sticky = cfg.isSticky ?? cfg.sticky ?? false;  const paddingY = cfg.paddingY || cfg.padding || "medium";  const logoCfg = cfg.logo || {    showLogo: cfg.showLogo ?? true,    showTitle: cfg.showTitle ?? true,    logoUrl: cfg.logoUrl || cfg.logoImage || "",  };  const title =    globalUseRealData && restaurant?.name      ? restaurant.name      : cfg.title || cfg.siteTitle || "My Restaurant";  const navigation = useMemo(    () =>      cfg.navigation || {        links: Array.isArray(cfg.links)          ? cfg.links          : cfg.navigation?.links || [],        spacing: cfg.navSpacing ?? cfg.navGap ?? cfg.navigation?.spacing ?? 24,        color: cfg.navigation?.color ?? "text",        fontSize: cfg.navigation?.fontSize ?? 14,        fontWeight: cfg.navigation?.fontWeight ?? 600,        bold: cfg.navigation?.bold ?? false,        italic: cfg.navigation?.italic ?? false,        underline: cfg.navigation?.underline ?? false,      },    [cfg.navigation, cfg.links, cfg.navSpacing, cfg.navGap]  );  const orderUrl =    isPublic && slug ? `/${slug}/order` : slug ? `/${slug}/order` : "/shop";  const showButton = cfg.showCtaButton ?? true;  const ctaButton = {    show: showButton,    label: "Order Now",    url: orderUrl,    style: "filled",    color: "primary",    textColor: "onPrimary",    rounded: true,    radius: 8,    ...(cfg.ctaButton || {}),  };  const { palette, colors, typography } = globalStyles || {    palette: {},    colors: {      primary: "#F97316",      onPrimary: "#ffffff",      secondary: "#3b82f6",      onSecondary: "#ffffff",      text: "#1f2937",      background: "#ffffff",    },    typography: {      headingFont: "Inter, sans-serif",      bodyFont: "Inter, sans-serif",    },  };  const resolve = (v) => resolveColor(v, globalStyles) || v;  const paddingClasses = {    small: "py-2",    medium: "py-4",    large: "py-6",    xl: "py-8",  };  const defaultLinks = [    { label: "Menu", url: "#menu" },    { label: "About", url: "#about" },    { label: "Locations", url: "#location" },  ];  const displayLinks =    navigation.links && navigation.links.length > 0      ? navigation.links      : defaultLinks;  const navGap = navigation.spacing ?? 24;  const [menuOpen, setMenuOpen] = useState(false);  const baseBg =    cfg.background?.color ??    (colors.background || palette?.background || "#ffffff");  const headerBgColor = resolve(baseBg);  const headerBgImage = cfg.background?.image || null;  const Logo = () => (    <div className="flex items-center gap-2">      {logoCfg && logoCfg.showLogo && logoCfg.logoUrl ? (        <img          src={logoCfg.logoUrl}          alt="logo"          className="h-10 w-auto object-contain"        />      ) : logoCfg && logoCfg.showTitle ? (        <StyledText          tag="span"          className="font-bold tracking-tight"          dataControl="logo-title"          dataBlockId={blockId}          styleConfig={{            color: resolve(logoCfg?.titleColor || colors.text),            fontFamily: typography.headingFont,            fontSize: logoCfg.titleFontSize || 18,          }}        >          {title}        </StyledText>      ) : null}    </div>  );  const NavLinks = ({ mobile = false }) => (    <Navbar      links={displayLinks}      navGap={navGap}      navigation={navigation}      globalStyles={globalStyles}      blockId={blockId}      mobile={mobile}      isMobileView={isMobileView}    />  );  const Actions = () => {    if (!ctaButton.show) return null;    const style = ctaButton.style || "filled";    const btnColor =      resolve(        ctaButton.color || colors.primary || palette?.primary,        globalStyles      ) ||      ctaButton.color ||      colors.primary ||      palette?.primary;    const defaultTextColor =      style === "filled"        ? palette?.onPrimary || colors.onPrimary || "#ffffff"        : palette?.text || colors.text || "#111827";    const textColor =      resolve(ctaButton.textColor || defaultTextColor, globalStyles) ||      ctaButton.textColor ||      defaultTextColor;    const rounded = ctaButton.rounded ? "rounded-full" : "rounded-md";    const styleConfig = {      style,      color: btnColor,      textColor,      rounded: ctaButton.rounded,      radius: ctaButton?.radius,      shadow: ctaButton?.shadow,    };    const onClick = (e) => {      if (onElementClick && !isPublic) {        e.stopPropagation();        onElementClick("cta-button");        return;      }      if (ctaButton.url) {        window.location.href = ctaButton.url;      }    };    return (      <div className="flex items-center gap-6">        <StyledButton          data-control="cta-button"          data-block-id={blockId}          onClick={onClick}          className={`${rounded} text-sm flex items-center gap-2 focus:ring-blue-500 transition-all duration-200`}          styleConfig={styleConfig}        >          {ctaButton.label && <span>{ctaButton.label}</span>}        </StyledButton>        {cfg.showSearch && !isMobileView && (          <div className="w-56">            <Input size="small" placeholder="Search" />          </div>        )}        {isMobileView && (          <button className="p-2" onClick={() => setMenuOpen((prev) => !prev)}>            <HiMenu              className="w-6 h-6"              style={{ color: resolve(colors.text) }}            />          </button>        )}      </div>    );  };  return (    <header      ref={headerRef}      className={`w-full bg-white border-b border-gray-100 z-40 transition-all duration-300 ${        sticky ? "sticky top-0 shadow-sm" : "relative"      } ${paddingClasses[paddingY] || "py-4"}`}      style={{        backgroundColor: headerBgColor,        backgroundImage: headerBgImage ? `url(${headerBgImage})` : undefined,        backgroundSize: headerBgImage ? "cover" : undefined,        backgroundRepeat: headerBgImage ? "no-repeat" : undefined,        fontFamily: typography.bodyFont,      }}      data-block-id={blockId}    >      <div className="max-w-7xl mx-auto px-6 relative">        {variant === "standard" && (          <div className="flex items-center justify-between">            <Logo />            <div className="flex items-center gap-8">              <NavLinks />              {!isMobileView && <div className="h-6 w-px bg-gray-200"></div>}              <Actions />            </div>          </div>        )}        {variant === "centered" && (          <div className="grid grid-cols-3 items-center">            <div className="flex justify-start">              <NavLinks />              {isMobileView && (                <div>                  <button onClick={() => setMenuOpen((prev) => !prev)}>                    <HiMenu                      className="w-6 h-6"                      style={{ color: resolve(colors.text) }}                    />                  </button>                </div>              )}            </div>            <div className="flex justify-center">              <Logo />            </div>            <div className="flex justify-end">              <Actions />            </div>          </div>        )}        {variant === "minimal" && (          <div className="flex items-center justify-between">            <Logo />            <div className="flex items-center gap-4">              <Actions />              {!isMobileView && (                <button                  className="inline-flex p-2 rounded-md hover:bg-gray-100"                  onClick={() => setMenuOpen((prev) => !prev)}                >                  <HiMenu                    className="w-7 h-7"                    style={{ color: resolve(colors.text) }}                  />                </button>              )}            </div>          </div>        )}        {menuOpen && isMobileView && (          <div className="absolute left-0 right-0 top-full bg-white border-t shadow-md z-50">            <NavLinks mobile />          </div>        )}        {variant === "minimal" && menuOpen && !isMobileView && (          <div className="absolute right-6 top-full mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50">            <div className="p-2">              {displayLinks.map((link, i) => (                <a                  key={i}                  href={link.url}                  className="block text-sm font-medium px-4 py-2 hover:bg-gray-50"                  style={{                    color: resolve(colors.text),                    fontFamily: typography.bodyFont,                  }}                >                  {link.label}                </a>              ))}            </div>          </div>        )}      </div>    </header>  );}

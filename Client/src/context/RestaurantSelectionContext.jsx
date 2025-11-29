@@ -1,3 +1,1 @@
-import { createContext } from "react";
-
-export const RestaurantSelectionContext = createContext();
+import { createContext } from "react";export const RestaurantSelectionContext = createContext();

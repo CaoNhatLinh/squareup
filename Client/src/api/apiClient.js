@@ -1,14 +1,12 @@
 import axios from 'axios'
-
+import { auth } from '@/firebase'
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: "/api",
   withCredentials: true,
 })
-
 export function parseApiResponse(response) {
   const payload = response?.data;
   if (!payload) return { data: null };
-
   if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
     return {
       success: payload.success !== undefined ? payload.success : true,
@@ -17,55 +15,63 @@ export function parseApiResponse(response) {
       has_more: payload.has_more || false,
     };
   }
-
   return { data: payload };
 }
-
 instance.interceptors.response.use(
   (response) => parseApiResponse(response),
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      // Don't redirect for public pages
-      if (!currentPath.includes('/signin') &&
-        !currentPath.includes('/signup') &&
-        !currentPath.includes('/accept-invitation') &&
-        !currentPath.includes('/admin') &&
-        !currentPath.includes('/restaurant') &&
-        !currentPath.includes('/pos') &&
-        !currentPath.includes('/settings') &&
-        !currentPath.includes('/customers') &&
-        !currentPath.includes('/reviews') &&
-        !currentPath.includes('/transactions')) {
-        // For public pages, don't redirect on 401
+      console.log('401 Error intercepted at:', currentPath);
+      const protectedPrefixes = [
+        '/admin',
+        '/settings',
+        '/pos',
+        '/restaurants',
+        '/dashboard',
+        '/customers',
+        '/transactions',
+        '/reviews',
+        '/staff'
+      ];
+      const isProtected = protectedPrefixes.some(prefix => currentPath.startsWith(prefix));
+      if (!isProtected) {
+        console.log('Public/Dynamic path detected, skipping redirect');
         return Promise.reject(error);
       }
-      window.location.href = '/signin';
+      console.log('Protected path detected, redirecting to signin');
+      try {
+        await auth.signOut();
+      } catch (e) {
+        console.error('Error signing out on 401:', e);
+      }
+      window.location.href = `/signin?returnUrl=${encodeURIComponent(currentPath + window.location.search)}`;
     }
     return Promise.reject(error);
   }
 );
-
-
 instance.interceptors.request.use((config) => {
   if (config && config.url && /\/restaurants\/(undefined|null)/.test(config.url)) {
-
     throw new Error(`Invalid API request to ${config.url}. restaurantId is missing or invalid.`);
   }
   return config;
 });
-
-
 async function buildAuthHeaders(contentType, idTokenOverride) {
   const headers = {}
   if (contentType) headers['Content-Type'] = contentType
-  if (idTokenOverride) {
-    headers['Authorization'] = 'Bearer ' + idTokenOverride
-    return headers
+  let token = idTokenOverride;
+  if (!token && auth.currentUser) {
+    try {
+      token = await auth.currentUser.getIdToken();
+    } catch (e) {
+      console.error("Error getting ID token:", e);
+    }
+  }
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token
   }
   return headers
 }
-
 export async function get(url, opts = {}) {
   const headers = await buildAuthHeaders(null, opts.idToken)
   return instance.get(url, { headers })
@@ -75,20 +81,15 @@ export async function post(url, body, opts = {}) {
   if (!contentType && !(body instanceof FormData)) {
     contentType = 'application/json';
   }
-
   const headers = await buildAuthHeaders(contentType === 'multipart/form-data' ? null : contentType, opts.idToken);
-
   if (opts.headers) {
     Object.assign(headers, opts.headers);
-    // Ensure we don't send Content-Type if it's multipart/form-data (let browser handle boundary)
     if (headers['Content-Type'] === 'multipart/form-data') {
       delete headers['Content-Type'];
     }
   }
-
   return instance.post(url, body, { headers });
 }
-
 export async function put(url, body, opts = {}) {
   let contentType = opts.headers?.['Content-Type'];
   if (!contentType && !(body instanceof FormData)) {
@@ -98,7 +99,6 @@ export async function put(url, body, opts = {}) {
   if (opts.headers) Object.assign(headers, opts.headers);
   return instance.put(url, body, { headers });
 }
-
 export async function patch(url, body, opts = {}) {
   let contentType = opts.headers?.['Content-Type'];
   if (!contentType && !(body instanceof FormData)) {
@@ -112,6 +112,4 @@ export async function del(url, opts = {}) {
   const headers = await buildAuthHeaders(null, opts.idToken)
   return instance.delete(url, { headers })
 }
-
 export const apiClient = instance;
-

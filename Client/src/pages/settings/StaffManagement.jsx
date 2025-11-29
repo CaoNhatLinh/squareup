@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useRestaurant } from "@/hooks/useRestaurant";
-
-import { getStaffMembers, inviteStaff, deleteStaff, updateStaffRole } from '@/api/staff';
+import { getStaffMembers, inviteStaff, deleteStaff, updateStaffRole, cancelInvitation } from '@/api/staff';
 import { getRoles } from '@/api/roles';
 import { useToast } from '@/hooks/useToast';
 import { HiPlus } from 'react-icons/hi';
 import InviteStaffModal from '@/components/settings/InviteStaffModal';
+import InvitationHistoryCard from '@/components/settings/InvitationHistoryCard';
 import StaffList from '@/components/settings/StaffList';
 import Table from '@/components/ui/Table';
 import PageHeader from '@/components/common/PageHeader';
@@ -14,7 +14,6 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import Dropdown from '@/components/ui/Dropdown';
 import Avatar from '@/components/ui/Avatar';
-
 export default function StaffManagement() {
   const { restaurant } = useRestaurant();
   const restaurantId = restaurant?.id;
@@ -28,6 +27,8 @@ export default function StaffManagement() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [invitePrefillData, setInvitePrefillData] = useState(null);
+  const [refreshHistory, setRefreshHistory] = useState(0);
   const fetchData = async (opts = {}) => {
     try {
       setLoading(true);
@@ -45,33 +46,52 @@ export default function StaffManagement() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchData();
-    
+    if (restaurantId) {
+      fetchData();
+    }
   }, [restaurantId]);
   const handleInviteSubmit = async (form) => {
     if (!form.email || !form.roleId) {
       error('Please fill in all fields');
       return;
     }
-
     try {
       await inviteStaff(restaurantId, form);
-      success('Invitation sent successfully');
+      success(`Invitation sent to ${form.email}`);
       setShowInviteModal(false);
+      setInvitePrefillData(null);
+      setRefreshHistory(prev => prev + 1);
       fetchData();
     } catch (err) {
       console.error('Error inviting staff:', err, err?.response?.data);
       error(err.response?.data?.error || 'Failed to send invitation');
     }
   };
-
+  const handleResendHistory = (invitation) => {
+    setInvitePrefillData({
+      email: invitation.email,
+      roleId: invitation.roleId
+    });
+    setShowInviteModal(true);
+  };
+  const handleCancelInvitation = async (invitation) => {
+    if (!window.confirm(`Are you sure you want to cancel the invitation for ${invitation.email}?`)) {
+      return;
+    }
+    try {
+      await cancelInvitation(restaurantId, invitation.id);
+      success('Invitation cancelled successfully');
+      setRefreshHistory(prev => prev + 1);
+    } catch (err) {
+      console.error('Error cancelling invitation:', err);
+      error(err.response?.data?.error || 'Failed to cancel invitation');
+    }
+  };
   const handleRemove = async (staffId, displayName) => {
     if (!window.confirm(`Are you sure you want to remove ${displayName}?`)) {
       return;
     }
-
     try {
       await deleteStaff(restaurantId, staffId);
       success('Staff member removed successfully');
@@ -81,15 +101,12 @@ export default function StaffManagement() {
       error(err.response?.data?.error || 'Failed to remove staff member');
     }
   };
-
   const handleUpdateRole = async (e) => {
     e.preventDefault();
-
     if (!selectedStaff?.newRoleId) {
       error('Please select a role');
       return;
     }
-
     try {
       await updateStaffRole(restaurantId, selectedStaff.id, selectedStaff.newRoleId);
       success('Role updated successfully');
@@ -101,8 +118,6 @@ export default function StaffManagement() {
       error(err.response?.data?.error || 'Failed to update role');
     }
   };
-
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -110,7 +125,6 @@ export default function StaffManagement() {
       </div>
     );
   }
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <PageHeader
@@ -121,13 +135,15 @@ export default function StaffManagement() {
             variant="primary"
             size="medium"
             icon={HiPlus}
-            onClick={() => setShowInviteModal(true)}
+            onClick={() => {
+              setInvitePrefillData(null);
+              setShowInviteModal(true);
+            }}
           >
             Invite Staff
           </Button>
         )}
       />
-
       {staff.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <svg
@@ -152,7 +168,10 @@ export default function StaffManagement() {
               variant="primary"
               size="medium"
               icon={HiPlus}
-              onClick={() => setShowInviteModal(true)}
+              onClick={() => {
+                setInvitePrefillData(null);
+                setShowInviteModal(true);
+              }}
             >
               Invite Staff
             </Button>
@@ -161,23 +180,32 @@ export default function StaffManagement() {
       ) : (
         <Table
           columns={[
-            { key: 'name', title: 'Name', render: (r) => (
-              <div className="flex items-center gap-4">
-                <Avatar name={r.displayName || r.email} size="small" />
-                <div>
-                  <div className="font-semibold">{r.displayName || r.email}</div>
-                  <div className="text-sm text-gray-500">{r.email}</div>
+            {
+              key: 'name', title: 'Name', render: (r) => (
+                <div className="flex items-center gap-4">
+                  <Avatar name={r.displayName || r.email} size="small" />
+                  <div>
+                    <div className="font-semibold">{r.displayName || r.email}</div>
+                    <div className="text-sm text-gray-500">{r.email}</div>
+                  </div>
                 </div>
-              </div>
-            )},
-            { key: 'role', title: 'Role', render: (r) => <div className="text-sm font-medium">{r.roleName || r.roleId}</div> },
+              )
+            },
+            {
+              key: 'role', title: 'Role', render: (r) => {
+                const role = roles.find(role => role.id === r.roleId);
+                return <div className="text-sm font-medium">{role?.name || r.roleId}</div>;
+              }
+            },
             { key: 'joinedAt', title: 'Joined', render: (r) => (r.joinedAt ? new Date(r.joinedAt).toLocaleString() : '-') },
-            { key: 'actions', title: '', render: (r) => (
-              <div className="flex justify-end gap-2">
-                <Button variant="secondary" size="small" onClick={() => { setSelectedStaff({ ...r, newRoleId: r.roleId }); setShowEditModal(true); }}>Edit</Button>
-                <Button variant="danger" size="small" onClick={() => handleRemove(r.id, r.displayName || r.email)}>Remove</Button>
-              </div>
-            )},
+            {
+              key: 'actions', title: '', render: (r) => (
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" size="small" onClick={() => { setSelectedStaff({ ...r, newRoleId: r.roleId }); setShowEditModal(true); }}>Edit</Button>
+                  <Button variant="danger" size="small" onClick={() => handleRemove(r.id, r.displayName || r.email)}>Remove</Button>
+                </div>
+              )
+            },
           ]}
           data={staff}
           loading={loading}
@@ -187,16 +215,16 @@ export default function StaffManagement() {
           onLimitChange={(l) => { setLimit(l); setPage(1); fetchData({ page: 1, limit: l }); }}
         />
       )}
-
       <InviteStaffModal
         visible={showInviteModal}
         onClose={() => {
-            setShowInviteModal(false);
-          }}
+          setShowInviteModal(false);
+          setInvitePrefillData(null);
+        }}
         roles={roles}
         onInvite={handleInviteSubmit}
+        prefillData={invitePrefillData}
       />
-
       <Modal
         isOpen={showEditModal && selectedStaff}
         onClose={() => {
@@ -215,7 +243,6 @@ export default function StaffManagement() {
             onChange={(value) => setSelectedStaff({ ...selectedStaff, newRoleId: value })}
             required
           />
-
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
@@ -233,6 +260,14 @@ export default function StaffManagement() {
           </div>
         </form>
       </Modal>
+      <div className="mt-8">
+        <InvitationHistoryCard
+          restaurantId={restaurantId}
+          onResend={handleResendHistory}
+          onCancel={handleCancelInvitation}
+          refreshTrigger={refreshHistory}
+        />
+      </div>
     </div>
   );
 }

@@ -1,60 +1,1 @@
-import { useEffect, useState } from "react";
-import { GuestUserContext } from "@/context/GuestUserContext";
-import { useParams } from "react-router-dom";
-import { v4 as uuidv4 } from 'uuid';
-import { cleanupOldGuestUserData } from "@/utils/guestUserCleanup";
-import useAppStore from '@/store/useAppStore';
-
-const GUEST_UUID_PREFIX = "guest_uuid_";
-
-export function GuestUserProvider({ children }) {
-  const params = useParams();
-  const storeRestaurantId = useAppStore(s => s.restaurantId);
-  const restaurantId = params?.restaurantId || storeRestaurantId;
-  const [guestUuid, setGuestUuid] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    cleanupOldGuestUserData();
-    
-    const initializeGuestUser = async () => {
-      if (!restaurantId) {
-        setLoading(false);
-        return; 
-      }
-
-      try {
-        const storageKey = `${GUEST_UUID_PREFIX}${restaurantId}`;
-        let existingUuid = localStorage.getItem(storageKey);
-        
-        if (existingUuid === 'undefined' || existingUuid === 'null' || !existingUuid) {
-          existingUuid = null;
-        }
-        if (existingUuid) {
-          setGuestUuid(existingUuid);
-        } else {
-          const newUuid = uuidv4();
-          localStorage.setItem(storageKey, newUuid);
-          setGuestUuid(newUuid);
-        }
-      } catch (error) {
-        console.error("❌ Error initializing guest user:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeGuestUser();
-  }, [restaurantId]);
-
-  const value = {
-    guestUuid,
-    loading,
-  };
-
-  return (
-    <GuestUserContext.Provider value={value}>
-      {children}
-    </GuestUserContext.Provider>
-  );
-}
+import { useEffect, useState } from "react";import { GuestUserContext } from "@/context/GuestUserContext";import { useParams } from "react-router-dom";import { v4 as uuidv4 } from 'uuid';import { cleanupOldGuestUserData } from "@/utils/guestUserCleanup";import useAppStore from '@/store/useAppStore';const GUEST_UUID_PREFIX = "guest_uuid_";export function GuestUserProvider({ children }) {  const params = useParams();  const storeRestaurantId = useAppStore(s => s.restaurantId);  const restaurantId = params?.restaurantId || storeRestaurantId;  const [guestUuid, setGuestUuid] = useState(null);  const [loading, setLoading] = useState(true);  useEffect(() => {    cleanupOldGuestUserData();    const initializeGuestUser = async () => {      if (!restaurantId) {        setLoading(false);        return;       }      try {        const storageKey = `${GUEST_UUID_PREFIX}${restaurantId}`;        let existingUuid = localStorage.getItem(storageKey);        if (existingUuid === 'undefined' || existingUuid === 'null' || !existingUuid) {          existingUuid = null;        }        if (existingUuid) {          setGuestUuid(existingUuid);        } else {          const newUuid = uuidv4();          localStorage.setItem(storageKey, newUuid);          setGuestUuid(newUuid);        }      } catch (error) {        console.error("❌ Error initializing guest user:", error);      } finally {        setLoading(false);      }    };    initializeGuestUser();  }, [restaurantId]);  const value = {    guestUuid,    loading,  };  return (    <GuestUserContext.Provider value={value}>      {children}    </GuestUserContext.Provider>  );}

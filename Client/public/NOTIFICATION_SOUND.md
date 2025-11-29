@@ -24,7 +24,7 @@ This folder needs a `notification.mp3` file for order notifications.
    - Place it here
 
 ## Recommended Sound Characteristics:
-- Duration: 0.5 - 2 seconds
+- Duration: 0.3 - 1 seconds
 - Volume: Medium (not too loud)
 - Format: MP3
 - File size: < 100KB

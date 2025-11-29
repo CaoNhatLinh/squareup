@@ -15,7 +15,6 @@ export default function EditDiscount() {
   const restaurantId = useAppStore(s => s.restaurantId);
   const { success, error } = useToast();
   const [loading, setLoading] = useState(true);
-  
   const [formData, setFormData] = useState({
     name: '',
     amountType: 'percentage',
@@ -54,7 +53,6 @@ export default function EditDiscount() {
     setMaximumValue: false,
     maximumValue: 0,
   });
-
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [showDiscountTypeModal, setShowDiscountTypeModal] = useState(false);
@@ -62,7 +60,6 @@ export default function EditDiscount() {
   const [showItemCategorySelector, setShowItemCategorySelector] = useState(false);
   const [selectorMode, setSelectorMode] = useState('purchase'); 
   const [saving, setSaving] = useState(false);
-
   useEffect(() => {
     if (restaurantId && discountId) {
       Promise.all([
@@ -79,22 +76,18 @@ export default function EditDiscount() {
       }).finally(() => setLoading(false));
     }
   }, [restaurantId, discountId, error]);
-
   const handleClose = () => {
     navigate(-1);
   };
-
   const handleSave = async () => {
     if (!formData.name.trim()) {
       error('Discount name is required');
       return;
     }
-    
     if (!formData.amount && formData.amountType !== 'variable_amount' && formData.amountType !== 'variable_percentage') {
       error('Discount amount is required');
       return;
     }
-
     setSaving(true);
     try {
       await updateDiscount(restaurantId, discountId, formData);
@@ -107,14 +100,12 @@ export default function EditDiscount() {
       setSaving(false);
     }
   };
-
   const amountTypeOptions = [
     { value: 'percentage', label: 'Percentage (%)' },
     { value: 'fixed', label: 'Amount (₫)' },
     { value: 'variable_amount', label: 'Variable amount (₫)' },
     { value: 'variable_percentage', label: 'Variable percentage (%)' },
   ];
-
   const renderAmountTypeDropdown = () => (
     <Dropdown
       label="Amount type"
@@ -123,7 +114,6 @@ export default function EditDiscount() {
       onChange={(val) => setFormData({ ...formData, amountType: val })}
     />
   );
-
   const renderAmountInput = () => {
     if (formData.amountType === 'variable_amount' || formData.amountType === 'variable_percentage') {
       return (
@@ -133,7 +123,6 @@ export default function EditDiscount() {
         </div>
       );
     }
-
     return (
       <div className="space-y-2">
         <label className="block text-sm font-semibold text-gray-700">
@@ -158,11 +147,9 @@ export default function EditDiscount() {
       </div>
     );
   };
-
   if (loading) {
     return <LoadingSpinner.Overlay message="Loading discount data..." />;
   }
-
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 overflow-auto">
       <div className="bg-white w-full max-w-4xl my-8 rounded-2xl shadow-2xl flex flex-col max-h-[95vh]">
@@ -173,17 +160,14 @@ export default function EditDiscount() {
             <Button variant="primary" size="medium" onClick={handleSave} loading={saving}>{saving ? 'Saving...' : 'Save'}</Button>
           </div>
         </div>
-
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div className="space-y-4">
             <Input label="Name" placeholder="Name (required)" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="text-lg font-semibold" />
-            
             <div className="grid grid-cols-2 gap-4">
               {renderAmountTypeDropdown()}
               {renderAmountInput()}
             </div>
           </div>
-
           <div className="border-2 border-blue-200 rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -216,11 +200,9 @@ export default function EditDiscount() {
                   <p className="text-blue-800">
                     • <strong>No stacking:</strong> If multiple automatic discounts apply, only the <strong>greater discount</strong> will be used.
                   </p>
-                  
                 </div>
               </div>
             </div>
-
             {formData.automaticDiscount && (
               <div className="space-y-4 mt-6 pt-6 border-t-2 border-blue-200">
                 {!formData.discountApplyTo ? (
@@ -244,7 +226,6 @@ export default function EditDiscount() {
                         </div>
                         <Button variant="link" size="small" onClick={() => setFormData({ ...formData, discountApplyTo: '', purchaseCategories: [], purchaseItems: [], addAllItemsToPurchase: false })} className="text-red-600">Change Type</Button>
                       </div>
-
                       <div className="bg-gray-50 rounded-lg p-4 mb-3">
                         {formData.addAllItemsToPurchase ? (
                           <p className="text-sm text-gray-700 font-medium">
@@ -273,7 +254,6 @@ export default function EditDiscount() {
                           <p className="text-sm text-gray-500 italic">No items selected</p>
                         )}
                       </div>
-
                       <div className="flex items-center justify-between gap-3">
                         <Button variant="primary" size="medium" onClick={() => { setShowItemCategorySelector(true); setSelectorMode('purchase'); }} className="flex-1">Select Items/Categories</Button>
                         <Checkbox checked={formData.addAllItemsToPurchase || false} onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })} label="Add all items" />
@@ -296,7 +276,6 @@ export default function EditDiscount() {
                           </div>
                           <Button variant="link" size="small" onClick={() => setFormData({ ...formData, discountApplyTo: '', quantityRuleType: 'exact', purchaseQuantity: 2, discountQuantity: 1, purchaseCategories: [], purchaseItems: [], addAllItemsToPurchase: false, discountTargetCategories: [], discountTargetItems: [], addAllItemsToDiscount: false, copyEligibleItems: false })} className="text-red-600">Change Type</Button>
                         </div>
-
                         <div className="bg-gray-50 rounded-lg p-4 mb-3 space-y-3">
                           <div>
                             <p className="text-sm text-gray-700 mb-2">
@@ -308,7 +287,6 @@ export default function EditDiscount() {
                             </p>
                             <Button variant="link" size="small" onClick={() => setShowPurchaseRuleModal(true)} className="text-blue-600">Change rule type</Button>
                           </div>
-
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -325,7 +303,6 @@ export default function EditDiscount() {
                               </div>
                             )}
                           </div>
-
                           {formData.addAllItemsToPurchase ? (
                             <p className="text-sm text-gray-700 font-medium">
                               <HiCheck className="w-4 h-4 inline text-green-600 mr-1" />
@@ -366,14 +343,12 @@ export default function EditDiscount() {
                             <p className="text-sm text-gray-500 italic">No items selected</p>
                           )}
                         </div>
-
                         <div className="flex items-center justify-between gap-3">
                           <Button variant="success" size="medium" onClick={() => { setShowItemCategorySelector(true); setSelectorMode('purchase'); }} className="flex-1">Select Items/Categories</Button>
                             <Checkbox checked={formData.addAllItemsToPurchase || false} onChange={(e) => setFormData({ ...formData, addAllItemsToPurchase: e.target.checked })} label="Add all items" />
                         </div>
                       </div>
                     </div>
-
                     {formData.quantityRuleType === 'bogo' && (
                       <div className="bg-white rounded-xl shadow-sm border-2 border-orange-200 hover:border-orange-400 transition-all">
                         <div className="p-5">
@@ -389,7 +364,6 @@ export default function EditDiscount() {
                               </p>
                             </div>
                           </div>
-                          
                           <div className="bg-gray-50 rounded-lg p-4 mb-3">
                             {formData.copyEligibleItems ? (
                               <p className="text-sm text-gray-700 font-medium">
@@ -423,7 +397,6 @@ export default function EditDiscount() {
                               <p className="text-sm text-gray-500 italic">No items selected</p>
                             )}
                           </div>
-
                           <div className="space-y-2">
                             <Button variant={formData.copyEligibleItems ? 'success' : 'secondary'} size="medium" onClick={() => setFormData({ ...formData, copyEligibleItems: !formData.copyEligibleItems })} className="w-full">{formData.copyEligibleItems ? '✓ Copy eligible items' : 'Copy eligible items'}</Button>
                             <div className="flex items-center justify-between gap-3">
@@ -448,7 +421,6 @@ export default function EditDiscount() {
               </div>
             )}
           </div>
-
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <Checkbox checked={formData.setSchedule} onChange={(e) => setFormData({ ...formData, setSchedule: e.target.checked })} label="" />
@@ -460,7 +432,6 @@ export default function EditDiscount() {
                 <p className="text-sm text-gray-600">Set the days of the week and times of day this discount is available. (Example: Happy Hour)</p>
               </div>
             </div>
-
             {formData.setSchedule && (
               <div className="space-y-3 mt-4 border-t border-gray-200 pt-4">
                 {DAYS_OF_WEEK.map((day) => (
@@ -475,7 +446,6 @@ export default function EditDiscount() {
               </div>
             )}
           </div>
-
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <Checkbox checked={formData.setDateRange} onChange={(e) => setFormData({ ...formData, setDateRange: e.target.checked })} label="" />
@@ -487,7 +457,6 @@ export default function EditDiscount() {
                 <p className="text-sm text-gray-600">Set the dates this discount is available. (Example: Seasonal Sale)</p>
               </div>
             </div>
-
             {formData.setDateRange && (
               <div className="grid grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4">
                 <div className="space-y-2">
@@ -501,7 +470,6 @@ export default function EditDiscount() {
               </div>
             )}
           </div>
-
           <div className="border border-gray-300 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <Checkbox checked={formData.setMinimumSpend} onChange={(e) => setFormData({ ...formData, setMinimumSpend: e.target.checked })} label="" />
@@ -510,7 +478,6 @@ export default function EditDiscount() {
                 <p className="text-sm text-gray-600">Require a minimum subtotal to qualify for discount (Example: Buy at least $50 and get $10 off)</p>
               </div>
             </div>
-
             {formData.setMinimumSpend && (
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum subtotal</label>
@@ -526,7 +493,6 @@ export default function EditDiscount() {
                 <p className="text-sm text-gray-600">Set the maximum discount value per purchase</p>
               </div>
             </div>
-
             {formData.setMaximumValue && (
               <div className="mt-4 border-t border-gray-200 pt-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Maximum value</label>
@@ -537,7 +503,6 @@ export default function EditDiscount() {
           </div>
         </div>
       </div>
-
       {showDiscountTypeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl">
@@ -545,7 +510,6 @@ export default function EditDiscount() {
               <h3 className="text-xl font-bold">Choose how to apply discount</h3>
               <Button variant="ghost" size="small" onClick={() => setShowDiscountTypeModal(false)} icon={HiXMark} className="p-2" />
             </div>
-
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -564,7 +528,6 @@ export default function EditDiscount() {
                   </div>
                 </div>
               </button>
-
               <button
                 onClick={() => {
                   setFormData({ ...formData, discountApplyTo: 'quantity' });
@@ -593,7 +556,6 @@ export default function EditDiscount() {
               <h3 className="text-xl font-bold">Choose a discount type</h3>
               <Button variant="ghost" size="small" onClick={() => setShowPurchaseRuleModal(false)} icon={HiXMark} className="p-2" />
             </div>
-
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -607,7 +569,6 @@ export default function EditDiscount() {
                 <h4 className="font-semibold">📊 Exact quantity</h4>
                 <p className="text-sm text-gray-600">Apply discount to exact quantity of eligible items.</p>
               </button>
-
               <button
                 onClick={() => {
                   setFormData({ ...formData, quantityRuleType: 'minimum' });
@@ -620,7 +581,6 @@ export default function EditDiscount() {
                 <h4 className="font-semibold">⬆️ Minimum quantity</h4>
                 <p className="text-sm text-gray-600">Apply discount to eligible items when a minimum quantity is met.</p>
               </button>
-
               <button
                 onClick={() => {
                   setFormData({ ...formData, quantityRuleType: 'bogo' });
@@ -637,12 +597,10 @@ export default function EditDiscount() {
                 </p>
               </button>
             </div>
-
             <Button variant="secondary" size="medium" onClick={() => setShowPurchaseRuleModal(false)} className="mt-6 w-full">Done</Button>
           </div>
         </div>
       )}
-
       {showItemCategorySelector && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-2xl p-6 w-full max-w-3xl max-h-[80vh] flex flex-col">
@@ -652,7 +610,6 @@ export default function EditDiscount() {
               </h3>
               <Button variant="ghost" size="small" onClick={() => setShowItemCategorySelector(false)} icon={HiXMark} className="p-2" />
             </div>
-
             <div className="flex-1 overflow-y-auto space-y-4">
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -663,7 +620,6 @@ export default function EditDiscount() {
                     const isSelected = selectorMode === 'purchase'
                       ? formData.purchaseCategories?.some(c => c.id === cat.id)
                       : formData.discountTargetCategories?.some(c => c.id === cat.id);
-                    
                     return (
                       <button
                         key={cat.id}
@@ -697,7 +653,6 @@ export default function EditDiscount() {
                   })}
                 </div>
               </div>
-
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   🍽️ Items ({items.length})
@@ -707,7 +662,6 @@ export default function EditDiscount() {
                     const isSelected = selectorMode === 'purchase'
                       ? formData.purchaseItems?.some(i => i.id === item.id)
                       : formData.discountTargetItems?.some(i => i.id === item.id);
-                    
                     return (
                       <button
                         key={item.id}
@@ -745,7 +699,6 @@ export default function EditDiscount() {
                 </div>
               </div>
             </div>
-
             <div className="mt-4 pt-4 border-t flex justify-between items-center">
               <div className="text-sm text-gray-600">
                 Selected: {selectorMode === 'purchase'

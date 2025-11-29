@@ -1,54 +1,1 @@
-import { useState } from "react";
-import Modal from '@/components/ui/Modal';
-import Input from '@/components/ui/Input';
-import Dropdown from '@/components/ui/Dropdown';
-import Button from '@/components/ui/Button';
-
-export default function InviteStaffModal({ visible, onClose, roles = [], onInvite }) {
-  const [form, setForm] = useState({ email: '', roleId: '' });
-
-  const submit = (e) => {
-    e.preventDefault();
-    onInvite(form);
-  };
-
-  return (
-    <Modal
-      isOpen={visible}
-      onClose={onClose}
-      title="Invite Staff Member"
-      size="small"
-    >
-      <p className="text-sm text-gray-600 mb-4">Send an invitation to join your restaurant team.</p>
-
-      <form onSubmit={submit} className="space-y-4">
-        <Input
-          type="email"
-          label="Email Address"
-          placeholder="staff@example.com"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-        />
-
-        <Dropdown
-          label="Role"
-          placeholder="Select a role"
-          options={roles.map(r => ({ value: r.id, label: r.name }))}
-          value={form.roleId}
-          onChange={(value) => setForm({ ...form, roleId: value })}
-          required
-        />
-
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary">
-            Send Invitation
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
+import { useState, useEffect } from "react";import Modal from '@/components/ui/Modal';import Input from '@/components/ui/Input';import Dropdown from '@/components/ui/Dropdown';import Button from '@/components/ui/Button';import { HiMail, HiUserGroup, HiClock } from 'react-icons/hi';export default function InviteStaffModal({ visible, onClose, roles = [], onInvite, expiryMinutes = 30, prefillData = null }) {  const [form, setForm] = useState({ email: '', roleId: '' });  const [isSubmitting, setIsSubmitting] = useState(false);  useEffect(() => {    if (prefillData) {      setForm({        email: prefillData.email || '',        roleId: prefillData.roleId || ''      });    } else {      setForm({ email: '', roleId: '' });    }  }, [prefillData, visible]);  const submit = async (e) => {    e.preventDefault();    setIsSubmitting(true);    try {      await onInvite(form);      setForm({ email: '', roleId: '' });    } finally {      setIsSubmitting(false);    }  };  const handleClose = () => {    setForm({ email: '', roleId: '' });    onClose();  };  return (    <Modal      isOpen={visible}      onClose={handleClose}      title="Invite Staff Member"      size="medium"    >      <div className="mb-6">        <div className="flex items-center gap-3 mb-3">          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-300 to-red-600 flex items-center justify-center">            <HiMail className="w-6 h-6 text-white" />          </div>          <div className="flex-1">            <h3 className="text-lg font-semibold text-gray-900">Send Team Invitation</h3>            <p className="text-sm text-gray-500">Add a new member to your restaurant team</p>          </div>        </div>        <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">          <HiClock className="w-5 h-5 text-amber-600 flex-shrink-0" />          <p className="text-sm text-amber-800">            <span className="font-semibold">Auto-expires in {expiryMinutes} minutes</span>            <span className="text-amber-700"> - Invitation will be deleted if not accepted</span>          </p>        </div>      </div>      <form onSubmit={submit} className="space-y-5">        <div className="relative">          <Input            type="email"            label="Email Address"            placeholder="colleague@example.com"            value={form.email}            onChange={(e) => setForm({ ...form, email: e.target.value })}            required          />          <div className="absolute right-3 top-9 text-gray-400">            <HiMail className="w-5 h-5" />          </div>        </div>        <div className="relative">          <Dropdown            label="Assign Role"            placeholder="Select a role for this member"            options={roles.map(r => ({              value: r.id,              label: `${r.name}${r.description ? ` - ${r.description}` : ''}`            }))}            value={form.roleId}            onChange={(value) => setForm({ ...form, roleId: value })}            required          />          <div className="absolute right-3 top-9 text-gray-400 pointer-events-none">            <HiUserGroup className="w-5 h-5" />          </div>        </div>        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">          <h4 className="text-sm font-semibold text-blue-900 mb-2">What happens next?</h4>          <ul className="text-sm text-blue-800 space-y-1">            <li className="flex items-start gap-2">              <span className="text-blue-600 mt-0.5">•</span>              <span>An invitation email will be sent to the recipient</span>            </li>            <li className="flex items-start gap-2">              <span className="text-blue-600 mt-0.5">•</span>              <span>They'll receive a secure link to accept the invitation</span>            </li>          </ul>        </div>        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">          <Button            type="button"            variant="secondary"            onClick={handleClose}            disabled={isSubmitting}          >            Cancel          </Button>          <Button            type="submit"            variant="primary"            disabled={isSubmitting}            className="min-w-[140px]"          >            {isSubmitting ? (              <span className="flex items-center gap-2">                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>                </svg>                Sending...              </span>            ) : (              <span className="flex items-center gap-2">                <HiMail className="w-4 h-4" />                Send Invitation              </span>            )}          </Button>        </div>      </form>    </Modal>  );}

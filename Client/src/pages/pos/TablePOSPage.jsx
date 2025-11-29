@@ -1,592 +1,1 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import useAppStore from "@/store/useAppStore";
-import { useRestaurant } from "@/hooks/useRestaurant";
-import { fetchCategories } from "@/api/categories";
-import { fetchItems } from "@/api/items";
-import { fetchModifiers } from "@/api/modifers";
-import { createOrder } from "@/api/orders";
-import useCalculateDiscounts from "@/hooks/useCalculateDiscounts";
-import { mergeOrAddCartItem } from "@/utils/cartUtils";
-import { useToast } from "@/hooks/useToast";
-import POSHeader from "@/pages/pos/components/POSHeader";
-import CategoryTabs from "@/pages/pos/components/CategoryTabs";
-import ProductGrid from "@/pages/pos/components/ProductGrid";
-import Cart from "@/pages/pos/components/Cart";
-import PaymentModal from "@/pages/pos/components/PaymentModal";
-import { printInvoice, printKitchenOrder } from "@/utils/printUtils";
-import { Button, Input } from "@/components/ui";
-import BillSplitModal from "@/pages/pos/components/BillSplitModal";
-import ConfirmDialog from "@/components/common/ConfirmDialog";
-import { HiPrinter, HiArrowLeft } from "react-icons/hi2";
-import {
-  getTableById,
-  updateTable,
-  createTable,
-  clearTable,
-} from "@/api/tables";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
-export default function TablePOSPage() {
-  const { tableId } = useParams();
-  const restaurantId = useAppStore((s) => s.restaurantId);
-  const navigate = useNavigate();
-  const { restaurant, loading: restaurantLoading } = useRestaurant();
-  const { success: showSuccess, error: showError } = useToast();
-
-  const [categories, setCategories] = useState([]);
-  const [items, setItems] = useState({});
-  const [modifiers, setModifiers] = useState({});
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [query, setQuery] = useState("");
-  const [cart, setCart] = useState([]);
-  const [couponCode, setCouponCode] = useState("");
-  const [loyaltyCard, setLoyaltyCard] = useState("");
-  const [discountResult, setDiscountResult] = useState({
-    totalDiscount: 0,
-    appliedDiscounts: [],
-    itemDiscounts: {},
-    discountBreakdown: [],
-  });
-  const [discountLoading, setDiscountLoading] = useState(false);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isBillSplitOpen, setIsBillSplitOpen] = useState(false);
-  const [pendingSplitPayments, setPendingSplitPayments] = useState(null);
-  const [printInvoiceOnCheckout, setPrintInvoiceOnCheckout] = useState(true);
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "",
-    phone: "",
-    email: "",
-  });
-  const [orderNotes, setOrderNotes] = useState("");
-  const [tableName, setTableName] = useState("");
-  const [tableUpdatedAt, setTableUpdatedAt] = useState(null);
-  const [isSavingTable, setIsSavingTable] = useState(false);
-  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
-  const handleClearConfirm = async () => {
-    if (!tableId || isNewTable) return;
-    try {
-      const res = await clearTable(restaurantId, tableId, {
-        expectedUpdatedAt: tableUpdatedAt,
-      });
-      setCart([]);
-      setCustomerInfo({ name: "", phone: "", email: "" });
-      setTableUpdatedAt(res?.updatedAt || Date.now());
-      showSuccess("Table cleared successfully");
-    } catch (err) {
-      console.error("Failed to clear table:", err);
-      showError(err.response?.data?.error || "Failed to clear table");
-    } finally {
-      setIsClearDialogOpen(false);
-    }
-  };
-  const isNewTable = !tableId || tableId === "new";
-
-  const loadPOSData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [categoriesData, itemsData, modifiersData] = await Promise.all([
-        fetchCategories(restaurantId),
-        fetchItems(restaurantId, { q: query }),
-        fetchModifiers(restaurantId),
-      ]);
-
-      const catsArray = categoriesData?.categories || categoriesData || [];
-      setCategories(
-        Array.isArray(catsArray) ? catsArray : Object.values(catsArray)
-      );
-
-      const itemsArray = itemsData?.items || itemsData || [];
-      const itemsMap = Array.isArray(itemsArray)
-        ? itemsArray.reduce((acc, it) => ({ ...acc, [it.id]: it }), {})
-        : itemsArray;
-      setItems(itemsMap || {});
-
-      const modsArray = modifiersData?.modifiers || modifiersData || [];
-      const modsMap = Array.isArray(modsArray)
-        ? modsArray.reduce((acc, m) => ({ ...acc, [m.id]: m }), {})
-        : modsArray;
-      setModifiers(modsMap || {});
-    } catch (error) {
-      console.error("Failed to load POS data:", error);
-      showError("Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  }, [restaurantId, showError, query]);
-
-  const loadTableData = useCallback(async () => {
-    if (isNewTable || !tableId) return;
-
-    try {
-      const tableData = await getTableById(restaurantId, tableId);
-      setTableName(tableData.name || "");
-
-      if (tableData.items && tableData.items.length > 0) {
-        const cartItems = tableData.items.map((item) => ({
-          id: `${item.itemId}-${Date.now()}-${Math.random()}`,
-          itemId: item.itemId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          selectedModifiers:
-            item.selectedModifiers || item.selectedOptions || [],
-          specialInstruction: item.notes || "",
-          modifierTotal: (
-            item.selectedModifiers ||
-            item.selectedOptions ||
-            []
-          ).reduce((sum, opt) => sum + (opt.price || 0), 0),
-        }));
-        setCart(cartItems);
-      }
-      if (tableData.customerInfo) {
-        setCustomerInfo(
-          tableData.customerInfo || { name: "", phone: "", email: "" }
-        );
-      }
-      setTableUpdatedAt(tableData.updatedAt || null);
-    } catch (error) {
-      console.error("Failed to load table:", error);
-      showError("Failed to load table data");
-    }
-  }, [restaurantId, tableId, isNewTable, showError]);
-
-  useEffect(() => {
-    if (restaurantId) {
-      loadPOSData();
-    }
-  }, [restaurantId, loadPOSData]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (restaurantId) {
-        loadPOSData();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [restaurantId, loadPOSData]);
-
-  useEffect(() => {
-    if (restaurantId) {
-      loadTableData();
-    }
-  }, [restaurantId, loadTableData]);
-
-  const cartItemsToCalc = cart.map((c) => ({
-    itemId: c.itemId,
-    name: c.name,
-    price: c.price,
-    quantity: c.quantity,
-    totalPrice:
-      (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) *
-      Number(c.quantity ?? 0),
-    groupKey: c.id,
-    selectedOptions: c.selectedModifiers || [],
-  }));
-
-  const storeRestaurantId = useAppStore((s) => s.restaurantId);
-  const { loading: hookLoading, discountResult: hookResult } =
-    useCalculateDiscounts(restaurantId || storeRestaurantId, cartItemsToCalc, {
-      couponCode,
-      loyaltyCard,
-    });
-  useEffect(() => {
-    setDiscountLoading(hookLoading);
-    setDiscountResult(hookResult);
-  }, [hookLoading, hookResult]);
-
-  const addToCart = (
-    item,
-    selectedOptions = [],
-    quantity = 1,
-    specialInstruction = ""
-  ) => {
-    const displayPrice = Number(item?.discountedPrice ?? item?.price ?? 0);
-    const cartItem = {
-      id: `${item.id}-${Date.now()}`,
-      itemId: item.id,
-      name: item.name,
-      price: displayPrice,
-      quantity,
-      selectedModifiers: selectedOptions,
-      specialInstruction,
-      modifierTotal: selectedOptions.reduce(
-        (sum, opt) => sum + (opt.price || 0),
-        0
-      ),
-      image: item.image,
-      category: item.category,
-    };
-    setCart((prev) => mergeOrAddCartItem(prev, cartItem));
-  };
-
-  const updateCartItemQuantity = (cartItemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(cartItemId);
-      return;
-    }
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const removeFromCart = (cartItemId) => {
-    setCart((prev) => prev.filter((item) => item.id !== cartItemId));
-  };
-
-  const clearCart = () => {
-    setCart([]);
-    setCustomerInfo({ name: "", phone: "", email: "" });
-  };
-
-  const getCartSummary = () => {
-    const subtotal = cart.reduce((sum, item) => {
-      const itemTotal =
-        (Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) *
-        Number(item.quantity ?? 0);
-      return sum + itemTotal;
-    }, 0);
-    const totalDiscount = Number(discountResult?.totalDiscount ?? 0);
-    const taxableBase = subtotal - totalDiscount;
-    const taxRate = Number(restaurant?.taxRate ?? restaurant?.tax ?? 0) || 0;
-    const taxAmount = taxableBase * taxRate;
-    const total = taxableBase + taxAmount;
-    return { subtotal, totalDiscount, taxAmount, total, taxRate };
-  };
-
-  const handleSaveTable = async () => {
-    if (!tableName.trim()) {
-      showError("Please enter a table name");
-      return;
-    }
-
-    setIsSavingTable(true);
-    try {
-      const tableData = {
-        name: tableName.trim(),
-        items: cart.map((item) => ({
-          itemId: item.itemId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          selectedModifiers: item.selectedModifiers,
-          notes: item.specialInstruction,
-        })),
-        customerInfo: customerInfo || { name: "", phone: "", email: "" },
-        notes: orderNotes || "",
-      };
-
-      if (isNewTable) {
-        const created = await createTable(restaurantId, tableData);
-        setTableUpdatedAt(created?.updatedAt || Date.now());
-        showSuccess("Table created successfully");
-      } else {
-        const updated = await updateTable(restaurantId, tableId, tableData, {
-          expectedUpdatedAt: tableUpdatedAt,
-        });
-        setTableUpdatedAt(updated?.updatedAt || Date.now());
-        showSuccess("Table saved successfully");
-      }
-
-      navigate(`/pos`);
-    } catch (error) {
-      console.error("Failed to save table:", error);
-      showError(error.response?.data?.error || "Failed to save table");
-    } finally {
-      setIsSavingTable(false);
-    }
-  };
-
-  const handlePrintKitchenOrder = () => {
-    if (cart.length === 0) {
-      showError("No items to print");
-      return;
-    }
-
-    try {
-      printKitchenOrder({
-        tableName: tableName || "New Table",
-        items: cart,
-        restaurantName: restaurant?.name,
-      });
-      showSuccess("Kitchen order sent to printer");
-    } catch (error) {
-      console.error("Failed to print kitchen order:", error);
-      showError("Failed to print kitchen order");
-    }
-  };
-
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      showError("Cart is empty");
-      return;
-    }
-    if (!tableName.trim()) {
-      showError("Please enter a table name before checkout");
-      return;
-    }
-    setIsPaymentModalOpen(true);
-  };
-
-  const handleCompletePayment = async (
-    paymentMethod,
-    splitPayments,
-    paymentDetails
-  ) => {
-    try {
-      setIsCreatingOrder(true);
-
-      const isFullyPaid = (() => {
-        if (paymentMethod === "split")
-          return (
-            Array.isArray(splitPayments) &&
-            splitPayments.length > 0 &&
-            splitPayments.every((sp) => sp.status === "paid")
-          );
-        if (paymentMethod === "cash") return true;
-        if (paymentMethod === "stripe")
-          return !!(
-            paymentDetails &&
-            (paymentDetails.success || paymentDetails.paymentIntentId)
-          );
-        if (paymentMethod === "bank_transfer")
-          return !!(paymentDetails && paymentDetails.paid);
-        return !!(paymentDetails && paymentDetails.success);
-      })();
-
-      const orderData = {
-        restaurantId,
-        tableId: isNewTable ? undefined : tableId,
-        tableName: tableName,
-        items: cart.map((item) => ({
-          itemId: item.itemId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          selectedOptions: item.selectedModifiers,
-        })),
-        customerInfo,
-        notes: orderNotes,
-        total: getCartSummary().total,
-        paymentMethod: paymentMethod === "split" ? "split" : paymentMethod,
-        paymentStatus: isFullyPaid ? "paid" : "pending",
-        splitPayments: paymentMethod === "split" ? splitPayments : undefined,
-        paymentDetails,
-        orderType: "dine_in",
-        status: isFullyPaid ? "completed" : "pending",
-        createdAt: Date.now(),
-      };
-
-      const created = await createOrder(restaurantId, orderData);
-      showSuccess("Order completed successfully!");
-
-      if (isFullyPaid && printInvoiceOnCheckout) {
-        try {
-          const { subtotal, totalDiscount, taxAmount, total, taxRate } =
-            getCartSummary();
-          const invoiceData = {
-            orderNumber: created?.id || `ORD-${Date.now()}`,
-            date: Date.now(),
-            customerInfo,
-            items: cart,
-            subtotal: subtotal,
-            discount: totalDiscount,
-            taxAmount: taxAmount,
-            taxRate: taxRate,
-            total: total,
-          };
-          printInvoice(invoiceData, restaurant);
-        } catch (printErr) {
-          console.error("Failed to print invoice:", printErr);
-        }
-      }
-
-      if (!isNewTable) {
-        await clearTable(restaurantId, tableId, {
-          expectedUpdatedAt: tableUpdatedAt,
-        });
-      }
-
-      navigate(`/pos`);
-    } catch (error) {
-      console.error("Failed to complete payment:", error);
-      showError("Failed to complete payment");
-    } finally {
-      setIsCreatingOrder(false);
-      setIsPaymentModalOpen(false);
-    }
-  };
-
-  if (restaurantLoading || loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <LoadingSpinner size="xl" color="indigo" />
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="small"
-              onClick={() => navigate("/pos")}
-            >
-              <HiArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tables
-            </Button>
-            <Button
-              variant="destructive"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsClearDialogOpen(true);
-              }}
-              disabled={isNewTable || cart.length === 0}
-            >
-              Clear Table
-            </Button>
-            <div className="flex items-center gap-2">
-              <Input
-                label="Table Name"
-                value={tableName}
-                onChange={(e) => setTableName(e.target.value)}
-                placeholder="Enter table name..."
-                containerClassName="min-w-[200px]"
-                layout="horizontal"
-                fullWidth={false}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="small"
-              onClick={handlePrintKitchenOrder}
-              disabled={cart.length === 0}
-            >
-              <HiPrinter className="h-4 w-4 mr-2" />
-              Print Kitchen Order
-            </Button>
-            <Button
-              onClick={handleSaveTable}
-              disabled={isSavingTable || !tableName.trim()}
-              size="small"
-            >
-              {isSavingTable ? "Saving..." : "Save Table"}
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <POSHeader
-            query={query}
-            onQueryChange={setQuery}
-            restaurant={restaurant}
-          />
-
-          <CategoryTabs
-            categories={categories}
-            items={items}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-
-          <ProductGrid
-            categories={categories}
-            items={items}
-            modifiers={modifiers}
-            selectedCategory={selectedCategory}
-            query={query}
-            onAddToCart={addToCart}
-            discountResult={discountResult}
-          />
-        </div>
-        <div className="w-96 bg-white border-l flex flex-col">
-          <Cart
-            cart={cart}
-            onUpdateQuantity={updateCartItemQuantity}
-            onRemove={removeFromCart}
-            onClear={clearCart}
-            total={getCartSummary().total}
-            taxAmount={getCartSummary().taxAmount}
-            taxRate={getCartSummary().taxRate}
-            getCartSummary={getCartSummary}
-            discountResult={discountResult}
-            discountLoading={discountLoading}
-            couponCode={couponCode}
-            onCouponChange={setCouponCode}
-            loyaltyCard={loyaltyCard}
-            onLoyaltyCardChange={setLoyaltyCard}
-            onCheckout={handleCheckout}
-            onSplitBill={() => setIsBillSplitOpen(true)}
-            customerInfo={customerInfo}
-            onCustomerInfoChange={setCustomerInfo}
-            printInvoiceOnCheckout={printInvoiceOnCheckout}
-            onPrintInvoiceChange={setPrintInvoiceOnCheckout}
-          />
-        </div>
-      </div>
-      <ConfirmDialog
-        open={isClearDialogOpen}
-        title="Clear Table"
-        message="Are you sure you want to clear this table? This will remove all items from the table."
-        onConfirm={handleClearConfirm}
-        onCancel={() => setIsClearDialogOpen(false)}
-        confirmLabel="Clear"
-        cancelLabel="Cancel"
-      />
-      <PaymentModal
-        open={isPaymentModalOpen}
-        onOpenChange={setIsPaymentModalOpen}
-        total={getCartSummary().total}
-        cart={cart}
-        onComplete={handleCompletePayment}
-        isProcessing={isCreatingOrder}
-        customerName={customerInfo.name || "Guest"}
-        customerInfo={customerInfo}
-        orderNotes={orderNotes}
-        onOrderNotesChange={setOrderNotes}
-        onClose={() => setIsPaymentModalOpen(false)}
-        initialSplitPayments={pendingSplitPayments}
-        printOnCheckout={printInvoiceOnCheckout}
-        setPrintOnCheckout={setPrintInvoiceOnCheckout}
-        hideOrderTypeSelection={true}
-      />
-      {isBillSplitOpen && (
-        <BillSplitModal
-          cart={cart}
-          total={getCartSummary().total}
-          onClose={() => setIsBillSplitOpen(false)}
-          onSplit={(splits) => {
-            setPendingSplitPayments(
-              (splits || []).map((s, i) => ({
-                id: `split_${Date.now()}_${i}`,
-                method: "cash",
-                amount: Number(s.amount || 0),
-                meta: { person: s.person },
-                status: "pending",
-                paymentDetails: null,
-              }))
-            );
-            setIsBillSplitOpen(false);
-            setIsPaymentModalOpen(true);
-          }}
-        />
-      )}
-    </div>
-  );
-}
+import { useCallback, useEffect, useState } from "react";import { useParams, useNavigate } from "react-router-dom";import useAppStore from "@/store/useAppStore";import { useRestaurant } from "@/hooks/useRestaurant";import { fetchCategories } from "@/api/categories";import { fetchItems } from "@/api/items";import { fetchModifiers } from "@/api/modifers";import { createOrder } from "@/api/orders";import useCalculateDiscounts from "@/hooks/useCalculateDiscounts";import { mergeOrAddCartItem } from "@/utils/cartUtils";import { useToast } from "@/hooks/useToast";import POSHeader from "@/pages/pos/components/POSHeader";import CategoryTabs from "@/pages/pos/components/CategoryTabs";import ProductGrid from "@/pages/pos/components/ProductGrid";import Cart from "@/pages/pos/components/Cart";import PaymentModal from "@/pages/pos/components/PaymentModal";import { printInvoice, printKitchenOrder } from "@/utils/printUtils";import { Button, Input } from "@/components/ui";import BillSplitModal from "@/pages/pos/components/BillSplitModal";import ConfirmDialog from "@/components/common/ConfirmDialog";import { HiPrinter, HiArrowLeft } from "react-icons/hi2";import {  getTableById,  updateTable,  createTable,  clearTable,} from "@/api/tables";import LoadingSpinner from "@/components/ui/LoadingSpinner";export default function TablePOSPage() {  const { tableId } = useParams();  const restaurantId = useAppStore((s) => s.restaurantId);  const navigate = useNavigate();  const { restaurant, loading: restaurantLoading } = useRestaurant();  const { success: showSuccess, error: showError } = useToast();  const [categories, setCategories] = useState([]);  const [items, setItems] = useState({});  const [modifiers, setModifiers] = useState({});  const [selectedCategory, setSelectedCategory] = useState("all");  const [query, setQuery] = useState("");  const [cart, setCart] = useState([]);  const [couponCode, setCouponCode] = useState("");  const [loyaltyCard, setLoyaltyCard] = useState("");  const [discountResult, setDiscountResult] = useState({    totalDiscount: 0,    appliedDiscounts: [],    itemDiscounts: {},    discountBreakdown: [],  });  const [discountLoading, setDiscountLoading] = useState(false);  const [isCreatingOrder, setIsCreatingOrder] = useState(false);  const [loading, setLoading] = useState(true);  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);  const [isBillSplitOpen, setIsBillSplitOpen] = useState(false);  const [pendingSplitPayments, setPendingSplitPayments] = useState(null);  const [printInvoiceOnCheckout, setPrintInvoiceOnCheckout] = useState(true);  const [customerInfo, setCustomerInfo] = useState({    name: "",    phone: "",    email: "",  });  const [orderNotes, setOrderNotes] = useState("");  const [tableName, setTableName] = useState("");  const [tableUpdatedAt, setTableUpdatedAt] = useState(null);  const [isSavingTable, setIsSavingTable] = useState(false);  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);  const handleClearConfirm = async () => {    if (!tableId || isNewTable) return;    try {      const res = await clearTable(restaurantId, tableId, {        expectedUpdatedAt: tableUpdatedAt,      });      setCart([]);      setCustomerInfo({ name: "", phone: "", email: "" });      setTableUpdatedAt(res?.updatedAt || Date.now());      showSuccess("Table cleared successfully");    } catch (err) {      console.error("Failed to clear table:", err);      showError(err.response?.data?.error || "Failed to clear table");    } finally {      setIsClearDialogOpen(false);    }  };  const isNewTable = !tableId || tableId === "new";  const loadPOSData = useCallback(async () => {    setLoading(true);    try {      const [categoriesData, itemsData, modifiersData] = await Promise.all([        fetchCategories(restaurantId),        fetchItems(restaurantId, { q: query }),        fetchModifiers(restaurantId),      ]);      const catsArray = categoriesData?.categories || categoriesData || [];      setCategories(        Array.isArray(catsArray) ? catsArray : Object.values(catsArray)      );      const itemsArray = itemsData?.items || itemsData || [];      const itemsMap = Array.isArray(itemsArray)        ? itemsArray.reduce((acc, it) => ({ ...acc, [it.id]: it }), {})        : itemsArray;      setItems(itemsMap || {});      const modsArray = modifiersData?.modifiers || modifiersData || [];      const modsMap = Array.isArray(modsArray)        ? modsArray.reduce((acc, m) => ({ ...acc, [m.id]: m }), {})        : modsArray;      setModifiers(modsMap || {});    } catch (error) {      console.error("Failed to load POS data:", error);      showError("Failed to load data");    } finally {      setLoading(false);    }  }, [restaurantId, showError, query]);  const loadTableData = useCallback(async () => {    if (isNewTable || !tableId) return;    try {      const tableData = await getTableById(restaurantId, tableId);      setTableName(tableData.name || "");      if (tableData.items && tableData.items.length > 0) {        const cartItems = tableData.items.map((item) => ({          id: `${item.itemId}-${Date.now()}-${Math.random()}`,          itemId: item.itemId,          name: item.name,          price: item.price,          quantity: item.quantity,          selectedModifiers:            item.selectedModifiers || item.selectedOptions || [],          specialInstruction: item.notes || "",          modifierTotal: (            item.selectedModifiers ||            item.selectedOptions ||            []          ).reduce((sum, opt) => sum + (opt.price || 0), 0),        }));        setCart(cartItems);      }      if (tableData.customerInfo) {        setCustomerInfo(          tableData.customerInfo || { name: "", phone: "", email: "" }        );      }      setTableUpdatedAt(tableData.updatedAt || null);    } catch (error) {      console.error("Failed to load table:", error);      showError("Failed to load table data");    }  }, [restaurantId, tableId, isNewTable, showError]);  useEffect(() => {    if (restaurantId) {      loadPOSData();    }  }, [restaurantId, loadPOSData]);  useEffect(() => {    const handleFocus = () => {      if (restaurantId) {        loadPOSData();      }    };    window.addEventListener('focus', handleFocus);    return () => window.removeEventListener('focus', handleFocus);  }, [restaurantId, loadPOSData]);  useEffect(() => {    if (restaurantId) {      loadTableData();    }  }, [restaurantId, loadTableData]);  const cartItemsToCalc = cart.map((c) => ({    itemId: c.itemId,    name: c.name,    price: c.price,    quantity: c.quantity,    totalPrice:      (Number(c.price ?? 0) + Number(c.modifierTotal ?? 0)) *      Number(c.quantity ?? 0),    groupKey: c.id,    selectedOptions: c.selectedModifiers || [],  }));  const storeRestaurantId = useAppStore((s) => s.restaurantId);  const { loading: hookLoading, discountResult: hookResult } =    useCalculateDiscounts(restaurantId || storeRestaurantId, cartItemsToCalc, {      couponCode,      loyaltyCard,    });  useEffect(() => {    setDiscountLoading(hookLoading);    setDiscountResult(hookResult);  }, [hookLoading, hookResult]);  const addToCart = (    item,    selectedOptions = [],    quantity = 1,    specialInstruction = ""  ) => {    const displayPrice = Number(item?.discountedPrice ?? item?.price ?? 0);    const cartItem = {      id: `${item.id}-${Date.now()}`,      itemId: item.id,      name: item.name,      price: displayPrice,      quantity,      selectedModifiers: selectedOptions,      specialInstruction,      modifierTotal: selectedOptions.reduce(        (sum, opt) => sum + (opt.price || 0),        0      ),      image: item.image,      category: item.category,    };    setCart((prev) => mergeOrAddCartItem(prev, cartItem));  };  const updateCartItemQuantity = (cartItemId, newQuantity) => {    if (newQuantity <= 0) {      removeFromCart(cartItemId);      return;    }    setCart((prev) =>      prev.map((item) =>        item.id === cartItemId ? { ...item, quantity: newQuantity } : item      )    );  };  const removeFromCart = (cartItemId) => {    setCart((prev) => prev.filter((item) => item.id !== cartItemId));  };  const clearCart = () => {    setCart([]);    setCustomerInfo({ name: "", phone: "", email: "" });  };  const getCartSummary = () => {    const subtotal = cart.reduce((sum, item) => {      const itemTotal =        (Number(item.price ?? 0) + Number(item.modifierTotal ?? 0)) *        Number(item.quantity ?? 0);      return sum + itemTotal;    }, 0);    const totalDiscount = Number(discountResult?.totalDiscount ?? 0);    const taxableBase = subtotal - totalDiscount;    const taxRate = Number(restaurant?.taxRate ?? restaurant?.tax ?? 0) || 0;    const taxAmount = taxableBase * taxRate;    const total = taxableBase + taxAmount;    return { subtotal, totalDiscount, taxAmount, total, taxRate };  };  const handleSaveTable = async () => {    if (!tableName.trim()) {      showError("Please enter a table name");      return;    }    setIsSavingTable(true);    try {      const tableData = {        name: tableName.trim(),        items: cart.map((item) => ({          itemId: item.itemId,          name: item.name,          price: item.price,          quantity: item.quantity,          selectedModifiers: item.selectedModifiers,          notes: item.specialInstruction,        })),        customerInfo: customerInfo || { name: "", phone: "", email: "" },        notes: orderNotes || "",      };      if (isNewTable) {        const created = await createTable(restaurantId, tableData);        setTableUpdatedAt(created?.updatedAt || Date.now());        showSuccess("Table created successfully");      } else {        const updated = await updateTable(restaurantId, tableId, tableData, {          expectedUpdatedAt: tableUpdatedAt,        });        setTableUpdatedAt(updated?.updatedAt || Date.now());        showSuccess("Table saved successfully");      }      navigate(`/pos`);    } catch (error) {      console.error("Failed to save table:", error);      showError(error.response?.data?.error || "Failed to save table");    } finally {      setIsSavingTable(false);    }  };  const handlePrintKitchenOrder = () => {    if (cart.length === 0) {      showError("No items to print");      return;    }    try {      printKitchenOrder({        tableName: tableName || "New Table",        items: cart,        restaurantName: restaurant?.name,      });      showSuccess("Kitchen order sent to printer");    } catch (error) {      console.error("Failed to print kitchen order:", error);      showError("Failed to print kitchen order");    }  };  const handleCheckout = () => {    if (cart.length === 0) {      showError("Cart is empty");      return;    }    if (!tableName.trim()) {      showError("Please enter a table name before checkout");      return;    }    setIsPaymentModalOpen(true);  };  const handleCompletePayment = async (    paymentMethod,    splitPayments,    paymentDetails  ) => {    try {      setIsCreatingOrder(true);      const isFullyPaid = (() => {        if (paymentMethod === "split")          return (            Array.isArray(splitPayments) &&            splitPayments.length > 0 &&            splitPayments.every((sp) => sp.status === "paid")          );        if (paymentMethod === "cash") return true;        if (paymentMethod === "stripe")          return !!(            paymentDetails &&            (paymentDetails.success || paymentDetails.paymentIntentId)          );        if (paymentMethod === "bank_transfer")          return !!(paymentDetails && paymentDetails.paid);        return !!(paymentDetails && paymentDetails.success);      })();      const orderData = {        restaurantId,        tableId: isNewTable ? undefined : tableId,        tableName: tableName,        items: cart.map((item) => ({          itemId: item.itemId,          name: item.name,          price: item.price,          quantity: item.quantity,          selectedOptions: item.selectedModifiers,        })),        customerInfo,        notes: orderNotes,        total: getCartSummary().total,        paymentMethod: paymentMethod === "split" ? "split" : paymentMethod,        paymentStatus: isFullyPaid ? "paid" : "pending",        splitPayments: paymentMethod === "split" ? splitPayments : undefined,        paymentDetails,        orderType: "dine_in",        status: isFullyPaid ? "completed" : "pending",        createdAt: Date.now(),      };      const created = await createOrder(restaurantId, orderData);      showSuccess("Order completed successfully!");      if (isFullyPaid && printInvoiceOnCheckout) {        try {          const { subtotal, totalDiscount, taxAmount, total, taxRate } =            getCartSummary();          const invoiceData = {            orderNumber: created?.id || `ORD-${Date.now()}`,            date: Date.now(),            customerInfo,            items: cart,            subtotal: subtotal,            discount: totalDiscount,            taxAmount: taxAmount,            taxRate: taxRate,            total: total,          };          printInvoice(invoiceData, restaurant);        } catch (printErr) {          console.error("Failed to print invoice:", printErr);        }      }      if (!isNewTable) {        await clearTable(restaurantId, tableId, {          expectedUpdatedAt: tableUpdatedAt,        });      }      navigate(`/pos`);    } catch (error) {      console.error("Failed to complete payment:", error);      showError("Failed to complete payment");    } finally {      setIsCreatingOrder(false);      setIsPaymentModalOpen(false);    }  };  if (restaurantLoading || loading) {    return (      <div className="flex items-center justify-center min-h-screen">        <div className="text-center">          <LoadingSpinner size="xl" color="indigo" />          <p className="mt-4 text-gray-600">Loading...</p>        </div>      </div>    );  }  return (    <div className="h-screen flex flex-col bg-gray-50">      <div className="bg-white border-b px-6 py-4">        <div className="flex items-center justify-between">          <div className="flex items-center gap-4">            <Button              variant="ghost"              size="small"              onClick={() => navigate("/pos")}            >              <HiArrowLeft className="h-4 w-4 mr-2" />              Back to Tables            </Button>            <Button              variant="destructive"              size="small"              onClick={(e) => {                e.stopPropagation();                setIsClearDialogOpen(true);              }}              disabled={isNewTable || cart.length === 0}            >              Clear Table            </Button>            <div className="flex items-center gap-2">              <Input                label="Table Name"                value={tableName}                onChange={(e) => setTableName(e.target.value)}                placeholder="Enter table name..."                containerClassName="min-w-[200px]"                layout="horizontal"                fullWidth={false}              />            </div>          </div>          <div className="flex items-center gap-2">            <Button              variant="outline"              size="small"              onClick={handlePrintKitchenOrder}              disabled={cart.length === 0}            >              <HiPrinter className="h-4 w-4 mr-2" />              Print Kitchen Order            </Button>            <Button              onClick={handleSaveTable}              disabled={isSavingTable || !tableName.trim()}              size="small"            >              {isSavingTable ? "Saving..." : "Save Table"}            </Button>          </div>        </div>      </div>      <div className="flex-1 flex overflow-hidden">        <div className="flex-1 flex flex-col overflow-hidden">          <POSHeader            query={query}            onQueryChange={setQuery}            restaurant={restaurant}          />          <CategoryTabs            categories={categories}            items={items}            selectedCategory={selectedCategory}            onSelectCategory={setSelectedCategory}          />          <ProductGrid            categories={categories}            items={items}            modifiers={modifiers}            selectedCategory={selectedCategory}            query={query}            onAddToCart={addToCart}            discountResult={discountResult}          />        </div>        <div className="w-96 bg-white border-l flex flex-col">          <Cart            cart={cart}            onUpdateQuantity={updateCartItemQuantity}            onRemove={removeFromCart}            onClear={clearCart}            total={getCartSummary().total}            taxAmount={getCartSummary().taxAmount}            taxRate={getCartSummary().taxRate}            getCartSummary={getCartSummary}            discountResult={discountResult}            discountLoading={discountLoading}            couponCode={couponCode}            onCouponChange={setCouponCode}            loyaltyCard={loyaltyCard}            onLoyaltyCardChange={setLoyaltyCard}            onCheckout={handleCheckout}            onSplitBill={() => setIsBillSplitOpen(true)}            customerInfo={customerInfo}            onCustomerInfoChange={setCustomerInfo}            printInvoiceOnCheckout={printInvoiceOnCheckout}            onPrintInvoiceChange={setPrintInvoiceOnCheckout}          />        </div>      </div>      <ConfirmDialog        open={isClearDialogOpen}        title="Clear Table"        message="Are you sure you want to clear this table? This will remove all items from the table."        onConfirm={handleClearConfirm}        onCancel={() => setIsClearDialogOpen(false)}        confirmLabel="Clear"        cancelLabel="Cancel"      />      <PaymentModal        open={isPaymentModalOpen}        onOpenChange={setIsPaymentModalOpen}        total={getCartSummary().total}        cart={cart}        onComplete={handleCompletePayment}        isProcessing={isCreatingOrder}        customerName={customerInfo.name || "Guest"}        customerInfo={customerInfo}        orderNotes={orderNotes}        onOrderNotesChange={setOrderNotes}        onClose={() => setIsPaymentModalOpen(false)}        initialSplitPayments={pendingSplitPayments}        printOnCheckout={printInvoiceOnCheckout}        setPrintOnCheckout={setPrintInvoiceOnCheckout}        hideOrderTypeSelection={true}      />      {isBillSplitOpen && (        <BillSplitModal          cart={cart}          total={getCartSummary().total}          onClose={() => setIsBillSplitOpen(false)}          onSplit={(splits) => {            setPendingSplitPayments(              (splits || []).map((s, i) => ({                id: `split_${Date.now()}_${i}`,                method: "cash",                amount: Number(s.amount || 0),                meta: { person: s.person },                status: "pending",                paymentDetails: null,              }))            );            setIsBillSplitOpen(false);            setIsPaymentModalOpen(true);          }}        />      )}    </div>  );}

@@ -1,518 +1,1 @@
-import { resolveColor } from '@/components/builder/utils/colorUtils';
-import StyledText from "@/components/builder/atoms/StyledText";
-import { useContainerQuery } from '@/components/builder/hooks/useContainerQuery';
-
-export default function AboutUs({
-  title,
-  subtitle,
-  story,
-  mission,
-  values = [],
-  team = [],
-  stats = [],
-  showTeam,
-  showStats,
-  layout = "centered",
-  backgroundColor = "background",
-  textColor = "text",
-  subtitleColor = "muted",
-  globalStyles,
-  blockId,
-  anchorId,
-  image,
-  showDecorativeElements = true
-}) {
-  const { containerRef,  isTablet, isDesktop } = useContainerQuery();
-
-  const getColor = (colorKey) => {
-    return resolveColor(colorKey, globalStyles);
-  };
-
-  const renderSplit = () => (
-    <section
-      ref={containerRef}
-      className="py-20 px-4 md:px-8 relative overflow-hidden"
-      style={{ backgroundColor: getColor(backgroundColor) }}
-      id={anchorId || "about"}
-      data-block-id={blockId}
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-16 items-center mb-20`}>
-          <div>
-            <div data-control="about-header" data-block-id={blockId}>
-              {showDecorativeElements && (
-                <div
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
-                  style={{
-                    backgroundColor: getColor('surface'),
-                    color: getColor('primary')
-                  }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-current"></span>
-                  About Us
-                </div>
-              )}
-              {title && (
-                <StyledText
-                  tag="h2"
-                  className={`font-bold mb-6 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}
-                  styleConfig={{
-                    fontFamily: globalStyles?.typography?.headingFont,
-                    color: getColor(textColor),
-                  }}
-                >
-                  {title}
-                </StyledText>
-              )}
-              {subtitle && (
-                <StyledText
-                  tag="p"
-                  className="text-xl mb-8 leading-relaxed"
-                  styleConfig={{ color: getColor(subtitleColor) }}
-                >
-                  {subtitle}
-                </StyledText>
-              )}
-            </div>
-
-            {story && (
-              <div className="prose prose-lg max-w-none mb-8" data-control="about-story" data-block-id={blockId}>
-                <StyledText
-                  tag="div"
-                  className="leading-relaxed whitespace-pre-line"
-                  styleConfig={{ color: getColor(textColor) }}
-                >
-                  {story}
-                </StyledText>
-              </div>
-            )}
-
-            {showStats && stats.length > 0 && (
-              <div className="grid grid-cols-2 gap-8 mt-12" data-control="about-stats" data-block-id={blockId}>
-                {stats.map((stat, index) => (
-                  <div key={index}>
-                    <div className="text-3xl font-bold mb-1" style={{ color: getColor('primary') }}>{stat.value}</div>
-                    <div className="text-sm font-medium" style={{ color: getColor('muted') }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl transform rotate-3"></div>
-            <div className="relative bg-white rounded-3xl shadow-xl p-8 md:p-12" style={{ backgroundColor: getColor('surface') }}>
-              {image && (
-                <div className="mb-8 rounded-2xl overflow-hidden aspect-video shadow-sm" data-control="about-image" data-block-id={blockId}>
-                  <img src={image} alt={title || "About Us"} className="w-full h-full object-cover" />
-                </div>
-              )}
-              {(mission || values.length > 0) && (
-                <div className="space-y-12" data-control="about-mission" data-block-id={blockId}>
-                  {mission && (
-                    <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: getColor('primary') + '20' }}>
-                          <svg className="w-5 h-5" style={{ color: getColor('primary') }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <StyledText tag="h3" className="text-xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>
-                      </div>
-                      <StyledText tag="p" className="leading-relaxed" styleConfig={{ color: getColor('muted') }}>{mission}</StyledText>
-                    </div>
-                  )}
-
-                  {values.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: getColor('secondary') + '20' }}>
-                          <svg className="w-5 h-5" style={{ color: getColor('secondary') }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </div>
-                        <StyledText tag="h3" className="text-xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>
-                      </div>
-                      <div className="grid gap-3">
-                        {values.map((value, index) => (
-                          <div key={index} className="flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getColor('secondary') }}></div>
-                            <StyledText tag="span" styleConfig={{ color: getColor('muted') }}>{typeof value === 'object' ? value.value : value}</StyledText>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {showTeam && team.length > 0 && (
-          <div className="pt-12 border-t" style={{ borderColor: getColor('border') }} data-control="about-team" data-block-id={blockId}>
-            <div className="text-center mb-12">
-              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>
-            </div>
-            <div className={`grid ${isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-3' : 'grid-cols-1'} gap-8`}>
-              {team.map((member, index) => (
-                <div key={index} className="group">
-                  <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-100 relative">
-                    {member.image ? (
-                      <img src={member.image} alt={member.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
-                      </div>
-                    )}
-                  </div>
-                  <StyledText tag="h4" className="text-lg font-bold" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>
-                  <StyledText tag="p" className="text-sm font-medium" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-
-  const renderMinimal = () => (
-    <section
-      ref={containerRef}
-      className="py-20 px-4 md:px-8"
-      style={{ backgroundColor: getColor(backgroundColor) }}
-      id={anchorId || "about"}
-      data-block-id={blockId}
-    >
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16" data-control="about-header" data-block-id={blockId}>
-          {showDecorativeElements && (
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
-              style={{
-                backgroundColor: getColor('surface'),
-                color: getColor('primary')
-              }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              About Us
-            </div>
-          )}
-          {title && (
-            <StyledText
-              tag="h2"
-              className={`font-bold mb-6 ${isDesktop ? 'text-4xl' : 'text-3xl'}`}
-              styleConfig={{
-                fontFamily: globalStyles?.typography?.headingFont,
-                color: getColor(textColor),
-              }}
-            >
-              {title}
-            </StyledText>
-          )}
-          {subtitle && (
-            <StyledText
-              tag="p"
-              className="text-xl leading-relaxed text-gray-500"
-              styleConfig={{ color: getColor(subtitleColor) }}
-            >
-              {subtitle}
-            </StyledText>
-          )}
-        </div>
-
-        <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 lg:gap-20 mb-20 items-start`}>
-          <div className="prose prose-lg max-w-none">
-            {story && (
-              <StyledText
-                tag="div"
-                className="leading-relaxed whitespace-pre-line text-gray-600"
-                styleConfig={{ color: getColor('muted') }}
-                dataControl="about-story"
-                dataBlockId={blockId}
-              >
-                {story}
-              </StyledText>
-            )}
-          </div>
-          <div className="space-y-8" data-control="about-stats" data-block-id={blockId}>
-            {image && (
-              <div className="rounded-2xl overflow-hidden shadow-lg mb-8" data-control="about-image" data-block-id={blockId}>
-                <img src={image} alt={title || "About Us"} className="w-full h-auto" />
-              </div>
-            )}
-            {stats.map((stat, index) => (
-              <div key={index} className="border-l-4 pl-4" style={{ borderColor: getColor('primary') }}>
-                <div className="text-3xl font-bold" style={{ color: getColor(textColor) }}>{stat.value}</div>
-                <div className="text-sm text-gray-500">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {(mission || values.length > 0) && (
-          <div className={`grid ${isTablet || isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 pt-12 border-t border-gray-100`} data-control="about-mission" data-block-id={blockId}>
-            {mission && (
-              <div>
-                <StyledText tag="h3" className="text-lg font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>
-                <StyledText tag="p" className="text-gray-600 leading-relaxed" styleConfig={{ color: getColor('muted') }}>{mission}</StyledText>
-              </div>
-            )}
-            {values.length > 0 && (
-              <div>
-                <StyledText tag="h3" className="text-lg font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>
-                <ul className="space-y-2">
-                  {values.map((value, index) => (
-                    <li key={index} className="flex items-center gap-2 text-gray-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                      <StyledText tag="span" styleConfig={{ color: getColor('muted') }}>{typeof value === 'object' ? value.value : value}</StyledText>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {showTeam && team.length > 0 && (
-          <div className="pt-12 border-t border-gray-100 mt-12" data-control="about-team" data-block-id={blockId}>
-            <div className="text-center mb-12">
-              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>
-            </div>
-            <div className={`grid ${isDesktop ? 'grid-cols-3' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>
-              {team.map((member, index) => (
-                <div key={index} className="group">
-                  <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-100 relative">
-                    {member.image ? (
-                      <img src={member.image} alt={member.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
-                      </div>
-                    )}
-                  </div>
-                  <StyledText tag="h4" className="text-lg font-bold" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>
-                  <StyledText tag="p" className="text-sm font-medium" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section >
-  );
-
-  const renderCentered = () => (
-    <section
-      ref={containerRef}
-      className="py-20 px-4 md:px-8 relative overflow-hidden"
-      style={{ backgroundColor: getColor(backgroundColor) }}
-      id={anchorId || "about"}
-      data-block-id={blockId}
-    >
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto relative">
-        <div>
-          <div className="text-center mb-16" data-control="about-header" data-block-id={blockId}>
-            {showDecorativeElements && (
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
-                style={{
-                  backgroundColor: getColor('surface'),
-                  color: getColor('primary')
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                About Us
-              </div>
-            )}
-
-            {title && (
-              <StyledText
-                tag="h2"
-                className={`font-bold mb-4 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}
-                styleConfig={{
-                  fontFamily: globalStyles?.typography?.headingFont,
-                  color: getColor(textColor),
-                }}
-              >
-                <span style={{
-                  background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  color: 'transparent'
-                }}>
-                  {title}
-                </span>
-              </StyledText>
-            )}
-
-            {subtitle && (
-              <StyledText
-                tag="p"
-                className="text-xl max-w-2xl mx-auto leading-relaxed"
-                styleConfig={{ color: getColor(subtitleColor) }}
-              >
-                {subtitle}
-              </StyledText>
-            )}
-          </div>
-
-          {image && (
-            <div className="mb-16 rounded-3xl overflow-hidden shadow-2xl aspect-[21/9]" data-control="about-image" data-block-id={blockId}>
-              <img src={image} alt={title || "About Us"} className="w-full h-full object-cover" />
-            </div>
-          )}
-
-          {story && (
-            <div className="mb-16" data-control="about-story" data-block-id={blockId}>
-              <div className="rounded-2xl shadow-xl p-8 md:p-12" style={{ backgroundColor: getColor('surface') }}>
-                <div className="prose prose-lg max-w-none text-center mx-auto">
-                  <StyledText
-                    tag="div"
-                    className="leading-relaxed whitespace-pre-line"
-                    styleConfig={{ color: getColor(textColor) }}
-                  >
-                    {story}
-                  </StyledText>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {(mission || values.length > 0) && (
-          <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 mb-16`} data-control="about-mission" data-block-id={blockId}>
-            {mission && (
-              <div
-                className="rounded-2xl p-8 text-center"
-                style={{ backgroundColor: getColor('surface') }}
-              >
-                <div className="flex flex-col items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('primary') }}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <StyledText tag="h3" className="text-2xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>
-                </div>
-                <StyledText tag="p" className="leading-relaxed" styleConfig={{ color: getColor(textColor) }}>{mission}</StyledText>
-              </div>
-            )}
-
-            {values.length > 0 && (
-              <div
-                className="rounded-2xl p-8 text-center"
-                style={{ backgroundColor: getColor('surface') }}
-              >
-                <div className="flex flex-col items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('secondary') }}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <StyledText tag="h3" className="text-2xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>
-                </div>
-                <div className="flex flex-wrap justify-center gap-4">
-                  {values.map((value, index) => (
-                    <div key={index} className="flex items-center gap-2 px-4 py-2 rounded-full border" style={{ borderColor: getColor('border') }}>
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getColor('secondary') }}></div>
-                      <StyledText tag="span" styleConfig={{ color: getColor(textColor) }}>{typeof value === 'object' ? value.value : value}</StyledText>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {showStats && stats.length > 0 && (
-          <div className="mb-16" data-control="about-stats" data-block-id={blockId}>
-            <div className={`grid ${isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="rounded-xl shadow-lg p-6 text-center border"
-                  style={{
-                    backgroundColor: getColor('surface'),
-                    borderColor: getColor('border')
-                  }}
-                >
-                  <div className="text-3xl font-bold mb-2" style={{ color: getColor('primary') }}>{stat.value}</div>
-                  <div className="font-medium" style={{ color: getColor(textColor) }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showTeam && team.length > 0 && (
-          <div data-control="about-team" data-block-id={blockId}>
-            <div className="text-center mb-12">
-              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>
-              <StyledText tag="p" className="max-w-2xl mx-auto" styleConfig={{ color: getColor(textColor) }}>
-                The passionate people behind our success
-              </StyledText>
-            </div>
-
-            <div className={`grid ${isDesktop ? 'grid-cols-3' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>
-              {team.map((member, index) => (
-                <div
-                  key={index}
-                  className="rounded-xl shadow-lg overflow-hidden border"
-                  style={{
-                    backgroundColor: getColor('surface'),
-                    borderColor: getColor('border')
-                  }}
-                >
-                  <div className="aspect-square flex items-center justify-center" style={{ backgroundColor: getColor('surface') }}>
-                    {member.image ? (
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: getColor('muted') }}>
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6 text-center">
-                    <StyledText tag="h4" className="text-xl font-bold mb-1" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>
-                    <StyledText tag="p" className="font-medium mb-3" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>
-                    {member.bio && (
-                      <StyledText tag="p" className="text-sm leading-relaxed" styleConfig={{ color: getColor(textColor) }}>{member.bio}</StyledText>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section >
-  );
-
-  switch (layout) {
-    case 'split':
-      return renderSplit();
-    case 'minimal':
-      return renderMinimal();
-    case 'centered':
-    default:
-      return renderCentered();
-  }
-}
+import { resolveColor } from '@/components/builder/utils/colorUtils';import StyledText from "@/components/builder/atoms/StyledText";import { useContainerQuery } from '@/components/builder/hooks/useContainerQuery';export default function AboutUs({  title,  subtitle,  story,  mission,  values = [],  team = [],  stats = [],  showTeam,  showStats,  layout = "centered",  backgroundColor = "background",  textColor = "text",  subtitleColor = "muted",  globalStyles,  blockId,  anchorId,  image,  showDecorativeElements = true}) {  const { containerRef,  isTablet, isDesktop } = useContainerQuery();  const getColor = (colorKey) => {    return resolveColor(colorKey, globalStyles);  };  const renderSplit = () => (    <section      ref={containerRef}      className="py-20 px-4 md:px-8 relative overflow-hidden"      style={{ backgroundColor: getColor(backgroundColor) }}      id={anchorId || "about"}      data-block-id={blockId}    >      <div className="max-w-7xl mx-auto">        <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-16 items-center mb-20`}>          <div>            <div data-control="about-header" data-block-id={blockId}>              {showDecorativeElements && (                <div                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"                  style={{                    backgroundColor: getColor('surface'),                    color: getColor('primary')                  }}                >                  <span className="w-2 h-2 rounded-full bg-current"></span>                  About Us                </div>              )}              {title && (                <StyledText                  tag="h2"                  className={`font-bold mb-6 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}                  styleConfig={{                    fontFamily: globalStyles?.typography?.headingFont,                    color: getColor(textColor),                  }}                >                  {title}                </StyledText>              )}              {subtitle && (                <StyledText                  tag="p"                  className="text-xl mb-8 leading-relaxed"                  styleConfig={{ color: getColor(subtitleColor) }}                >                  {subtitle}                </StyledText>              )}            </div>            {story && (              <div className="prose prose-lg max-w-none mb-8" data-control="about-story" data-block-id={blockId}>                <StyledText                  tag="div"                  className="leading-relaxed whitespace-pre-line"                  styleConfig={{ color: getColor(textColor) }}                >                  {story}                </StyledText>              </div>            )}            {showStats && stats.length > 0 && (              <div className="grid grid-cols-2 gap-8 mt-12" data-control="about-stats" data-block-id={blockId}>                {stats.map((stat, index) => (                  <div key={index}>                    <div className="text-3xl font-bold mb-1" style={{ color: getColor('primary') }}>{stat.value}</div>                    <div className="text-sm font-medium" style={{ color: getColor('muted') }}>{stat.label}</div>                  </div>                ))}              </div>            )}          </div>          <div className="relative">            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl transform rotate-3"></div>            <div className="relative bg-white rounded-3xl shadow-xl p-8 md:p-12" style={{ backgroundColor: getColor('surface') }}>              {image && (                <div className="mb-8 rounded-2xl overflow-hidden aspect-video shadow-sm" data-control="about-image" data-block-id={blockId}>                  <img src={image} alt={title || "About Us"} className="w-full h-full object-cover" />                </div>              )}              {(mission || values.length > 0) && (                <div className="space-y-12" data-control="about-mission" data-block-id={blockId}>                  {mission && (                    <div>                      <div className="flex items-center gap-3 mb-4">                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: getColor('primary') + '20' }}>                          <svg className="w-5 h-5" style={{ color: getColor('primary') }} fill="none" stroke="currentColor" viewBox="0 0 24 24">                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />                          </svg>                        </div>                        <StyledText tag="h3" className="text-xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>                      </div>                      <StyledText tag="p" className="leading-relaxed" styleConfig={{ color: getColor('muted') }}>{mission}</StyledText>                    </div>                  )}                  {values.length > 0 && (                    <div>                      <div className="flex items-center gap-3 mb-4">                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: getColor('secondary') + '20' }}>                          <svg className="w-5 h-5" style={{ color: getColor('secondary') }} fill="none" stroke="currentColor" viewBox="0 0 24 24">                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />                          </svg>                        </div>                        <StyledText tag="h3" className="text-xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>                      </div>                      <div className="grid gap-3">                        {values.map((value, index) => (                          <div key={index} className="flex items-center gap-3">                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getColor('secondary') }}></div>                            <StyledText tag="span" styleConfig={{ color: getColor('muted') }}>{typeof value === 'object' ? value.value : value}</StyledText>                          </div>                        ))}                      </div>                    </div>                  )}                </div>              )}            </div>          </div>        </div>        {showTeam && team.length > 0 && (          <div className="pt-12 border-t" style={{ borderColor: getColor('border') }} data-control="about-team" data-block-id={blockId}>            <div className="text-center mb-12">              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>            </div>            <div className={`grid ${isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-3' : 'grid-cols-1'} gap-8`}>              {team.map((member, index) => (                <div key={index} className="group">                  <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-100 relative">                    {member.image ? (                      <img src={member.image} alt={member.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />                    ) : (                      <div className="w-full h-full flex items-center justify-center text-gray-300">                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>                      </div>                    )}                  </div>                  <StyledText tag="h4" className="text-lg font-bold" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>                  <StyledText tag="p" className="text-sm font-medium" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>                </div>              ))}            </div>          </div>        )}      </div>    </section>  );  const renderMinimal = () => (    <section      ref={containerRef}      className="py-20 px-4 md:px-8"      style={{ backgroundColor: getColor(backgroundColor) }}      id={anchorId || "about"}      data-block-id={blockId}    >      <div className="max-w-4xl mx-auto">        <div className="text-center mb-16" data-control="about-header" data-block-id={blockId}>          {showDecorativeElements && (            <div              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"              style={{                backgroundColor: getColor('surface'),                color: getColor('primary')              }}            >              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />              </svg>              About Us            </div>          )}          {title && (            <StyledText              tag="h2"              className={`font-bold mb-6 ${isDesktop ? 'text-4xl' : 'text-3xl'}`}              styleConfig={{                fontFamily: globalStyles?.typography?.headingFont,                color: getColor(textColor),              }}            >              {title}            </StyledText>          )}          {subtitle && (            <StyledText              tag="p"              className="text-xl leading-relaxed text-gray-500"              styleConfig={{ color: getColor(subtitleColor) }}            >              {subtitle}            </StyledText>          )}        </div>        <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 lg:gap-20 mb-20 items-start`}>          <div className="prose prose-lg max-w-none">            {story && (              <StyledText                tag="div"                className="leading-relaxed whitespace-pre-line text-gray-600"                styleConfig={{ color: getColor('muted') }}                dataControl="about-story"                dataBlockId={blockId}              >                {story}              </StyledText>            )}          </div>          <div className="space-y-8" data-control="about-stats" data-block-id={blockId}>            {image && (              <div className="rounded-2xl overflow-hidden shadow-lg mb-8" data-control="about-image" data-block-id={blockId}>                <img src={image} alt={title || "About Us"} className="w-full h-auto" />              </div>            )}            {stats.map((stat, index) => (              <div key={index} className="border-l-4 pl-4" style={{ borderColor: getColor('primary') }}>                <div className="text-3xl font-bold" style={{ color: getColor(textColor) }}>{stat.value}</div>                <div className="text-sm text-gray-500">{stat.label}</div>              </div>            ))}          </div>        </div>        {(mission || values.length > 0) && (          <div className={`grid ${isTablet || isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 pt-12 border-t border-gray-100`} data-control="about-mission" data-block-id={blockId}>            {mission && (              <div>                <StyledText tag="h3" className="text-lg font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>                <StyledText tag="p" className="text-gray-600 leading-relaxed" styleConfig={{ color: getColor('muted') }}>{mission}</StyledText>              </div>            )}            {values.length > 0 && (              <div>                <StyledText tag="h3" className="text-lg font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>                <ul className="space-y-2">                  {values.map((value, index) => (                    <li key={index} className="flex items-center gap-2 text-gray-600">                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>                      <StyledText tag="span" styleConfig={{ color: getColor('muted') }}>{typeof value === 'object' ? value.value : value}</StyledText>                    </li>                  ))}                </ul>              </div>            )}          </div>        )}        {showTeam && team.length > 0 && (          <div className="pt-12 border-t border-gray-100 mt-12" data-control="about-team" data-block-id={blockId}>            <div className="text-center mb-12">              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>            </div>            <div className={`grid ${isDesktop ? 'grid-cols-3' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>              {team.map((member, index) => (                <div key={index} className="group">                  <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-100 relative">                    {member.image ? (                      <img src={member.image} alt={member.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />                    ) : (                      <div className="w-full h-full flex items-center justify-center text-gray-300">                        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>                      </div>                    )}                  </div>                  <StyledText tag="h4" className="text-lg font-bold" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>                  <StyledText tag="p" className="text-sm font-medium" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>                </div>              ))}            </div>          </div>        )}      </div>    </section >  );  const renderCentered = () => (    <section      ref={containerRef}      className="py-20 px-4 md:px-8 relative overflow-hidden"      style={{ backgroundColor: getColor(backgroundColor) }}      id={anchorId || "about"}      data-block-id={blockId}    >      <div className="absolute inset-0 opacity-5">        <div className="absolute top-20 left-20 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: getColor('primary') }}></div>        <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: getColor('secondary') }}></div>      </div>      <div className="max-w-7xl mx-auto relative">        <div>          <div className="text-center mb-16" data-control="about-header" data-block-id={blockId}>            {showDecorativeElements && (              <div                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"                style={{                  backgroundColor: getColor('surface'),                  color: getColor('primary')                }}              >                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />                </svg>                About Us              </div>            )}            {title && (              <StyledText                tag="h2"                className={`font-bold mb-4 leading-tight ${isDesktop ? 'text-5xl' : 'text-4xl'}`}                styleConfig={{                  fontFamily: globalStyles?.typography?.headingFont,                  color: getColor(textColor),                }}              >                <span style={{                  background: `linear-gradient(to right, ${getColor('primary')}, ${getColor('secondary')})`,                  backgroundClip: 'text',                  WebkitBackgroundClip: 'text',                  WebkitTextFillColor: 'transparent',                  color: 'transparent'                }}>                  {title}                </span>              </StyledText>            )}            {subtitle && (              <StyledText                tag="p"                className="text-xl max-w-2xl mx-auto leading-relaxed"                styleConfig={{ color: getColor(subtitleColor) }}              >                {subtitle}              </StyledText>            )}          </div>          {image && (            <div className="mb-16 rounded-3xl overflow-hidden shadow-2xl aspect-[21/9]" data-control="about-image" data-block-id={blockId}>              <img src={image} alt={title || "About Us"} className="w-full h-full object-cover" />            </div>          )}          {story && (            <div className="mb-16" data-control="about-story" data-block-id={blockId}>              <div className="rounded-2xl shadow-xl p-8 md:p-12" style={{ backgroundColor: getColor('surface') }}>                <div className="prose prose-lg max-w-none text-center mx-auto">                  <StyledText                    tag="div"                    className="leading-relaxed whitespace-pre-line"                    styleConfig={{ color: getColor(textColor) }}                  >                    {story}                  </StyledText>                </div>              </div>            </div>          )}        </div>        {(mission || values.length > 0) && (          <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-12 mb-16`} data-control="about-mission" data-block-id={blockId}>            {mission && (              <div                className="rounded-2xl p-8 text-center"                style={{ backgroundColor: getColor('surface') }}              >                <div className="flex flex-col items-center gap-3 mb-6">                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('primary') }}>                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />                    </svg>                  </div>                  <StyledText tag="h3" className="text-2xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Mission</StyledText>                </div>                <StyledText tag="p" className="leading-relaxed" styleConfig={{ color: getColor(textColor) }}>{mission}</StyledText>              </div>            )}            {values.length > 0 && (              <div                className="rounded-2xl p-8 text-center"                style={{ backgroundColor: getColor('surface') }}              >                <div className="flex flex-col items-center gap-3 mb-6">                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: getColor('secondary') }}>                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />                    </svg>                  </div>                  <StyledText tag="h3" className="text-2xl font-bold" styleConfig={{ color: getColor(textColor) }}>Our Values</StyledText>                </div>                <div className="flex flex-wrap justify-center gap-4">                  {values.map((value, index) => (                    <div key={index} className="flex items-center gap-2 px-4 py-2 rounded-full border" style={{ borderColor: getColor('border') }}>                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getColor('secondary') }}></div>                      <StyledText tag="span" styleConfig={{ color: getColor(textColor) }}>{typeof value === 'object' ? value.value : value}</StyledText>                    </div>                  ))}                </div>              </div>            )}          </div>        )}        {showStats && stats.length > 0 && (          <div className="mb-16" data-control="about-stats" data-block-id={blockId}>            <div className={`grid ${isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>              {stats.map((stat, index) => (                <div                  key={index}                  className="rounded-xl shadow-lg p-6 text-center border"                  style={{                    backgroundColor: getColor('surface'),                    borderColor: getColor('border')                  }}                >                  <div className="text-3xl font-bold mb-2" style={{ color: getColor('primary') }}>{stat.value}</div>                  <div className="font-medium" style={{ color: getColor(textColor) }}>{stat.label}</div>                </div>              ))}            </div>          </div>        )}        {showTeam && team.length > 0 && (          <div data-control="about-team" data-block-id={blockId}>            <div className="text-center mb-12">              <StyledText tag="h3" className="text-3xl font-bold mb-4" styleConfig={{ color: getColor(textColor) }}>Meet Our Team</StyledText>              <StyledText tag="p" className="max-w-2xl mx-auto" styleConfig={{ color: getColor(textColor) }}>                The passionate people behind our success              </StyledText>            </div>            <div className={`grid ${isDesktop ? 'grid-cols-3' : isTablet ? 'grid-cols-2' : 'grid-cols-1'} gap-8`}>              {team.map((member, index) => (                <div                  key={index}                  className="rounded-xl shadow-lg overflow-hidden border"                  style={{                    backgroundColor: getColor('surface'),                    borderColor: getColor('border')                  }}                >                  <div className="aspect-square flex items-center justify-center" style={{ backgroundColor: getColor('surface') }}>                    {member.image ? (                      <img                        src={member.image}                        alt={member.name}                        className="w-full h-full object-cover"                      />                    ) : (                      <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: getColor('muted') }}>                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />                        </svg>                      </div>                    )}                  </div>                  <div className="p-6 text-center">                    <StyledText tag="h4" className="text-xl font-bold mb-1" styleConfig={{ color: getColor(textColor) }}>{member.name}</StyledText>                    <StyledText tag="p" className="font-medium mb-3" styleConfig={{ color: getColor('primary') }}>{member.role}</StyledText>                    {member.bio && (                      <StyledText tag="p" className="text-sm leading-relaxed" styleConfig={{ color: getColor(textColor) }}>{member.bio}</StyledText>                    )}                  </div>                </div>              ))}            </div>          </div>        )}      </div>    </section >  );  switch (layout) {    case 'split':      return renderSplit();    case 'minimal':      return renderMinimal();    case 'centered':    default:      return renderCentered();  }}

@@ -64,13 +64,12 @@ describe('Tables Controller concurrency + permission tests', () => {
   beforeEach(() => {
     admin.__helpers.auth.verifyIdToken.mockReset();
     admin.__helpers.dbRefMap.clear();
-    // default to admin token
+
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'admin', admin: true });
   });
 
   test('permission: deny staff without pos read permission', async () => {
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'staff1', admin: false, role: 'staff' });
-    // staff membership exists with roleX that lacks pos.read
     admin.__helpers.dbRefMap.set(`restaurants/${restId}/staff/staff1`, { roleId: 'roleX' });
     admin.__helpers.dbRefMap.set(`restaurants/${restId}/roles/roleX`, { permissions: { pos: { read: false } } });
 
@@ -100,11 +99,9 @@ describe('Tables Controller concurrency + permission tests', () => {
   });
 
   test('permission: allow update with pos.update', async () => {
-    // create table as admin
     const createRes = await request(app).post(`/api/restaurants/${restId}/tables`).set('Authorization', 'Bearer token').send({ name: 'P2', items: [] });
     expect(createRes.status).toBe(201);
     const t = createRes.body;
-    // mock staff with pos.update
     admin.__helpers.auth.verifyIdToken.mockResolvedValue({ uid: 'staff4', admin: false, role: 'staff' });
     admin.__helpers.dbRefMap.set(`restaurants/${restId}/staff/staff4`, { roleId: 'roleYesUpdate' });
     admin.__helpers.dbRefMap.set(`restaurants/${restId}/roles/roleYesUpdate`, { permissions: { pos: { read: true, update: true } } });
@@ -134,21 +131,18 @@ describe('Tables Controller concurrency + permission tests', () => {
   });
 
   test('concurrency: 409 on stale update', async () => {
-    // create table
     const createRes = await request(app)
       .post(`/api/restaurants/${restId}/tables`)
       .set('Authorization', 'Bearer token')
       .send({ name: 'Table A', items: [] });
     expect(createRes.status).toBe(201);
     const table = createRes.body;
-    // update once with expected timestamp
     const expected = table.updatedAt || Date.now();
     const u1 = await request(app)
       .put(`/api/restaurants/${restId}/tables/${table.id}`)
       .set('Authorization', 'Bearer token')
       .send({ name: 'Updated 1', items: [], expectedUpdatedAt: expected });
     expect(u1.status).toBe(200);
-    // attempt update with stale expectedUpdatedAt
     const u2 = await request(app)
       .put(`/api/restaurants/${restId}/tables/${table.id}`)
       .set('Authorization', 'Bearer token')
@@ -176,9 +170,9 @@ describe('Tables Controller concurrency + permission tests', () => {
     expect(res3.status).toBe(201);
     const target = res3.body;
 
-    // create expected map with outdated timestamp for t1
+
     const expectedMap = {};
-    expectedMap[t1.id] = 0; // stale
+    expectedMap[t1.id] = 0; 
     expectedMap[t2.id] = t2.updatedAt || 0;
     expectedMap[target.id] = target.updatedAt || 0;
 
@@ -196,13 +190,12 @@ describe('Tables Controller concurrency + permission tests', () => {
       .send({ name: 'ClearTest', items: [{ itemId: 'i1', name: 'A1', price: 100, quantity: 1 }] });
     expect(res.status).toBe(201);
     const t = res.body;
-    // Clear with correct timestamp
     const clearRes = await request(app)
       .post(`/api/restaurants/${restId}/tables/${t.id}/clear`)
       .set('Authorization', 'Bearer token')
       .send({ expectedUpdatedAt: t.updatedAt || 0 });
     expect(clearRes.status).toBe(200);
-    // Attempt clear with stale timestamp (use original timestamp again)
+
     const clearRes2 = await request(app)
       .post(`/api/restaurants/${restId}/tables/${t.id}/clear`)
       .set('Authorization', 'Bearer token')

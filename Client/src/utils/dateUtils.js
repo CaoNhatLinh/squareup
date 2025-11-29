@@ -1,29 +1,1 @@
-export const formatDate = (timestamp) => {
-  if (!timestamp) return '';
-  return new Date(timestamp).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-export const formatDateShort = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric'
-  });
-};
-export const formatTime = (timeString) => {
-  if (!timeString) return '';
-  return timeString;
-};
-export const isPastDate = (dateString) => {
-  if (!dateString) return false;
-  const date = new Date(dateString);
-  const now = new Date();
-  return date < now;
-};
+export const formatDate = (timestamp) => {  if (!timestamp) return '';  return new Date(timestamp).toLocaleString("en-US", {    year: "numeric",    month: "short",    day: "numeric",    hour: "2-digit",    minute: "2-digit",  });};export const formatDateShort = (dateString) => {  if (!dateString) return '';  const date = new Date(dateString);  return date.toLocaleDateString('en-US', {    month: '2-digit',    day: '2-digit',    year: 'numeric'  });};export const formatTime = (timeString) => {  if (!timeString) return '';  return timeString;};export const isPastDate = (dateString) => {  if (!dateString) return false;  const date = new Date(dateString);  const now = new Date();  return date < now;};

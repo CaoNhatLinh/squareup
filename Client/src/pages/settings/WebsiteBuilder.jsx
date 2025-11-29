@@ -1,38 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  arrayMove,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { ref, get, update } from "firebase/database";
 import { rtdb } from "@/firebase";
+import { getUserPermissions } from "@/api/roles";
 import {
   updateRestaurantSiteConfig,
   generateSlug,
   isSlugAvailable,
-} from '@/api/siteConfig';
-import { DEFAULT_SITE_CONFIG } from '@/utils/siteConfigUtils';
+} from "@/api/siteConfig";
+import { DEFAULT_SITE_CONFIG } from "@/utils/siteConfigUtils";
 import { BLOCK_TYPES } from "@/components/builder/blockTypes";
 import { ShopProvider } from "@/context/ShopProvider";
 import useAppStore from "@/store/useAppStore";
+import { useAuth } from "@/hooks/useAuth";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import { useToast } from "@/hooks/useToast";
-import { useLoading } from "@/context/LoadingContext";
 import BuilderContent from "@/components/builder/BuilderContent";
-
+import AccessDenied from "@/components/common/AccessDenied";
 import { deepMerge } from "@/utils/objectUtils";
 import { DEFAULT_GLOBAL_STYLES } from "@/components/builder/config/defaults";
-
 import {
   useSensor,
   useSensors,
   PointerSensor,
   KeyboardSensor,
 } from "@dnd-kit/core";
-
-
 export default function WebsiteBuilder() {
   const restaurantId = useAppStore((s) => s.restaurantId);
-  const { success: showSuccess, error: showError, warning: showWarning } = useToast();
-  const { showLoading, hideLoading } = useLoading();
+  const {
+    success: showSuccess,
+    error: showError,
+    warning: showWarning,
+  } = useToast();
   const [layout, setLayout] = useState([]);
   const [headerConfig, setHeaderConfig] = useState(
     BLOCK_TYPES.find((t) => t.type === "HEADER").defaultProps
@@ -41,38 +40,74 @@ export default function WebsiteBuilder() {
     BLOCK_TYPES.find((t) => t.type === "FOOTER").defaultProps
   );
   const [globalStyles, setGlobalStyles] = useState(DEFAULT_GLOBAL_STYLES);
-
-
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   const [activeControl, setActiveControl] = useState(null);
-
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [saving, setSaving] = useState(false);
-  // const [loading, setLoading] = useState(true); // Removed local loading state
-
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-
+  const { user } = useAuth();
+  const { restaurant, updateRestaurant } = useRestaurant();
+  const [hasAccess, setHasAccess] = useState(null);
+  const [hasRead, setHasRead] = useState(null);
+  const [userPermissions, setUserPermissions] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!restaurant || !user) return;
+      if (restaurant.ownerId === user.uid) {
+        setHasAccess(true);
+        setIsOwner(true);
+        setUserPermissions(null);
+        return;
+      }
+      try {
+        const data = await getUserPermissions(restaurant.id);
+        if (data.isOwner) {
+          setHasAccess(true);
+          setIsOwner(true);
+          setUserPermissions(null);
+          return;
+        }
+          const perms = data.permissions && data.permissions.web_builder;
+          const access = Boolean(perms?.access);
+          const read = Boolean(perms?.read);
+          const updatePerm = Boolean(perms?.update);
+          const createPerm = Boolean(perms?.create);
+          // For viewing the Website Builder we require BOTH access and read
+          setHasAccess(access && read);
+          // Track read permission separately for conditional data fetching
+          setHasRead(read);
+          setUserPermissions(data.permissions);
+        setIsOwner(false);
+      } catch (err) {
+        console.error("Error checking permissions:", err);
+        setHasAccess(false);
+        setUserPermissions(null);
+        setIsOwner(false);
+      }
+    };
+    checkAccess();
+  }, [restaurant, user]);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
   useEffect(() => {
     async function loadSiteConfig() {
+      // Only load site config if we have explicit read access OR if owner
       if (!restaurantId) return;
-
-      showLoading("Loading builder...");
-
+      if (!isOwner && hasRead === false) return;
+      // If still checking permissions, wait
+      if (!isOwner && hasRead === null) return;
       try {
         const restaurantRef = ref(rtdb, `restaurants/${restaurantId}`);
         const snapshot = await get(restaurantRef);
-
         if (snapshot.exists()) {
           const data = snapshot.val();
           const config =
@@ -85,9 +120,7 @@ export default function WebsiteBuilder() {
               props: deepMerge(blockType.defaultProps, block.props || {}),
             };
           });
-
           setLayout(initialLayout);
-
           let loadedHeader = BLOCK_TYPES.find(
             (t) => t.type === "HEADER"
           ).defaultProps;
@@ -95,11 +128,6 @@ export default function WebsiteBuilder() {
             (t) => t.type === "FOOTER"
           ).defaultProps;
           let loadedStyles = DEFAULT_GLOBAL_STYLES;
-          let loadedComponentStyles = {
-            promotion: "popup",
-            restaurant: "card",
-          };
-
           if (config.headerConfig)
             loadedHeader = deepMerge(loadedHeader, config.headerConfig);
           if (config.footerConfig)
@@ -115,23 +143,17 @@ export default function WebsiteBuilder() {
               },
             };
           }
-          if (config.componentStyles)
-            loadedComponentStyles = deepMerge(loadedComponentStyles, config.componentStyles);
-
           setHeaderConfig(loadedHeader);
           setFooterConfig(loadedFooter);
           setGlobalStyles(loadedStyles);
-
           setSlug(data.slug || "");
           setOriginalSlug(data.slug || "");
-
           setHistory([
             {
               layout: initialLayout,
               headerConfig: loadedHeader,
               footerConfig: loadedFooter,
               globalStyles: loadedStyles,
-              componentStyles: loadedComponentStyles,
             },
           ]);
           setHistoryIndex(0);
@@ -157,30 +179,40 @@ export default function WebsiteBuilder() {
       } catch (error) {
         console.error("Error loading site config:", error);
         showError("Failed to load site configuration");
-      } finally {
-        hideLoading();
       }
     }
-
     loadSiteConfig();
-  }, [restaurantId, showLoading, hideLoading, showError]);
-
+  }, [restaurantId, showError, hasRead, isOwner]);
   const updateState = useCallback(
     (updates) => {
-      setLayout((prevLayout) => updates.layout !== undefined ? updates.layout : prevLayout);
-      setHeaderConfig((prevHeader) => updates.headerConfig !== undefined ? updates.headerConfig : prevHeader);
-      setFooterConfig((prevFooter) => updates.footerConfig !== undefined ? updates.footerConfig : prevFooter);
-      setGlobalStyles((prevStyles) => updates.globalStyles !== undefined ? updates.globalStyles : prevStyles);
-
-
+      setLayout((prevLayout) =>
+        updates.layout !== undefined ? updates.layout : prevLayout
+      );
+      setHeaderConfig((prevHeader) =>
+        updates.headerConfig !== undefined ? updates.headerConfig : prevHeader
+      );
+      setFooterConfig((prevFooter) =>
+        updates.footerConfig !== undefined ? updates.footerConfig : prevFooter
+      );
+      setGlobalStyles((prevStyles) =>
+        updates.globalStyles !== undefined ? updates.globalStyles : prevStyles
+      );
       setHistory((prevHistory) => {
         const currentState = {
           layout: updates.layout !== undefined ? updates.layout : layout,
-          headerConfig: updates.headerConfig !== undefined ? updates.headerConfig : headerConfig,
-          footerConfig: updates.footerConfig !== undefined ? updates.footerConfig : footerConfig,
-          globalStyles: updates.globalStyles !== undefined ? updates.globalStyles : globalStyles,
+          headerConfig:
+            updates.headerConfig !== undefined
+              ? updates.headerConfig
+              : headerConfig,
+          footerConfig:
+            updates.footerConfig !== undefined
+              ? updates.footerConfig
+              : footerConfig,
+          globalStyles:
+            updates.globalStyles !== undefined
+              ? updates.globalStyles
+              : globalStyles,
         };
-
         const newHistory = prevHistory.slice(0, historyIndex + 1);
         newHistory.push(currentState);
         setHistoryIndex(newHistory.length - 1);
@@ -189,7 +221,6 @@ export default function WebsiteBuilder() {
     },
     [layout, headerConfig, footerConfig, globalStyles, historyIndex]
   );
-
   const handleUndo = () => {
     if (historyIndex > 0) {
       const prevState = history[historyIndex - 1];
@@ -200,7 +231,6 @@ export default function WebsiteBuilder() {
       if (prevState.globalStyles) setGlobalStyles(prevState.globalStyles);
     }
   };
-
   const handleRedo = () => {
     if (historyIndex < history.length - 1) {
       const nextState = history[historyIndex + 1];
@@ -211,7 +241,6 @@ export default function WebsiteBuilder() {
       if (nextState.globalStyles) setGlobalStyles(nextState.globalStyles);
     }
   };
-
   const handleAddBlock = (blockType) => {
     const newBlock = {
       id: `block-${Date.now()}`,
@@ -223,7 +252,6 @@ export default function WebsiteBuilder() {
     setSelectedBlockId(newBlock.id);
     setSelectedSection("block");
   };
-
   const handleRemoveBlock = (blockId) => {
     const newLayout = layout.filter((b) => b.id !== blockId);
     updateState({ layout: newLayout });
@@ -231,17 +259,14 @@ export default function WebsiteBuilder() {
       setSelectedBlockId(null);
     }
   };
-
   const handleUpdateBlock = (updatedBlock) => {
     const newLayout = layout.map((b) =>
       b.id === updatedBlock.id ? updatedBlock : b
     );
     updateState({ layout: newLayout });
   };
-
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     if (active.id !== over.id) {
       const oldIndex = layout.findIndex((item) => item.id === active.id);
       const newIndex = layout.findIndex((item) => item.id === over.id);
@@ -249,7 +274,6 @@ export default function WebsiteBuilder() {
       updateState({ layout: newLayout });
     }
   };
-
   const handleMoveBlockUp = (block) => {
     const index = layout.findIndex((b) => b.id === block.id);
     if (index > 0) {
@@ -260,7 +284,6 @@ export default function WebsiteBuilder() {
       setSelectedBlockId(block.id);
     }
   };
-
   const handleMoveBlockDown = (block) => {
     const index = layout.findIndex((b) => b.id === block.id);
     if (index < layout.length - 1) {
@@ -271,7 +294,6 @@ export default function WebsiteBuilder() {
       setSelectedBlockId(block.id);
     }
   };
-
   const handleDuplicateBlock = (block) => {
     const index = layout.findIndex((b) => b.id === block.id);
     const copy = { ...block, id: `block-${Date.now()}` };
@@ -280,25 +302,24 @@ export default function WebsiteBuilder() {
     updateState(newLayout);
     setSelectedBlockId(copy.id);
   };
-
   const handleQuickSwapVariant = (block) => {
     const blockType = BLOCK_TYPES.find((t) => t.type === block.type);
     if (!blockType) return;
     const variantField = blockType.schema?.find((s) => s.name === "variant");
     if (!variantField || !Array.isArray(variantField.options)) return;
-
     const current = block.props?.variant || variantField.options[0]?.value;
     const opts = variantField.options.map((o) => o.value);
     const idx = opts.indexOf(current);
     const next = opts[(idx + 1) % opts.length];
-
     handleUpdateBlock({ ...block, props: { ...block.props, variant: next } });
   };
-
   const handleSaveDraft = async () => {
     if (!restaurantId) return;
+    if (!canEdit) {
+      showError("You don't have permission to save drafts.");
+      return;
+    }
     setSaving(true);
-    showLoading("Saving draft...");
     try {
       await update(ref(rtdb, `restaurants/${restaurantId}`), {
         draftConfig: {
@@ -315,16 +336,17 @@ export default function WebsiteBuilder() {
       showError("Failed to save draft");
     } finally {
       setSaving(false);
-      hideLoading();
     }
   };
-
   const handlePublish = async () => {
     if (!restaurantId) {
       showWarning("No restaurant selected");
       return;
     }
-
+    if (!canEdit) {
+      showError("You don't have permission to publish this site.");
+      return;
+    }
     if (slug && slug !== originalSlug) {
       const available = await isSlugAvailable(slug, restaurantId);
       if (!available) {
@@ -332,12 +354,9 @@ export default function WebsiteBuilder() {
         return;
       }
     }
-
     try {
       setSaving(true);
       setSlugError("");
-      showLoading("Publishing site...");
-
       const configData = {
         layout: layout,
         headerConfig,
@@ -345,13 +364,14 @@ export default function WebsiteBuilder() {
         globalStyles,
         publishedAt: new Date().toISOString(),
       };
-
       await updateRestaurantSiteConfig(restaurantId, {
         slug: slug || null,
         siteConfig: configData,
         draftConfig: configData,
       });
-
+      if (updateRestaurant) {
+        updateRestaurant({ slug: slug || null });
+      }
       setOriginalSlug(slug);
       showSuccess("Site published successfully!");
     } catch (error) {
@@ -359,25 +379,18 @@ export default function WebsiteBuilder() {
       showError("Failed to publish");
     } finally {
       setSaving(false);
-      hideLoading();
     }
   };
-
   const handleGenerateSlug = async () => {
     try {
-      const restaurantRef = ref(rtdb, `restaurants/${restaurantId}`);
-      const snapshot = await get(restaurantRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const generatedSlug = generateSlug(data.name || "");
-        setSlug(generatedSlug);
-      }
+      const result = await generateSlug(restaurantId, slug);
+      setSlug(result.slug);
+      setSlugError("");
     } catch (error) {
       console.error("Error generating slug:", error);
+      showError("Failed to generate slug");
     }
   };
-
   const setHeaderConfigCallback = useCallback(
     (config) => updateState({ headerConfig: config }),
     [updateState]
@@ -390,10 +403,25 @@ export default function WebsiteBuilder() {
     (styles) => updateState({ globalStyles: styles }),
     [updateState]
   );
-
-
+  if (hasAccess === null) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+  if (hasAccess === false) {
+    return (
+      <AccessDenied message="You do not have permission to access the Website Builder." />
+    );
+  }
   const selectedBlock = layout.find((b) => b.id === selectedBlockId);
-
+  // Editing requires access + read and update/create OR owner
+  const canEdit =
+    isOwner ||
+    ((userPermissions?.web_builder?.access === true || isOwner) &&
+      userPermissions?.web_builder?.read &&
+      (userPermissions?.web_builder?.update || userPermissions?.web_builder?.create));
   return (
     <ShopProvider restaurantId={restaurantId}>
       <BuilderContent
@@ -414,6 +442,7 @@ export default function WebsiteBuilder() {
         setSlug={setSlug}
         slugError={slugError}
         saving={saving}
+        canEdit={canEdit}
         handleSaveDraft={handleSaveDraft}
         handlePublish={handlePublish}
         handleGenerateSlug={handleGenerateSlug}

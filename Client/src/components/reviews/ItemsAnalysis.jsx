@@ -1,101 +1,1 @@
-import { HiOutlineTag } from "react-icons/hi2";
-
-const StarDisplay = ({ rating, size = "w-5 h-5" }) => (
-  <div className="flex gap-0.5 justify-center">
-    {[1, 2, 3, 4, 5].map((star) => (
-      <svg
-        key={star}
-        className={`${size} ${
-          star <= rating ? "text-yellow-500 fill-current text-shadow-lg/20" : "text-gray-300"
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-        />
-      </svg>
-    ))}
-  </div>
-);
-
-const ItemRatingCard = ({ item }) => (
-  <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition-shadow">
-    <div className="flex items-start gap-4">
-      {item.image && (
-        <img
-          src={item.image}
-          alt={item.name}
-          className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-        />
-      )}
-
-      <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-gray-900 mb-1 truncate">{item.name}</h4>
-
-        <div className="flex items-center gap-2">
-          <StarDisplay rating={Math.round(item.averageRating)} size="w-4 h-4" />
-
-          <span className="text-base font-bold text-red-600">
-            {item.averageRating.toFixed(1)}
-          </span>
-
-          <span className="text-sm text-gray-500">
-            ({item.reviewCount} reviews)
-          </span>
-        </div>
-
-        {item.reviewCount > 0 && (
-          <div className="mt-3 space-y-1">
-            {[5, 4, 3, 2, 1].map((rating) => {
-              const count = item.ratingDistribution?.[rating] || 0;
-              const percentage = (count / item.reviewCount) * 100;
-              return (
-                <div key={rating} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-3">{rating}</span>
-
-                  <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className="bg-yellow-500 h-full rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-
-                  <span className="text-xs text-gray-500 w-6 text-right">
-                    {count}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
-const ItemsAnalysis = ({ itemStats }) => {
-  if (itemStats.length === 0) {
-    return (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-        <HiOutlineTag className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-
-        <p className="text-gray-600">No item ratings yet.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {itemStats.map((item) => (
-        <ItemRatingCard key={item.itemId} item={item} />
-      ))}
-    </div>
-  );
-};
-
-export default ItemsAnalysis;
+import { HiOutlineTag } from "react-icons/hi2";const StarDisplay = ({ rating, size = "w-5 h-5" }) => (  <div className="flex gap-0.5 justify-center">    {[1, 2, 3, 4, 5].map((star) => (      <svg        key={star}        className={`${size} ${          star <= rating ? "text-yellow-500 fill-current text-shadow-lg/20" : "text-gray-300"        }`}        fill="none"        stroke="currentColor"        viewBox="0 0 24 24"      >        <path          strokeLinecap="round"          strokeLinejoin="round"          strokeWidth={2}          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"        />      </svg>    ))}  </div>);const ItemRatingCard = ({ item }) => (  <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition-shadow">    <div className="flex items-start gap-4">      {item.image && (        <img          src={item.image}          alt={item.name}          className="w-16 h-16 object-cover rounded-lg flex-shrink-0"        />      )}      <div className="flex-1 min-w-0">        <h4 className="font-bold text-gray-900 mb-1 truncate">{item.name}</h4>        <div className="flex items-center gap-2">          <StarDisplay rating={Math.round(item.averageRating)} size="w-4 h-4" />          <span className="text-base font-bold text-red-600">            {item.averageRating.toFixed(1)}          </span>          <span className="text-sm text-gray-500">            ({item.reviewCount} reviews)          </span>        </div>        {item.reviewCount > 0 && (          <div className="mt-3 space-y-1">            {[5, 4, 3, 2, 1].map((rating) => {              const count = item.ratingDistribution?.[rating] || 0;              const percentage = (count / item.reviewCount) * 100;              return (                <div key={rating} className="flex items-center gap-2">                  <span className="text-xs text-gray-500 w-3">{rating}</span>                  <div className="flex-1 bg-gray-200 rounded-full h-1.5">                    <div                      className="bg-yellow-500 h-full rounded-full"                      style={{ width: `${percentage}%` }}                    />                  </div>                  <span className="text-xs text-gray-500 w-6 text-right">                    {count}                  </span>                </div>              );            })}          </div>        )}      </div>    </div>  </div>);const ItemsAnalysis = ({ itemStats }) => {  if (itemStats.length === 0) {    return (      <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">        <HiOutlineTag className="w-16 h-16 mx-auto text-gray-400 mb-4" />        <p className="text-gray-600">No item ratings yet.</p>      </div>    );  }  return (    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">      {itemStats.map((item) => (        <ItemRatingCard key={item.itemId} item={item} />      ))}    </div>  );};export default ItemsAnalysis;

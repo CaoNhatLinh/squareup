@@ -1,51 +1,1 @@
-import { Link } from "react-router-dom";
-import { HiPencilSquare, HiTrash } from "react-icons/hi2";
-import { HiDotsHorizontal } from "react-icons/hi";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/DropdownMenu";
-
-export default function ActionMenu({
-  isOpen,
-  onToggle,
-  editPath,
-  onDelete,
-  itemName = "this item",
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger isOpen={isOpen} setIsOpen={onToggle}>
-        <div
-          className={`p-2 rounded-full transition-all duration-200 ease-in-out ${isOpen
-              ? "bg-red-100 text-red-700 shadow-sm"
-              : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            }`}
-          aria-label={`Actions for ${itemName}`}
-        >
-          <HiDotsHorizontal className="w-5 h-5" />
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" isOpen={isOpen} setIsOpen={onToggle}>
-        <Link to={editPath} className="w-full">
-          <DropdownMenuItem>
-            <HiPencilSquare className="w-4 h-4 mr-2 text-gray-500" />
-            Edit
-          </DropdownMenuItem>
-        </Link>
-        <DropdownMenuItem
-          onClick={() => {
-            if (
-              window.confirm(
-                `Are you sure you want to delete ${itemName}? This action cannot be undone.`
-              )
-            ) {
-              onDelete();
-            }
-          }}
-          className="text-red-600 hover:bg-red-50"
-        >
-          <HiTrash className="w-4 h-4 mr-2 text-red-500" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+import { Link } from "react-router-dom";import { HiPencilSquare, HiTrash } from "react-icons/hi2";import { HiDotsHorizontal } from "react-icons/hi";import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/DropdownMenu";export default function ActionMenu({  isOpen,  onToggle,  editPath,  onDelete,  itemName = "this item",}) {  return (    <DropdownMenu>      <DropdownMenuTrigger isOpen={isOpen} setIsOpen={onToggle}>        <div          className={`p-2 rounded-full transition-all duration-200 ease-in-out ${isOpen              ? "bg-red-100 text-red-700 shadow-sm"              : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"            }`}          aria-label={`Actions for ${itemName}`}        >          <HiDotsHorizontal className="w-5 h-5" />        </div>      </DropdownMenuTrigger>      <DropdownMenuContent align="end" isOpen={isOpen} setIsOpen={onToggle}>        <Link to={editPath} className="w-full">          <DropdownMenuItem>            <HiPencilSquare className="w-4 h-4 mr-2 text-gray-500" />            Edit          </DropdownMenuItem>        </Link>        <DropdownMenuItem          onClick={() => {            if (              window.confirm(                `Are you sure you want to delete ${itemName}? This action cannot be undone.`              )            ) {              onDelete();            }          }}          className="text-red-600 hover:bg-red-50"        >          <HiTrash className="w-4 h-4 mr-2 text-red-500" />          Delete        </DropdownMenuItem>      </DropdownMenuContent>    </DropdownMenu>  );}
