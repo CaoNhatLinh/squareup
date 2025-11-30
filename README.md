@@ -57,7 +57,11 @@ Please update the image URLs below with your actual screenshots.
 
 ### 3. Point of Sale (POS)
 *Streamlined interface for staff to take orders and manage tables.*
-![POS System](https://github.com/user-attachments/assets/401d21be-1b94-4fed-85ff-6c87fa6ffc8)
+<img width="1917" height="872" alt="image" src="https://github.com/user-attachments/assets/4b5be1b6-bef0-4567-997e-f87d8d7f0021" />
+<img width="1919" height="874" alt="image" src="https://github.com/user-attachments/assets/b72143f3-7a0d-4988-9e6d-8f1809d21dc7" />
+<img width="1919" height="870" alt="image" src="https://github.com/user-attachments/assets/be8fe4c8-1d04-4e44-9c54-9a6c567cbb89" />
+<img  height="600" alt="image" src="https://github.com/user-attachments/assets/05580691-0d0e-4cd3-9cc2-dd678b3cec13" />
+<img  height="600" alt="image" src="https://github.com/user-attachments/assets/4ba92625-8e78-4525-b924-c274a99915fe" />
 
 ### 4. Menu Management
 *Interface for managing categories, items, modifiers, and discounts.*
@@ -90,7 +94,6 @@ Please update the image URLs below with your actual screenshots.
 ![Customer Storefront](https://github.com/user-attachments/assets/60235c77-4f26-4c4f-8770-ad66a19c08e3)
 ![add cart](https://github.com/user-attachments/assets/9738d385-ed08-4057-bad2-ea9d7d1c773e)
 ![cart](https://github.com/user-attachments/assets/3b421dc1-5722-43ac-ab6f-e9acf450159e)
-<img width="1919" height="875" alt="image" src="" />
 ### 6. Order Tracking & review
 ![Order review](https://github.com/user-attachments/assets/382cff46-42ea-44dd-b25b-2d32a30779c3)
 *Real-time order status updates for customers.*
