@@ -61,24 +61,42 @@ Please update the image URLs below with your actual screenshots.
 
 ### 4. Menu Management
 *Interface for managing categories, items, modifiers, and discounts.*
-<img width="1919" height="873" alt="image" src="https://github.com/user-attachments/assets/8a25c1ef-d0bf-4457-99a3-13d61a098ba3" />
+<img width="1919" height="873" alt="image" src="https://github.com/user-attachments/assets/2aca2286-7e22-4ec6-b99d-5482ea1afb09" />
+<img width="1919" height="872" alt="image" src="https://github.com/user-attachments/assets/05725f4a-af0c-42c2-a78f-74aeea162438" />
+<img width="1919" height="876" alt="image" src="https://github.com/user-attachments/assets/80564068-6b46-4cb0-aa60-b7362ee3c71c" />
 <img width="1919" height="875" alt="image" src="https://github.com/user-attachments/assets/f80ebac6-6a1f-422d-b8ef-87b072e42d91" />
+*Interface for managing order & review*
+<img width="1900" height="871" alt="image" src="https://github.com/user-attachments/assets/c3f0f583-ea3e-4a3f-8898-8d68e90086b1" />
+<img width="1901" height="873" alt="image" src="https://github.com/user-attachments/assets/32553981-78c4-4ddd-b27a-2b3f077685aa" />
+<img width="1898" height="872" alt="image" src="https://github.com/user-attachments/assets/08d5527d-5084-4847-a4ec-c15f77e493c7" />
+*Interface for staff & role management*
+<img width="1901" height="870" alt="image" src="https://github.com/user-attachments/assets/d8b70ded-12b4-4cfd-bcdb-258686d02b7d" />
+<img width="1919" height="873" alt="image" src="https://github.com/user-attachments/assets/bced67d9-78f2-4c08-ba0d-c3dbb24690f4" />
+<img width="1902" height="872" alt="image" src="https://github.com/user-attachments/assets/510e2587-137f-4a07-ae15-d7cb0391b6d7" />
+### 6. Restaurant setting
+*update infomation for restaurant*
+<img width="1918" height="874" alt="image" src="https://github.com/user-attachments/assets/fb6be1c9-3dd6-4cff-add8-0ba786e2d058" />
+<img width="1919" height="871" alt="image" src="https://github.com/user-attachments/assets/e2e2ce79-b50a-455d-a5da-19104b831021" />
+<img width="1901" height="875" alt="image" src="https://github.com/user-attachments/assets/17982948-22e6-45c7-9b6c-e6a413611b86" />
+<img width="1900" height="876" alt="image" src="https://github.com/user-attachments/assets/be8cb78e-a2de-4afb-a2f7-6f993eff1a59" />
+
+*Interface for managing opening hours and special holidays*
+<img width="1919" height="875" alt="image" src="https://github.com/user-attachments/assets/2a520771-d587-4941-a2fb-5a7c7b80375f" />
+<img width="1919" height="870" alt="image" src="https://github.com/user-attachments/assets/66b7c5b9-e584-4e06-9411-d0ce59a27810" />
 
 
-
-
-
-
-
-### 5. Customer Storefront
+### 7. Customer Storefront
 *Mobile-responsive online ordering page for customers.*
 ![Customer Storefront](https://github.com/user-attachments/assets/60235c77-4f26-4c4f-8770-ad66a19c08e3)
-![Menu Management](https://github.com/user-attachments/assets/3b421dc1-5722-43ac-ab6f-e9acf450159e)
-<img width="1919" height="875" alt="image" src="https://github.com/user-attachments/assets/9738d385-ed08-4057-bad2-ea9d7d1c773e" />
-### 6. Order Tracking
+![add cart](https://github.com/user-attachments/assets/9738d385-ed08-4057-bad2-ea9d7d1c773e)
+![cart](https://github.com/user-attachments/assets/3b421dc1-5722-43ac-ab6f-e9acf450159e)
+<img width="1919" height="875" alt="image" src="" />
+### 6. Order Tracking & review
+![Order review](https://github.com/user-attachments/assets/382cff46-42ea-44dd-b25b-2d32a30779c3)
 *Real-time order status updates for customers.*
 ![Order Tracking](https://github.com/user-attachments/assets/c6f25194-ef94-4120-b197-c8e4311d609a)
-
+*Review order and item for customers.*
+![Order review](https://github.com/user-attachments/assets/817794c0-6689-4e30-9eb0-b884328d77e3)
 ## 🛠️ Technology Stack
 
 ### Frontend (Client)
