@@ -90,10 +90,17 @@ Please update the image URLs below with your actual screenshots.
 
 
 ### 7. Customer Storefront
-*Mobile-responsive online ordering page for customers.*
+*Online ordering page for customers.*
 ![Customer Storefront](https://github.com/user-attachments/assets/60235c77-4f26-4c4f-8770-ad66a19c08e3)
 ![add cart](https://github.com/user-attachments/assets/9738d385-ed08-4057-bad2-ea9d7d1c773e)
 ![cart](https://github.com/user-attachments/assets/3b421dc1-5722-43ac-ab6f-e9acf450159e)
+*Mobile reponsive*
+
+<img  height="540" alt="image" src="https://github.com/user-attachments/assets/d93821eb-5553-41b6-a8b5-f0d9a955e990" />
+<img  height="540" alt="image" src="https://github.com/user-attachments/assets/35a4db28-b964-46be-9e04-0469d11112fd" />
+<img height="540" alt="image" src="https://github.com/user-attachments/assets/6f51432a-448e-4edc-bde4-99ad0a5cee12" />
+<img  height="540" alt="image" src="https://github.com/user-attachments/assets/311a09c1-8321-4ff9-9205-1506b5f50284" />
+
 ### 6. Order Tracking & review
 ![Order review](https://github.com/user-attachments/assets/382cff46-42ea-44dd-b25b-2d32a30779c3)
 *Real-time order status updates for customers.*
